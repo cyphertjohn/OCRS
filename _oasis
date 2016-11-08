@@ -21,4 +21,14 @@ Executable test
   MainIs:     main.ml
   BuildDepends:	ocrs
   Install: false
-  
+
+AlphaFeatures: ocamlbuild_more_args
+Document "OCRS"
+  Type: ocamlbuild (0.4)
+  BuildTools: ocamldoc, ocamlbuild
+
+  Title: Documentation for OCRS
+  XOCamlbuildPath: .
+  XOCamlbuildExtraArgs:
+    "-docflags '-colorize-code -short-functors -charset utf-8'"
+  XOCamlbuildLibraries: ocrs  
