@@ -10,8 +10,8 @@ Library ocrs
   Pack:       true
   Path:       src
   BuildTools: ocamlbuild
-  Modules:    Expr_helpers, Expr_simplifications, Expr_to_opcalc
-  InternalModules: Expr_def, Subscript_def 
+  Modules:    Type_def, Expr_helpers
+  InternalModules: Expr_simplifications, Expr_to_opcalc
   XMETAEnable:	true
   BuildDepends: gmp
   
@@ -22,13 +22,10 @@ Executable test
   BuildDepends:	ocrs
   Install: false
 
-AlphaFeatures: ocamlbuild_more_args
 Document "OCRS"
   Type: ocamlbuild (0.4)
   BuildTools: ocamldoc, ocamlbuild
 
   Title: Documentation for OCRS
   XOCamlbuildPath: .
-  XOCamlbuildExtraArgs:
-    "-docflags '-colorize-code -short-functors -charset utf-8'"
   XOCamlbuildLibraries: ocrs  

@@ -1,4 +1,4 @@
-open Expr_def
+open Type_def
 
 let base expr = 
   match expr with

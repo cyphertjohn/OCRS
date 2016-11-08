@@ -1,5 +1,4 @@
-open Subscript_def
-open Expr_def
+open Type_def
 open Expr_helpers
 (*open Expr_simplifications*)
 open Expr_to_opcalc

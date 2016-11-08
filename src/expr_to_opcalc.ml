@@ -1,5 +1,4 @@
-open Subscript_def
-open Expr_def
+open Type_def
 
 
 (* need to check to make sure the transform is possible namely pointwise multiplication and pointwise divide *)
