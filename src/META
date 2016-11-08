@@ -1,0 +1,12 @@
+# OASIS_START
+# DO NOT EDIT (digest: 1073192e756d49521d8885837ff95c73)
+version = "0.1"
+description = "Recurrence solver based on operational calculus"
+requires = "gmp"
+archive(byte) = "ocrs.cma"
+archive(byte, plugin) = "ocrs.cma"
+archive(native) = "ocrs.cmxa"
+archive(native, plugin) = "ocrs.cmxs"
+exists_if = "ocrs.cma"
+# OASIS_STOP
+

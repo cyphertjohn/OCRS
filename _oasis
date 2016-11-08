@@ -1,0 +1,24 @@
+OASISFormat: 0.4
+Plugins: META (0.4)
+Name:        OCRS
+Version:     0.1
+Synopsis:    Recurrence solver based on operational calculus
+Authors:     John Cyphert
+License:     LGPL
+
+Library ocrs
+  Pack:       true
+  Path:       src
+  BuildTools: ocamlbuild
+  Modules:    Expr_helpers, Expr_simplifications, Expr_to_opcalc
+  InternalModules: Expr_def, Subscript_def 
+  XMETAEnable:	true
+  BuildDepends: gmp
+  
+Executable test
+  Path:       test
+  BuildTools: ocamlbuild
+  MainIs:     main.ml
+  BuildDepends:	ocrs
+  Install: false
+  
