@@ -151,7 +151,7 @@ type op_expr = OpPlus of op_expr * op_expr         (** Binary addition *)
              | OpUndefined			 (** An expression whose value is undefined. ie x/0, log(-1), etc *)
              ;;
                   
-type opCalc_inequation = OpEquals of op_expr * op_expr	(** = *)
+type op_inequation = OpEquals of op_expr * op_expr	(** = *)
 		       | OpLessEq of op_expr * op_expr	(** <= *)
 		       | OpLess of op_expr * op_expr	(** < *)
 		       | OpGreaterEq of op_expr * op_expr (** >= *)

@@ -10,8 +10,8 @@ Library ocrs
   Pack:       true
   Path:       src
   BuildTools: ocamlbuild
-  Modules:    Type_def, Expr_helpers
-  InternalModules: Expr_simplifications, Expr_to_opcalc
+  Modules:    Type_def, Expr_helpers, Expr_simplifications
+  InternalModules: Expr_to_opcalc
   XMETAEnable:	true
   BuildDepends: gmp
   
