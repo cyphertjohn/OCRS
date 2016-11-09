@@ -27,6 +27,23 @@ let x6 = Divide(Minus(Symbolic_Constant "y", Symbolic_Constant "y"), Sum [Pow (S
 
 let x7 = Divide(Minus(Symbolic_Constant "y", Symbolic_Constant "y"), Minus (Symbolic_Constant "y", Symbolic_Constant "y"));;
 
-let lis = [x;y;z;x1; x2; x3; x4; x5; x6; x7];;
+let x9 = Sum [Symbolic_Constant "x"; Product [Rational (snd(Mpfr.init_set_si (-2) Mpfr.Near)); Symbolic_Constant "x"]];;
 
-List.iter (fun x -> begin print_endline (expr_to_string x); print_endline (expr_to_string (Expr_simplifications.automatic_simplify x)) end) lis;;
+let lis = [x;y;z;x1; x2; x3; x4; x5; x6; x7; x9];;
+
+(*List.iter (fun x -> begin print_endline (expr_to_string x); print_endline (expr_to_string (Expr_simplifications.automatic_simplify x)); print_endline "" end) lis;;
+*)
+let x8 = Equals(Output_variable("y", SAdd("n", 1)), Plus (Output_variable("y", SSVar "n"), Input_variable "n"));;
+
+let simplify_x8 = Expr_simplifications.automatic_simplify_inequation x8;;
+
+print_endline (inequation_to_string simplify_x8);;
+
+let op_x8 = Op_simplifications.op_automatic_simplify_inequation (inequation_to_opCalc simplify_x8);;
+
+print_endline (op_inequation_to_string op_x8);;
+
+let isolated_op_x8 = Isolate_Ovar.solve_for_Ovar op_x8 "y" "n";;
+
+print_endline (op_inequation_to_string isolated_op_x8);;
+

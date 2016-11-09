@@ -157,3 +157,69 @@ type op_inequation = OpEquals of op_expr * op_expr	(** = *)
 		       | OpGreaterEq of op_expr * op_expr (** >= *)
 		       | OpGreater of op_expr * op_expr	(** > *)
 		       ;;
+
+(** {7 OpExpression comparison} *)
+
+(** Definition of the comparison between two op_expressions. See Computer Algebra and Symbolic Computation: Mathematical Methods by Joel S. Cohen 
+    @return < 0 if a < b, 0 if a = b, and > 0 if a > b *)
+let rec op_expr_order a b = 
+    match (a, b) with
+    | (OpRational a_v, OpRational b_v) ->		(* O-1 *)
+        Mpfr.cmp a_v b_v
+    | (Q, Q) -> 0
+    | (OpSymbolic_Constant a_str, OpSymbolic_Constant b_str) | (OpInput_variable a_str, OpInput_variable b_str) -> (* O-2 *)
+        String.compare a_str b_str
+    | (OpBase_case (a_ident, a_index), OpBase_case (b_ident, b_index)) ->
+        if a_ident <> b_ident then String.compare a_ident b_ident
+        else compare a_index b_index
+    | (OpOutput_variable (a_ident, a_sub), OpOutput_variable (b_ident, b_sub)) ->
+        if a_ident <> b_ident then String.compare a_ident b_ident
+        else subscript_order a_sub b_sub
+    | (OpSum a_list, OpSum b_list) | (OpProduct a_list, OpProduct b_list) ->
+        let a_rev = List.rev a_list in
+        let b_rev = List.rev b_list in
+        let rec aux x y = 
+            (match (x, y) with
+            | ([], []) -> 0		(* the two lists are equal *)
+            | ([], y1) -> (-1)		(* n>m *)	(* O-3-3 *)
+            | (x1, []) -> 1		(* m>n *)	(* O-3-3 *)
+            | (x_hd :: x_rest, y_hd :: y_rest) ->
+                if (op_expr_order x_hd y_hd) = 0 then aux x_rest y_rest	(* O-3-2 *)
+                else op_expr_order x_hd y_hd		(* O-3-1 *)
+            ) in aux a_rev b_rev
+    | (OpPow (a_bas, a_exp), OpPow (b_bas, b_exp)) ->
+        if (op_expr_order a_bas b_bas) <> 0 then				(* O-4-1 *)
+            op_expr_order a_bas b_bas
+        else op_expr_order a_exp b_exp			(* O-4-2 *)
+    | (OpLog a_log, OpLog b_log) ->
+        op_expr_order a_log b_log
+    | (OpRational _, _) -> (-1)				(* O-7 *)
+    | (_, OpRational _) -> (1)
+    | (Q, _) -> (-1)
+    | (_, Q) -> 1
+    | (OpProduct _, _) ->
+        op_expr_order a (OpProduct [b])			(* O-8 *)
+    | ( _, OpProduct _)  ->	
+        op_expr_order (OpProduct [a]) b			(* O-8 *)
+    | (OpPow _, _) ->
+        op_expr_order a (OpPow (b, OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))))	(* O-9 *)
+    | (_, OpPow _) ->
+        op_expr_order (OpPow (a, OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near)))) b	(* O-9 *)
+    | (OpSum _, _) ->
+        op_expr_order a (OpSum [b])				(* O-10 *)
+    | (_, OpSum _) ->
+        op_expr_order (OpSum [a]) b				(* O-10 *)
+    | (OpLog _, _) ->
+        op_expr_order a (OpLog b)
+    | (_, OpLog _) ->
+        op_expr_order (OpLog a) b
+    | (OpOutput_variable _, _) -> 1
+    | (_, OpOutput_variable _) -> (-1)
+    | (OpInput_variable _, _) -> 1
+    | (_, OpInput_variable _) -> (-1)
+    | (OpBase_case _, _) -> 1
+    | (_, OpBase_case _) -> (-1)
+    | (OpSymbolic_Constant _, _) -> 1
+    | (_, OpSymbolic_Constant _) -> (-1)
+    | _ -> failwith "all cases should have been taken care of"
+    ;;

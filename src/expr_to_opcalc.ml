@@ -44,7 +44,7 @@ let rec expr_to_opCalc expr =
 	   failwith "input was in incorrect form"
        )
   | Input_variable str ->
-      OpInput_variable str
+      expr_to_opCalc (Binomial(expr, (Rational (snd (Mpfr.init_set_si 1 Mpfr.Near)))))
   | Rational rat ->
       OpRational rat
   | Log expression ->
@@ -56,6 +56,7 @@ let rec expr_to_opCalc expr =
   | Binomial (top, bottom) ->
       (match (top, bottom) with
           | (Input_variable ident, Rational k) when (Mpfr.integer_p k) ->	(* if the binomial is of the form n choose k, where k is a constant int *)
+              let _ = Mpfr.neg k k Mpfr.Near in
               OpPow (OpMinus (Q, OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))), OpRational k)		(* appropriate transformation *)
           | _ ->
       	      failwith "Bad binomial input"
