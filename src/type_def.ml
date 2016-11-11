@@ -95,6 +95,10 @@ let rec expr_order a b =
         expr_order a_fac b_fac				(* O-5 *)
     | (Rational _, _) -> (-1)				(* O-7 *)
     | (_, Rational _) -> (1)
+    | (Base_case _, _) -> (-1)
+    | (_, Base_case _) -> 1
+    | (Symbolic_Constant _, _) -> (-1)
+    | (_, Symbolic_Constant _) -> (1)
     | (Product _, _) ->
         expr_order a (Product [b])			(* O-8 *)
     | ( _, Product _)  ->	
@@ -123,10 +127,6 @@ let rec expr_order a b =
     | (_, Output_variable _) -> (-1)
     | (Input_variable _, _) -> 1
     | (_, Input_variable _) -> (-1)
-    | (Base_case _, _) -> 1
-    | (_, Base_case _) -> (-1)
-    | (Symbolic_Constant _, _) -> 1
-    | (_, Symbolic_Constant _) -> (-1)
     | _ -> failwith "all cases should have been taken care of"
     ;;
 
@@ -195,6 +195,10 @@ let rec op_expr_order a b =
         op_expr_order a_log b_log
     | (OpRational _, _) -> (-1)				(* O-7 *)
     | (_, OpRational _) -> (1)
+    | (OpBase_case _, _) -> (-1)
+    | (_, OpBase_case _) -> (1)
+    | (OpSymbolic_Constant _, _) -> (-1)
+    | (_, OpSymbolic_Constant _) -> (1)
     | (Q, _) -> (-1)
     | (_, Q) -> 1
     | (OpProduct _, _) ->
@@ -217,9 +221,5 @@ let rec op_expr_order a b =
     | (_, OpOutput_variable _) -> (-1)
     | (OpInput_variable _, _) -> 1
     | (_, OpInput_variable _) -> (-1)
-    | (OpBase_case _, _) -> 1
-    | (_, OpBase_case _) -> (-1)
-    | (OpSymbolic_Constant _, _) -> 1
-    | (_, OpSymbolic_Constant _) -> (-1)
     | _ -> failwith "all cases should have been taken care of"
     ;;

@@ -1,7 +1,9 @@
 # OASIS_START
-# DO NOT EDIT (digest: 4e17a866ad20629ec061853843e538a0)
+# DO NOT EDIT (digest: 22b194ffe9e3280ad3b49a24cffc9d09)
+Isolate_Ovar
 Type_def
 Expr_helpers
 Expr_simplifications
+Op_simplifications
 Expr_to_opcalc
 # OASIS_STOP

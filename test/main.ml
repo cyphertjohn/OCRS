@@ -4,8 +4,6 @@ open Expr_helpers
 open Expr_to_opcalc
 (*open Expr_opCalc_simp*)
 
-let print_expr e = 
-  print_endline (inequation_to_string e);;
 
 let x = Sum [Product [Rational (snd (Mpfr.init_set_si 2 Mpfr.Near)); Pow(Symbolic_Constant "x", Rational (snd (Mpfr.init_set_si 3 Mpfr.Near)))]; Product [Pow(Symbolic_Constant "x", Rational (snd (Mpfr.init_set_si 2 Mpfr.Near))) ; Symbolic_Constant "x"]];;
 
@@ -33,7 +31,10 @@ let lis = [x;y;z;x1; x2; x3; x4; x5; x6; x7; x9];;
 
 (*List.iter (fun x -> begin print_endline (expr_to_string x); print_endline (expr_to_string (Expr_simplifications.automatic_simplify x)); print_endline "" end) lis;;
 *)
-let x8 = Equals(Output_variable("y", SAdd("n", 2)), Plus (Output_variable("y", SSVar "n"), Input_variable "n"));;
+
+
+
+let x8 = Equals(Output_variable("y", SAdd("n", 1)), Times (Output_variable("y", SSVar "n"), Rational (snd(Mpfr.init_set_si 2 Mpfr.Near))));;
 
 let simplify_x8 = Expr_simplifications.automatic_simplify_inequation x8;;
 
@@ -47,3 +48,17 @@ let isolated_op_x8 = Isolate_Ovar.solve_for_Ovar op_x8 "y" "n";;
 
 print_endline (op_inequation_to_string isolated_op_x8);;
 
+let tau_inverse_inequation expr input_ident = 
+    match expr with
+    | OpEquals (OpOutput_variable(ident, subscript), right) ->
+        Equals(Output_variable(ident, subscript), (Tau_inverse.tau_inverse right "n"))
+    | _ -> failwith "very temporary solution"
+    ;;
+
+let answer = tau_inverse_inequation isolated_op_x8 "n";;
+
+let simp_answer = Expr_simplifications.automatic_simplify_inequation answer;;
+
+print_endline (inequation_to_string simp_answer);;
+
+print_endline "";;
