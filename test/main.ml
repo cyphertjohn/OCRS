@@ -33,7 +33,7 @@ let lis = [x;y;z;x1; x2; x3; x4; x5; x6; x7; x9];;
 
 (*List.iter (fun x -> begin print_endline (expr_to_string x); print_endline (expr_to_string (Expr_simplifications.automatic_simplify x)); print_endline "" end) lis;;
 *)
-let x8 = Equals(Output_variable("y", SAdd("n", 1)), Plus (Output_variable("y", SSVar "n"), Input_variable "n"));;
+let x8 = Equals(Output_variable("y", SAdd("n", 2)), Plus (Output_variable("y", SSVar "n"), Input_variable "n"));;
 
 let simplify_x8 = Expr_simplifications.automatic_simplify_inequation x8;;
 

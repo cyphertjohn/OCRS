@@ -39,62 +39,50 @@ let rec contains_Ovar expr identifier =
 let rec move_Ovar_left left right identifier = 
   match (left, right) with
   | (OpSum left_list, OpSum right_list) ->
-      let (ovar_left_temp, non_ovar_left_temp) = List.partition (fun x -> contains_Ovar x identifier) left_list in
-      let (ovar_right_temp, non_ovar_right_temp) = List.partition (fun x -> contains_Ovar x identifier) right_list in
-      let ovar_left = (if (List.length ovar_left_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))] else ovar_left_temp) in
+      let (_, non_ovar_left_temp) = List.partition (fun x -> contains_Ovar x identifier) left_list in
+      let (ovar_right_temp, _) = List.partition (fun x -> contains_Ovar x identifier) right_list in
       let non_ovar_left = (if (List.length non_ovar_left_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))] else non_ovar_left_temp) in
       let ovar_right = (if (List.length ovar_right_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))] else ovar_right_temp) in
-      let non_ovar_right = (if (List.length non_ovar_right_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))] else non_ovar_right_temp) in
       let new_left_simp = op_automatic_simplify (OpSum [OpSum left_list; OpProduct [OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); OpSum ovar_right]; OpProduct [OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); OpSum non_ovar_left]]) in	(* sanity check: non_ovar_left should cancel *)
       let new_right_simp = op_automatic_simplify (OpSum [OpSum right_list; OpProduct [OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); OpSum non_ovar_left]; OpProduct [OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); OpSum ovar_right]]) in
       (new_left_simp, new_right_simp)
   | (OpSum left_list, _) ->
-      let (ovar_left_temp, non_ovar_left_temp) = List.partition (fun x -> contains_Ovar x identifier) left_list in
-      let (ovar_right_temp, non_ovar_right_temp) = List.partition (fun x -> contains_Ovar x identifier) (right :: []) in
-      let ovar_left = (if (List.length ovar_left_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))] else ovar_left_temp) in
+      let (_, non_ovar_left_temp) = List.partition (fun x -> contains_Ovar x identifier) left_list in
+      let (ovar_right_temp, _) = List.partition (fun x -> contains_Ovar x identifier) (right :: []) in
       let non_ovar_left = (if (List.length non_ovar_left_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))] else non_ovar_left_temp) in
       let ovar_right = (if (List.length ovar_right_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))] else ovar_right_temp) in
-      let non_ovar_right = (if (List.length non_ovar_right_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))] else non_ovar_right_temp) in
       let new_left_simp = op_automatic_simplify (OpSum [OpSum left_list; OpProduct [OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); OpSum ovar_right]; OpProduct [OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); OpSum non_ovar_left]]) in (* sanity check: non_ovar_left should cancel *)
       let new_right_simp = op_automatic_simplify (OpSum [OpSum [right]; OpProduct [OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); OpSum non_ovar_left]; OpProduct [OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); OpSum ovar_right]]) in
       (new_left_simp, new_right_simp)
   | (_, OpSum right_list) ->
-      let (ovar_left_temp, non_ovar_left_temp) = List.partition (fun x -> contains_Ovar x identifier) (left :: []) in
-      let (ovar_right_temp, non_ovar_right_temp) = List.partition (fun x -> contains_Ovar x identifier) right_list in
-      let ovar_left = (if (List.length ovar_left_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))] else ovar_left_temp) in
+      let (_, non_ovar_left_temp) = List.partition (fun x -> contains_Ovar x identifier) (left :: []) in
+      let (ovar_right_temp, _) = List.partition (fun x -> contains_Ovar x identifier) right_list in
       let non_ovar_left = (if (List.length non_ovar_left_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))] else non_ovar_left_temp) in
       let ovar_right = (if (List.length ovar_right_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))] else ovar_right_temp) in
-      let non_ovar_right = (if (List.length non_ovar_right_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))] else non_ovar_right_temp) in
       let new_left_simp = op_automatic_simplify (OpSum [OpSum [left]; OpProduct [OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); OpSum non_ovar_left]; OpProduct [OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); OpSum ovar_right]]) in (* sanity check: non_ovar_left should cancel *)
       let new_right_simp = op_automatic_simplify (OpSum [OpSum right_list; OpProduct [OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); OpSum non_ovar_left]; OpProduct [OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); OpSum ovar_right]]) in
       (new_left_simp, new_right_simp)
   | (OpProduct left_list, OpProduct right_list) ->
-      let (ovar_left_temp, non_ovar_left_temp) = List.partition (fun x -> contains_Ovar x identifier) left_list in
-      let (ovar_right_temp, non_ovar_right_temp) = List.partition (fun x -> contains_Ovar x identifier) right_list in
-      let ovar_left = (if (List.length ovar_left_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))] else ovar_left_temp) in
+      let (_, non_ovar_left_temp) = List.partition (fun x -> contains_Ovar x identifier) left_list in
+      let (ovar_right_temp, _) = List.partition (fun x -> contains_Ovar x identifier) right_list in
       let non_ovar_left = (if (List.length non_ovar_left_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))] else non_ovar_left_temp) in
       let ovar_right = (if (List.length ovar_right_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))] else ovar_right_temp) in
-      let non_ovar_right = (if (List.length non_ovar_right_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))] else non_ovar_right_temp) in
       let new_left_simp = op_automatic_simplify (OpProduct [OpProduct left_list; OpPow (OpProduct ovar_right, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near))); OpPow (OpProduct non_ovar_left, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)))]) in (* sanity check: non_ovar_left should cancel *)
       let new_right_simp = op_automatic_simplify (OpProduct [OpProduct right_list; OpPow (OpProduct ovar_right, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near))); OpPow (OpProduct non_ovar_left, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)))]) in (* sanity check: non_ovar_left should cancel *)
       (new_left_simp, new_right_simp)
   | (OpProduct left_list, _) ->
-      let (ovar_left_temp, non_ovar_left_temp) = List.partition (fun x -> contains_Ovar x identifier) left_list in
-      let (ovar_right_temp, non_ovar_right_temp) = List.partition (fun x -> contains_Ovar x identifier) (right :: []) in
-      let ovar_left = (if (List.length ovar_left_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))] else ovar_left_temp) in
+      let (_, non_ovar_left_temp) = List.partition (fun x -> contains_Ovar x identifier) left_list in
+      let (ovar_right_temp, _) = List.partition (fun x -> contains_Ovar x identifier) (right :: []) in
       let non_ovar_left = (if (List.length non_ovar_left_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))] else non_ovar_left_temp) in
       let ovar_right = (if (List.length ovar_right_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))] else ovar_right_temp) in
-      let non_ovar_right = (if (List.length non_ovar_right_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))] else non_ovar_right_temp) in
       let new_left_simp = op_automatic_simplify (OpProduct [OpProduct left_list; OpPow (OpProduct ovar_right, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near))); OpPow (OpProduct non_ovar_left, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)))]) in (* sanity check: non_ovar_left should cancel *)
       let new_right_simp = op_automatic_simplify (OpProduct [OpProduct [right]; OpPow (OpProduct ovar_right, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near))); OpPow (OpProduct non_ovar_left, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)))]) in (* sanity check: non_ovar_left should cancel *)
       (new_left_simp, new_right_simp)
   | (_, OpProduct right_list) ->
-      let (ovar_left_temp, non_ovar_left_temp) = List.partition (fun x -> contains_Ovar x identifier) (left :: []) in
-      let (ovar_right_temp, non_ovar_right_temp) = List.partition (fun x -> contains_Ovar x identifier) right_list in
-      let ovar_left = (if (List.length ovar_left_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))] else ovar_left_temp) in
+      let (_, non_ovar_left_temp) = List.partition (fun x -> contains_Ovar x identifier) (left :: []) in
+      let (ovar_right_temp, _) = List.partition (fun x -> contains_Ovar x identifier) right_list in
       let non_ovar_left = (if (List.length non_ovar_left_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))] else non_ovar_left_temp) in
       let ovar_right = (if (List.length ovar_right_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))] else ovar_right_temp) in
-      let non_ovar_right = (if (List.length non_ovar_right_temp) = 0 then [OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))] else non_ovar_right_temp) in
       let new_left_simp = op_automatic_simplify (OpProduct [OpProduct [left]; OpPow (OpProduct ovar_right, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near))); OpPow (OpProduct non_ovar_left, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)))]) in (* sanity check: non_ovar_left should cancel *)
       let new_right_simp = op_automatic_simplify (OpProduct [OpProduct right_list; OpPow (OpProduct ovar_right, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near))); OpPow (OpProduct non_ovar_left, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)))]) in (* sanity check: non_ovar_left should cancel *)
       (new_left_simp, new_right_simp)
