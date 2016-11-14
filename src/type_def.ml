@@ -95,10 +95,6 @@ let rec expr_order a b =
         expr_order a_fac b_fac				(* O-5 *)
     | (Rational _, _) -> (-1)				(* O-7 *)
     | (_, Rational _) -> (1)
-    | (Base_case _, _) -> (-1)
-    | (_, Base_case _) -> 1
-    | (Symbolic_Constant _, _) -> (-1)
-    | (_, Symbolic_Constant _) -> (1)
     | (Product _, _) ->
         expr_order a (Product [b])			(* O-8 *)
     | ( _, Product _)  ->	
@@ -123,6 +119,10 @@ let rec expr_order a b =
         expr_order a (Binomial (b, Rational (snd (Mpfr.init_set_si 1 Mpfr.Near))))
     | (_, Binomial _) ->
         expr_order (Binomial (a, Rational (snd (Mpfr.init_set_si 1 Mpfr.Near)))) b
+    | (Base_case _, _) -> (-1)
+    | (_, Base_case _) -> 1
+    | (Symbolic_Constant _, _) -> (-1)
+    | (_, Symbolic_Constant _) -> (1)
     | (Output_variable _, _) -> 1
     | (_, Output_variable _) -> (-1)
     | (Input_variable _, _) -> 1
@@ -195,10 +195,6 @@ let rec op_expr_order a b =
         op_expr_order a_log b_log
     | (OpRational _, _) -> (-1)				(* O-7 *)
     | (_, OpRational _) -> (1)
-    | (OpBase_case _, _) -> (-1)
-    | (_, OpBase_case _) -> (1)
-    | (OpSymbolic_Constant _, _) -> (-1)
-    | (_, OpSymbolic_Constant _) -> (1)
     | (Q, _) -> (-1)
     | (_, Q) -> 1
     | (OpProduct _, _) ->
@@ -217,6 +213,10 @@ let rec op_expr_order a b =
         op_expr_order a (OpLog b)
     | (_, OpLog _) ->
         op_expr_order (OpLog a) b
+    | (OpBase_case _, _) -> (-1)
+    | (_, OpBase_case _) -> (1)
+    | (OpSymbolic_Constant _, _) -> (-1)
+    | (_, OpSymbolic_Constant _) -> (1)
     | (OpOutput_variable _, _) -> 1
     | (_, OpOutput_variable _) -> (-1)
     | (OpInput_variable _, _) -> 1

@@ -29,8 +29,8 @@ let x9 = Sum [Symbolic_Constant "x"; Product [Rational (snd(Mpfr.init_set_si (-2
 
 let lis = [x;y;z;x1; x2; x3; x4; x5; x6; x7; x9];;
 
-(*List.iter (fun x -> begin print_endline (expr_to_string x); print_endline (expr_to_string (Expr_simplifications.automatic_simplify x)); print_endline "" end) lis;;
-*)
+List.iter (fun x -> begin print_endline (expr_to_string x); print_endline (expr_to_string (Expr_simplifications.automatic_simplify x)); print_endline "" end) lis;;
+
 
 
 
@@ -62,3 +62,16 @@ let simp_answer = Expr_simplifications.automatic_simplify_inequation answer;;
 print_endline (inequation_to_string simp_answer);;
 
 print_endline "";;
+
+
+(*let x10 = Equals(Output_variable("y", SAdd("n", 4)), Sum[Times (Output_variable("y", SAdd ("n", 3)), Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)));Times (Output_variable("y", SAdd ("n", 2)), Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))); Times (Output_variable("y", SAdd ("n", 1)), Rational (snd(Mpfr.init_set_si (-5) Mpfr.Near))); Times (Output_variable("y", SSVar "n"), Rational (snd(Mpfr.init_set_si 3 Mpfr.Near)))]);;
+
+let simplify_x10 = Expr_simplifications.automatic_simplify_inequation x10;;
+
+print_endline (inequation_to_string simplify_x10);;
+
+let op_x10 = Op_simplifications.op_automatic_simplify_inequation (inequation_to_opCalc simplify_x10);;
+print_endline (op_inequation_to_string op_x10);;
+
+let isolated_op_x10 = Isolate_Ovar.solve_for_Ovar op_x10 "y" "n";;
+print_endline (op_inequation_to_string isolated_op_x10);;*)
