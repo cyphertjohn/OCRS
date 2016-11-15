@@ -34,7 +34,7 @@ List.iter (fun x -> begin print_endline (expr_to_string x); print_endline (expr_
 
 
 
-let x8 = Equals(Output_variable("y", SAdd("n", 1)), Times (Output_variable("y", SSVar "n"), Rational (snd(Mpfr.init_set_si 2 Mpfr.Near))));;
+let x8 = Equals(Output_variable("y", SAdd("n", 1)), Plus (Output_variable("y", SSVar "n"), Plus(Pow (Input_variable "n", Rational (snd (Mpfr.init_set_si 4 Mpfr.Near))), Pow (Input_variable "n", Rational (snd (Mpfr.init_set_si 3 Mpfr.Near))))));;
 
 let simplify_x8 = Expr_simplifications.automatic_simplify_inequation x8;;
 
@@ -48,14 +48,9 @@ let isolated_op_x8 = Isolate_Ovar.solve_for_Ovar op_x8 "y" "n";;
 
 print_endline (op_inequation_to_string isolated_op_x8);;
 
-let tau_inverse_inequation expr input_ident = 
-    match expr with
-    | OpEquals (OpOutput_variable(ident, subscript), right) ->
-        Equals(Output_variable(ident, subscript), (Tau_inverse.tau_inverse right "n"))
-    | _ -> failwith "very temporary solution"
-    ;;
+let temp = Op_simplifications.op_automatic_simplify_inequation isolated_op_x8;;
 
-let answer = tau_inverse_inequation isolated_op_x8 "n";;
+let answer = Tau_inverse.tau_inverse_inequation temp "n"
 
 let simp_answer = Expr_simplifications.automatic_simplify_inequation answer;;
 

@@ -1,6 +1,66 @@
 open Type_def
 
 
+let rec binomial_transform expr =
+  match expr with
+  | Pow(Input_variable ident, Rational rat) when Mpfr.integer_p rat && (Mpfr.cmp_si rat 0) > 0 ->
+      let find_first_deg_elem deg = 
+          let rec aux a b = 
+              (if (Mpfr.cmp a b) > 0 then [] 
+              else
+                  let pow_res = Mpfr.init () in
+                  let a_plus_1 = Mpfr.init () in 
+                  let _ = Mpfr.pow pow_res a b Mpfr.Near in
+                  let _ = Mpfr.add_ui a_plus_1 a 1 Mpfr.Near in
+                  pow_res :: (aux a_plus_1 b)) in
+          aux (snd(Mpfr.init_set_si 0 Mpfr.Near)) deg in
+      let val_list = find_first_deg_elem rat in
+      let binomial x y = 
+          let x_minus_y = Mpfr.init () in
+          let result = Mpfr.init () in
+          let y_temp = Mpfr.init () in
+          let _ = Mpfr.sub x_minus_y x y Mpfr.Near in (* x_minus_y = x-y *)
+          let _ = Mpfr.add_ui result x 1 Mpfr.Near in (* x = x+1 *)
+          let _ = Mpfr.add_ui y_temp y 1 Mpfr.Near in (* y = y+1 *)
+          let _ = Mpfr.add_ui x_minus_y x_minus_y 1 Mpfr.Near in
+          let _ = Mpfr.gamma result result Mpfr.Near in (* x = x! *)
+          let _ = Mpfr.gamma y_temp y_temp Mpfr.Near in (* y = y! *)
+          let _ = Mpfr.gamma x_minus_y x_minus_y Mpfr.Near in (* x_minus_y = x_minus_y! *)
+          let _ = Mpfr.mul y_temp y_temp x_minus_y Mpfr.Near in (* y = y * x_minus_y *)
+          let _ = Mpfr.div result result y_temp Mpfr.Near in (* x = x/y *) result in
+      let rec accumulate j k = 
+          if (Mpfr.cmp j k) > 0 then (snd(Mpfr.init_set_si 0 Mpfr.Near))
+          else( 
+              let minus_one = snd (Mpfr.init_set_si (-1) Mpfr.Near) in
+              let k_minus_j = Mpfr.init () in
+              let _ = Mpfr.sub k_minus_j k j Mpfr.Near in
+              let j_plus_1 = Mpfr.init () in
+              let _ = Mpfr.add_ui j_plus_1 j 1 Mpfr.Near in
+              let _ = Mpfr.pow minus_one minus_one k_minus_j Mpfr.Near in
+              let binom = binomial k j in
+              let f_j = List.nth val_list (int_of_float(Mpfr.to_float j)) in
+              let result = Mpfr.init () in
+              let _ = Mpfr.mul result minus_one f_j Mpfr.Near in
+              let _ = Mpfr.mul result result binom Mpfr.Near in
+              let acc = accumulate j_plus_1 k in
+              let _ = Mpfr.add result result acc Mpfr.Near in
+              result) in
+      let rec build_sum_lis k deg = 
+          if (Mpfr.cmp k deg) > 0 then []
+          else(
+              let k_plus_1 = Mpfr.init () in
+              let _ = Mpfr.add_ui k_plus_1 k 1 Mpfr.Near in
+              let zero = snd (Mpfr.init_set_si 0 Mpfr.Near) in
+              Product [Binomial(Input_variable ident, Rational k); Rational (accumulate zero k)] :: (build_sum_lis k_plus_1 deg)
+          ) in
+      let zero = snd (Mpfr.init_set_si 0 Mpfr.Near) in
+      Expr_simplifications.automatic_simplify (Sum (build_sum_lis zero rat))
+      (* for k = 0 to deg do Product [Binomial(Input_variable ident, Rational k); Rational ((accumulate 0 k) * 1/k!)] *)
+
+  | _ -> failwith "should never get here"
+  ;;
+
+
 (* need to check to make sure the transform is possible namely pointwise multiplication and pointwise divide *)
 
 (* This function is incomplete!!! doesn't tranform other functions such as polynomials
@@ -16,7 +76,7 @@ let rec expr_to_opCalc expr =
   | Divide (left, right) ->
       OpDivide (expr_to_opCalc left, expr_to_opCalc right)
   | Product expr_list ->
-      OpProduct (List.map expr_to_opCalc expr_list)  					(* convert all list elem to strings concat with star *)
+      OpProduct (List.map expr_to_opCalc expr_list)  					(* TODO only good if linear multiply *)
   | Sum expr_list ->
       OpSum (List.map expr_to_opCalc expr_list)  					(* convert all list elem to strings concat with star *)
   | Symbolic_Constant ident ->
@@ -51,8 +111,10 @@ let rec expr_to_opCalc expr =
       failwith "haven't done this part yet"
       (* don't know what to do here *)
   | Pow (left, right) ->
-      failwith "haven't done this part yet"
-      (* don't know what to do here either *)
+      (match (left, right) with
+      | (Input_variable ident, Rational rat) when Mpfr.integer_p rat && (Mpfr.cmp_si rat 0)>0 ->
+          expr_to_opCalc (binomial_transform expr)
+      | _ -> failwith "don't know if anything else can be done here")
   | Binomial (top, bottom) ->
       (match (top, bottom) with
           | (Input_variable ident, Rational k) when (Mpfr.integer_p k) ->	(* if the binomial is of the form n choose k, where k is a constant int *)
