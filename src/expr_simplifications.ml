@@ -1,4 +1,4 @@
-open Expr_def
+open Type_def
 
 let base expr = 
   match expr with
@@ -331,4 +331,16 @@ let rec automatic_simplify expr =
       simplify_factorial (automatic_simplify expression)
   ;;
 
-
+let automatic_simplify_inequation inequation = 
+  match inequation with
+  | Equals (left, right) ->
+      Equals (automatic_simplify left, automatic_simplify right)
+  | GreaterEq (left, right) ->
+      GreaterEq (automatic_simplify left, automatic_simplify right)
+  | Greater (left, right) ->
+      Greater (automatic_simplify left, automatic_simplify right)
+  | LessEq (left, right) ->
+      LessEq (automatic_simplify left, automatic_simplify right)
+  | Less (left, right) ->
+      Less (automatic_simplify left, automatic_simplify right)
+  ;;

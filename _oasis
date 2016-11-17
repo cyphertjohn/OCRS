@@ -10,8 +10,8 @@ Library ocrs
   Pack:       true
   Path:       src
   BuildTools: ocamlbuild
-  Modules:    Expr_helpers, Expr_simplifications, Expr_to_opcalc
-  InternalModules: Expr_def, Subscript_def 
+  Modules:    Isolate_Ovar, Type_def, Expr_helpers, Expr_simplifications, Op_simplifications, Tau_inverse
+  InternalModules: Expr_to_opcalc
   XMETAEnable:	true
   BuildDepends: gmp
   
@@ -21,4 +21,11 @@ Executable test
   MainIs:     main.ml
   BuildDepends:	ocrs
   Install: false
-  
+
+Document "OCRS"
+  Type: ocamlbuild (0.4)
+  BuildTools: ocamldoc, ocamlbuild
+
+  Title: Documentation for OCRS
+  XOCamlbuildPath: .
+  XOCamlbuildLibraries: ocrs  

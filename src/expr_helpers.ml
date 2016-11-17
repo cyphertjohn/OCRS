@@ -1,5 +1,4 @@
-open Subscript_def
-open Expr_def
+open Type_def
 
 let rec subscript_to_string e = 
   match e with
