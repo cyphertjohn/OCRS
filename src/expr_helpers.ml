@@ -112,3 +112,52 @@ let op_inequation_to_string e =
       op_expr_to_string left ^ " > " ^ op_expr_to_string right
   ;;
 
+
+let rec op_expr_to_string_IR e =
+  match e with
+  | OpPlus (left, right) ->
+      "OpPlus (" ^ op_expr_to_string_IR left ^ ", " ^ op_expr_to_string_IR right ^ ")"
+  | OpMinus (left, right) ->
+      "OpMinus (" ^ op_expr_to_string_IR left ^ ", " ^ op_expr_to_string_IR right ^ ")"
+  | OpTimes (left, right) ->
+      "OpTimes (" ^ op_expr_to_string_IR left ^ ", " ^ op_expr_to_string_IR right ^ ")"
+  | OpDivide (left, right) ->
+      "OpDivide (" ^ op_expr_to_string_IR left ^ ", " ^ op_expr_to_string_IR right ^ ")"
+  | OpProduct expr_list ->
+      "OpProduct [" ^ (String.concat "; " (List.map op_expr_to_string_IR expr_list))^ "]"
+  | OpSum expr_list ->
+      "OpSum [" ^ (String.concat "; " (List.map op_expr_to_string_IR expr_list))^ "]"
+  | OpSymbolic_Constant ident ->
+      "OpSymbolic_Constant (" ^ ident ^ ")"
+  | OpBase_case (ident, index) ->
+      "OpBase_case (" ^ ident ^ ", " ^ string_of_int index ^ ")"
+  | OpOutput_variable (ident , subscript) ->
+      "OpOutput_variable (" ^ ident ^ ", " ^ (subscript_to_string subscript) ^ ")"
+  | OpInput_variable str ->
+      "OpInput_variable (" ^ str ^ ")"
+  | OpRational rat ->
+      "OpRational (" ^ (Mpfr.to_string rat) ^ ")"
+  | OpLog expression ->
+      "OpLog (" ^ (op_expr_to_string_IR expression)^ ")"
+  | OpPow (left, right) ->
+      "OpPow (" ^ (op_expr_to_string_IR left) ^ ", " ^ (op_expr_to_string_IR right) ^ ")"
+  | Q ->
+      "Q"
+  | OpUndefined ->
+      "UNDEFINED"
+  ;;
+
+(* convert an inequation to a string *)
+let op_inequation_to_string_IR e =
+  match e with
+  | OpEquals (left, right) ->
+      "OpEquals (" ^ op_expr_to_string_IR left ^ ", " ^ op_expr_to_string_IR right ^ ")"
+  | OpLessEq (left, right) ->
+      "OpLessEq (" ^ op_expr_to_string_IR left ^ ", " ^ op_expr_to_string_IR right ^ ")"
+  | OpLess (left, right) ->
+      "OpLess (" ^ op_expr_to_string_IR left ^ ", " ^ op_expr_to_string_IR right ^ ")"
+  | OpGreaterEq (left, right) ->
+      "OpGreaterEq (" ^ op_expr_to_string_IR left ^ ", " ^ op_expr_to_string_IR right ^ ")"
+  | OpGreater (left, right) ->
+      "OpGreater (" ^ op_expr_to_string_IR left ^ ", " ^ op_expr_to_string_IR right ^ ")"
+  ;;

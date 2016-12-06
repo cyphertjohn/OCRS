@@ -25,7 +25,7 @@ let rec complete_tiling op_expr =
   | OpBase_case (str, integer) -> true
   | OpProduct expr_list ->
       let (const_list, term) = List.partition is_const expr_list in
-      if (List.length const_list) <> 0 then complete_tiling (OpProduct term)
+      if (List.length const_list) <> 0 then complete_tiling (Op_simplifications.op_automatic_simplify (OpProduct term))
       else false
   | _ -> false (* might be too strong *)
 
@@ -61,7 +61,7 @@ let rec tau_inverse op_expr input_ident =
   | OpBase_case (str, integer) -> Base_case (str, integer)
   | OpProduct expr_list ->
       let (const_list, term) = List.partition is_const expr_list in
-      if (List.length const_list) <> 0 then Product (List.append (List.map (fun x -> tau_inverse x input_ident) const_list) ((tau_inverse (OpProduct term) input_ident) :: []))
+      if (List.length const_list) <> 0 then Product (List.append (List.map (fun x -> tau_inverse x input_ident) const_list) ((tau_inverse (Op_simplifications.op_automatic_simplify (OpProduct term)) input_ident) :: []))
       else (failwith "This shouldn't happen eventually because we check we don't get here") (* need to do some transformations *)
   | _ -> failwith "Haven't implemented any other transforms yet"
 

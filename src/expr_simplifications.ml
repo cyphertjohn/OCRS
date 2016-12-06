@@ -288,8 +288,32 @@ let simplify_factorial expression =
       Factorial expression
   ;;
   
+  
+
 let simplify_binom top bottom = 
-  Binomial (top, bottom)
+  match (top, bottom) with
+  | (_, Rational rat) when (Mpfr.cmp_si rat 0)=0 ->
+    Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))		(*might need a stronger condition *)
+  | (_, Rational rat) when (Mpfr.cmp_si rat 1)=0 ->
+    top
+  | (Rational ratTop, Rational ratBot) when (Mpfr.cmp ratTop ratBot)<0 ->
+    Rational (snd(Mpfr.init_set_si 0 Mpfr.Near))
+  | (Rational ratTop, Rational ratBot) when (Mpfr.cmp_si ratTop 0)>0 && (Mpfr.cmp_si ratBot 0)>0 && (Mpfr.integer_p ratTop) && (Mpfr.integer_p ratBot) ->
+    let binomial x y = 
+      let x_minus_y = Mpfr.init () in
+      let result = Mpfr.init () in
+      let y_temp = Mpfr.init () in
+      let _ = Mpfr.sub x_minus_y x y Mpfr.Near in (* x_minus_y = x-y *)
+      let _ = Mpfr.add_ui result x 1 Mpfr.Near in (* x = x+1 *)
+      let _ = Mpfr.add_ui y_temp y 1 Mpfr.Near in (* y = y+1 *)
+      let _ = Mpfr.add_ui x_minus_y x_minus_y 1 Mpfr.Near in
+      let _ = Mpfr.gamma result result Mpfr.Near in (* x = x! *)
+      let _ = Mpfr.gamma y_temp y_temp Mpfr.Near in (* y = y! *)
+      let _ = Mpfr.gamma x_minus_y x_minus_y Mpfr.Near in (* x_minus_y = x_minus_y! *)
+      let _ = Mpfr.mul y_temp y_temp x_minus_y Mpfr.Near in (* y = y * x_minus_y *)
+      let _ = Mpfr.div result result y_temp Mpfr.Near in (* x = x/y *) result
+    in Rational (binomial ratTop ratBot)
+  | _ -> Binomial (top, bottom)
   ;;
   
 (** Automatically simplify an expression bottom up *)
@@ -344,3 +368,5 @@ let automatic_simplify_inequation inequation =
   | Less (left, right) ->
       Less (automatic_simplify left, automatic_simplify right)
   ;;
+  
+  

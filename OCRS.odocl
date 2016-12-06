@@ -1,9 +1,10 @@
 # OASIS_START
-# DO NOT EDIT (digest: b7e59d2d07cc25a5b5d421ebbad7863c)
+# DO NOT EDIT (digest: ad3bdb29ba73fac1f44eff7927db40f5)
 src/Isolate_Ovar
 src/Type_def
 src/Expr_helpers
 src/Expr_simplifications
 src/Op_simplifications
 src/Tau_inverse
+src/Op_transforms
 # OASIS_STOP

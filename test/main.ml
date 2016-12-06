@@ -32,6 +32,40 @@ let lis = [x;y;z;x1; x2; x3; x4; x5; x6; x7; x9];;
 List.iter (fun x -> begin print_endline (expr_to_string x); print_endline (expr_to_string (Expr_simplifications.automatic_simplify x)); print_endline "" end) lis;;
 
 
+let testing = OpProduct [OpSum [OpSymbolic_Constant "x"; OpRational (snd(Mpfr.init_set_si (2) Mpfr.Near))]; OpSum [OpSymbolic_Constant "x"; OpRational (snd(Mpfr.init_set_si (1) Mpfr.Near))]];;
+
+
+print_endline (op_expr_to_string (Op_simplifications.op_automatic_simplify testing));;
+print_endline (op_expr_to_string (Op_transforms.algebraic_expand testing));;
+print_endline ("");;
+
+
+let y1 = Equals(Output_variable("y", SAdd("n", 1)), Times (Output_variable("y", SSVar "n"), Rational (snd(Mpfr.init_set_si (2) Mpfr.Near))));;
+
+let simplify_y1 = Expr_simplifications.automatic_simplify_inequation y1;;
+
+print_endline (inequation_to_string simplify_y1);;
+
+let op_y1 = Op_simplifications.op_automatic_simplify_inequation (inequation_to_opCalc simplify_y1);;
+
+print_endline (op_inequation_to_string op_y1);;
+
+let isolated_op_y1 = Isolate_Ovar.solve_for_Ovar op_y1 "y" "n";;
+
+print_endline (op_inequation_to_string isolated_op_y1);;
+
+let temp1 = Op_simplifications.op_automatic_simplify_inequation isolated_op_y1;;
+
+let answer1 = Tau_inverse.tau_inverse_inequation temp1 "n"
+
+let simp_answer1 = Expr_simplifications.automatic_simplify_inequation answer1;;
+
+print_endline (inequation_to_string simp_answer1);;
+
+print_endline "";;
+
+
+
 
 
 let x8 = Equals(Output_variable("y", SAdd("n", 1)), Plus (Output_variable("y", SSVar "n"), Plus(Pow (Input_variable "n", Rational (snd (Mpfr.init_set_si 4 Mpfr.Near))), Pow (Input_variable "n", Rational (snd (Mpfr.init_set_si 3 Mpfr.Near))))));;
@@ -48,11 +82,11 @@ let isolated_op_x8 = Isolate_Ovar.solve_for_Ovar op_x8 "y" "n";;
 
 print_endline (op_inequation_to_string isolated_op_x8);;
 
-let temp = Op_simplifications.op_automatic_simplify_inequation isolated_op_x8;;
-
+let temp = Op_simplifications.op_automatic_simplify_inequation (Op_transforms.algebraic_expand_inequation isolated_op_x8);;
+print_endline (op_inequation_to_string temp);;
 let answer = Tau_inverse.tau_inverse_inequation temp "n"
 
-let simp_answer = Expr_simplifications.automatic_simplify_inequation answer;;
+let simp_answer = Expr_transforms.inverse_binomial_ineq (Expr_simplifications.automatic_simplify_inequation answer);;
 
 print_endline (inequation_to_string simp_answer);;
 
