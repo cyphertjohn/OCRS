@@ -67,7 +67,6 @@ print_endline "";;
 
 
 
-
 let x8 = Equals(Output_variable("y", SAdd("n", 1)), Plus (Output_variable("y", SSVar "n"), Plus(Pow (Input_variable "n", Rational (snd (Mpfr.init_set_si 4 Mpfr.Near))), Pow (Input_variable "n", Rational (snd (Mpfr.init_set_si 3 Mpfr.Near))))));;
 
 let simplify_x8 = Expr_simplifications.automatic_simplify_inequation x8;;
@@ -92,6 +91,26 @@ print_endline (inequation_to_string simp_answer);;
 
 print_endline "";;
 
+print_endline "";;
+
+let top = OpRational (snd(Mpfr.init_set_si 2 Mpfr.Near));;
+
+let bot = OpProduct[OpPow(OpSum[Q; OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near))], OpRational (snd(Mpfr.init_set_si 2 Mpfr.Near))); OpSum[Q; OpRational (snd(Mpfr.init_set_si (-2) Mpfr.Near))]];;
+
+print_endline (op_expr_to_string (Op_transforms.partial_fraction_2 top bot))
+
+let top = OpSum[Q; OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near))];;
+
+let bot = OpSum[Q; OpRational (snd(Mpfr.init_set_si (-2) Mpfr.Near))];;
+
+print_endline (op_expr_to_string (Op_transforms.partial_fraction_2 top bot));;
+
+
+let test = OpSum[OpProduct[OpRational (snd(Mpfr.init_set_si (-2) Mpfr.Near)); Q]; OpRational (snd(Mpfr.init_set_si (-2) Mpfr.Near))];;
+let testdenom = OpPow(Q, OpRational (snd(Mpfr.init_set_si (2) Mpfr.Near)));;
+
+let resul = Op_transforms.algebraic_expand (Op_simplifications.op_automatic_simplify (OpDivide(test, testdenom)));;
+print_endline (op_expr_to_string (resul));;
 
 (*let x10 = Equals(Output_variable("y", SAdd("n", 4)), Sum[Times (Output_variable("y", SAdd ("n", 3)), Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)));Times (Output_variable("y", SAdd ("n", 2)), Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))); Times (Output_variable("y", SAdd ("n", 1)), Rational (snd(Mpfr.init_set_si (-5) Mpfr.Near))); Times (Output_variable("y", SSVar "n"), Rational (snd(Mpfr.init_set_si 3 Mpfr.Near)))]);;
 

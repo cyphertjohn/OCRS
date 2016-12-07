@@ -79,3 +79,157 @@ let algebraic_expand_inequation ineq =
   | OpLess(left, right) -> OpLess(algebraic_expand left, algebraic_expand right)
   | OpLessEq(left, right) -> OpLessEq(algebraic_expand left, algebraic_expand right)
   ;;
+
+
+let rec contains_q expr=
+  match expr with
+  | OpPlus (left, right) ->
+      (contains_q left) || (contains_q right)
+  | OpMinus (left, right) ->
+      (contains_q left) || (contains_q right)
+  | OpTimes (left, right) ->
+      (contains_q left) || (contains_q right)
+  | OpDivide (left, right) ->
+      (contains_q left) || (contains_q right)
+  | OpProduct expr_list ->
+      List.exists contains_q expr_list
+  | OpSum expr_list ->
+      List.exists contains_q expr_list
+  | OpSymbolic_Constant _ ->
+      false
+  | OpBase_case (_, _) ->
+      false
+  | OpOutput_variable (ident , subscript) ->
+       false
+  | OpInput_variable str ->
+      false
+  | OpRational rat ->
+      false
+  | OpLog expression ->
+      contains_q expression
+  | OpPow (left, right) ->
+      (contains_q left) || (contains_q right)
+  | Q ->
+      true
+  | OpUndefined ->
+      false
+  ;;
+
+
+let rec degree_monomial u =
+  match u with
+  | Q ->
+    (OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near)), snd(Mpfr.init_set_si 1 Mpfr.Near))
+  | OpPow(Q, OpRational rat) when (Mpfr.cmp_si rat 1)>0 ->
+    (OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near)), rat)
+  | OpProduct prodList ->
+    let coef_deg_list = List.map degree_monomial prodList in
+    if List.exists (fun x -> (fst x) = OpUndefined) coef_deg_list then (OpUndefined, snd(Mpfr.init_set_si 0 Mpfr.Near))
+    else 
+      let max a b =
+        let a_deg = snd a in
+        let b_deg = snd b in
+        let cmp_result = Mpfr.cmp a_deg b_deg in
+        if cmp_result < 0 then b 
+        else a in
+      let m = List.fold_left max (OpSymbolic_Constant "y", snd(Mpfr.init_set_si (-1) Mpfr.Near)) coef_deg_list in
+      (Op_simplifications.op_automatic_simplify (OpDivide(u, OpPow (Q, OpRational (snd m)))), (snd m))
+  | _ ->
+    if contains_q u then (OpUndefined, snd(Mpfr.init_set_si 0 Mpfr.Near))
+    else (u, snd(Mpfr.init_set_si 0 Mpfr.Near))
+  ;;
+
+ 
+(* the degree of the polynomial u in q *)
+let degree u = 
+  let x = degree_monomial u in
+  if fst x <> OpUndefined then x
+  else (match u with
+    | OpSum sumList ->
+      let degreelist = List.map degree_monomial sumList in
+      if List.exists (fun x1 -> fst x1 = OpUndefined) degreelist then (OpUndefined, snd(Mpfr.init_set_si 0 Mpfr.Near))
+      else 
+        let max a b = 
+          let a_deg = snd a in
+          let b_deg = snd b in
+          let cmp_result = Mpfr.cmp a_deg b_deg in
+          if cmp_result < 0 then b
+          else a in
+        List.fold_left max (OpSymbolic_Constant "y", snd(Mpfr.init_set_si (-1) Mpfr.Near)) degreelist
+    | _ -> (OpUndefined, snd (Mpfr.init_set_si 0 Mpfr.Near)))
+  ;;
+
+(* u and v are polynomials in q *)
+let polynomial_division u v =
+  let x = degree u in
+  let y = degree v in
+  let n = snd y in
+  let lcv = fst y in
+  let rec aux acc m r =
+    let is_zero expr = 
+      match expr with
+      | OpRational rat when (Mpfr.cmp_si rat 0)=0 -> true
+      | _ -> false in
+    if (Mpfr.cmp m n)<0 || (is_zero r) then (acc, r)
+    else 
+      let lcr = fst (degree r) in
+      let s = Op_simplifications.op_automatic_simplify (OpDivide(lcr, lcv)) in
+      let new_acc = Op_simplifications.op_automatic_simplify (OpSum[acc; OpProduct[s; OpPow(Q, OpMinus(OpRational m, OpRational n))]]) in
+      let new_r = Op_simplifications.op_automatic_simplify (algebraic_expand (Op_simplifications.op_automatic_simplify (OpMinus(OpMinus(r, OpProduct[lcr; OpPow(Q, OpRational m)]), OpProduct[OpMinus(v, OpProduct[lcv;OpPow(Q, OpRational n)]);s;OpPow(Q, OpMinus(OpRational m, OpRational n))])))) in
+      let new_m = snd (degree new_r) in
+      aux new_acc new_m new_r in
+  aux (OpRational (snd(Mpfr.init_set_si 0 Mpfr.Near))) (snd x) u
+  ;;
+
+
+let extended_euclidean u v =
+  match (u, v) with
+  | (OpRational rat1, OpRational rat2) when (Mpfr.cmp_si rat1 0)=0 && (Mpfr.cmp_si rat2 0)=0 ->
+    [OpRational (snd(Mpfr.init_set_si 0 Mpfr.Near)); OpRational (snd(Mpfr.init_set_si 0 Mpfr.Near)); OpRational (snd(Mpfr.init_set_si 0 Mpfr.Near))]
+  | _ ->
+    let rec aux u v app ap bpp bp =
+      (match v with
+      | OpRational rat when (Mpfr.cmp_si rat 0)=0 -> [u; app; bpp;] 
+      | _ ->
+        let division_result = polynomial_division u v in
+        let a = Op_simplifications.op_automatic_simplify (OpMinus (app, OpTimes(fst division_result, ap))) in
+        let b = Op_simplifications.op_automatic_simplify (OpMinus (bpp, OpTimes(fst division_result, bp))) in
+        let new_app = ap in
+        let new_ap = a in
+        let new_bpp = bp in
+        let new_bp = b in
+        let new_u = v in
+        let new_v = snd division_result in
+        aux new_u new_v new_app new_ap new_bpp new_bp) in
+      let aux_result = aux u v (OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))) (OpRational (snd(Mpfr.init_set_si 0 Mpfr.Near))) (OpRational (snd(Mpfr.init_set_si 0 Mpfr.Near))) (OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))) in
+      let c = fst (degree (List.nth aux_result 0)) in
+      let app_res = algebraic_expand (Op_simplifications.op_automatic_simplify (OpDivide(List.nth aux_result 1, c))) in
+      let bpp_res = algebraic_expand (Op_simplifications.op_automatic_simplify (OpDivide(List.nth aux_result 2, c))) in
+      let u_res = algebraic_expand (Op_simplifications.op_automatic_simplify (OpDivide(List.nth aux_result 0, c))) in
+      [u_res; app_res; bpp_res]
+  ;;
+
+
+let partial_fraction_1 u v1 v2 =
+  let s = extended_euclidean v1 v2 in
+  let a = List.nth s 1 in
+  let b = List.nth s 2 in
+  let u1_result = polynomial_division (algebraic_expand (Op_simplifications.op_automatic_simplify (OpProduct[b; u]))) v1 in
+  let u2_result = polynomial_division (algebraic_expand (Op_simplifications.op_automatic_simplify (OpProduct[a; u]))) v2 in
+  (snd u1_result, snd u2_result)
+  ;;
+
+let rec partial_fraction_2 u v =
+  match v with
+  | OpProduct prod_list ->
+    let f = List.nth prod_list 0 in
+    let r = Op_simplifications.op_automatic_simplify (OpDivide(v, f)) in
+    if not(contains_q f) then Op_simplifications.op_automatic_simplify (OpProduct[OpDivide(OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near)), f); (partial_fraction_2 u r)])
+    else
+      let s = partial_fraction_1 u (algebraic_expand f) (algebraic_expand r) in
+      let u1 = fst s in
+      let w = snd s in
+      Op_simplifications.op_automatic_simplify (OpSum[OpDivide(u1, f); (partial_fraction_2 w r)])
+  | _ ->
+    Op_simplifications.op_automatic_simplify (OpDivide(u, v))
+  ;;

@@ -22,6 +22,8 @@ let exponent expr =
 
 let term expr = 
   match expr with
+  | OpProduct ((OpRational rat) :: tail :: []) ->
+      tail
   | OpProduct ((OpRational rat) :: rest) ->
       OpProduct rest
   | OpProduct lis ->
