@@ -161,3 +161,57 @@ let op_inequation_to_string_IR e =
   | OpGreater (left, right) ->
       "OpGreater (" ^ op_expr_to_string_IR left ^ ", " ^ op_expr_to_string_IR right ^ ")"
   ;;
+
+
+let rec expr_to_string_IR e =
+  match e with
+  | Plus (left, right) ->
+      "Plus (" ^ expr_to_string_IR left ^ ", " ^ expr_to_string_IR right ^ ")"
+  | Minus (left, right) ->
+      "Minus (" ^ expr_to_string_IR left ^ ", " ^ expr_to_string_IR right ^ ")"
+  | Times (left, right) ->
+      "Times (" ^ expr_to_string_IR left ^ ", " ^ expr_to_string_IR right ^ ")"
+  | Divide (left, right) ->
+      "Divide (" ^ expr_to_string_IR left ^ ", " ^ expr_to_string_IR right ^ ")"
+  | Product expr_list ->
+      "Product [" ^ (String.concat "; " (List.map expr_to_string_IR expr_list))^ "]"
+  | Sum expr_list ->
+      "Sum [" ^ (String.concat "; " (List.map expr_to_string_IR expr_list))^ "]"
+  | Symbolic_Constant ident ->
+      "Symbolic_Constant (" ^ ident ^ ")"
+  | Base_case (ident, index) ->
+      "Base_case (" ^ ident ^ ", " ^ string_of_int index ^ ")"
+  | Output_variable (ident , subscript) ->
+      "Output_variable (" ^ ident ^ ", " ^ (subscript_to_string subscript) ^ ")"
+  | Input_variable str ->
+      "Input_variable (" ^ str ^ ")"
+  | Rational rat ->
+      "Rational (" ^ (Mpfr.to_string rat) ^ ")"
+  | Binomial (top, bottom) ->
+      "Binomial (" ^ expr_to_string top ^ ", " ^ expr_to_string bottom ^ ")"
+  | Factorial child ->
+      "Factorial (" ^ (expr_to_string child) ^ ")"
+  | Log expression ->
+      "Log (" ^ (expr_to_string_IR expression)^ ")"
+  | Pow (left, right) ->
+      "Pow (" ^ (expr_to_string_IR left) ^ ", " ^ (expr_to_string_IR right) ^ ")"
+  | Undefined ->
+      "UNDEFINED"
+  ;;
+
+(* convert an inequation to a string *)
+let inequation_to_string_IR e =
+  match e with
+  | Equals (left, right) ->
+      "Equals (" ^ expr_to_string_IR left ^ ", " ^ expr_to_string_IR right ^ ")"
+  | LessEq (left, right) ->
+      "LessEq (" ^ expr_to_string_IR left ^ ", " ^ expr_to_string_IR right ^ ")"
+  | Less (left, right) ->
+      "Less (" ^ expr_to_string_IR left ^ ", " ^ expr_to_string_IR right ^ ")"
+  | GreaterEq (left, right) ->
+      "GreaterEq (" ^ expr_to_string_IR left ^ ", " ^ expr_to_string_IR right ^ ")"
+  | Greater (left, right) ->
+      "Greater (" ^ expr_to_string_IR left ^ ", " ^ expr_to_string_IR right ^ ")"
+  ;;
+
+

@@ -85,7 +85,7 @@ let rec inverse_binomial expr =
   | Rational _ | Symbolic_Constant _ | Base_case (_, _) | Output_variable (_, _) | Input_variable _ | Undefined ->
      expr
   | Pow (base, exponent) ->
-      automatic_simplify (Pow (inverse_binomial base, inverse_binomial expr))
+      automatic_simplify (Pow (inverse_binomial base, inverse_binomial exponent))
   | Times (left, right) ->
       automatic_simplify (Times (inverse_binomial left, inverse_binomial right))
   | Product prod_list ->

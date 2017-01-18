@@ -89,6 +89,7 @@ let rec simplify_sum_rec expr_list =
       | _ ->
           merge_sums (u_1 :: []) w				(* SPRDREC-3-2 *)
       )
+  | [] -> []
   | _ ->
       failwith "An Error has occured in simplify_product_rec"
 
@@ -164,6 +165,7 @@ and simplify_product_rec expr_list =
       | _ ->
           merge_products (u_1 :: []) w				(* SPRDREC-3-2 *)
       )
+  | [] -> []
   | _ ->
       failwith "An Error has occured in simplify_product_rec"
 and merge_products p q = 

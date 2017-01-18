@@ -233,3 +233,101 @@ let rec partial_fraction_2 u v =
   | _ ->
     Op_simplifications.op_automatic_simplify (OpDivide(u, v))
   ;;
+
+
+let rec polynomial_expansion u v t = 
+  match u with
+  | OpRational rat when (Mpfr.cmp_si rat 0)=0 ->
+    u
+  | _ ->
+    let d = polynomial_division u v in
+    let q = fst d in
+    let r = snd d in
+    algebraic_expand (OpSum[OpProduct[t; polynomial_expansion q v t]; r])
+  ;;
+
+let rec substitute expr a t =
+  let simp_expr = Op_simplifications.op_automatic_simplify expr in
+  let simp_a = Op_simplifications.op_automatic_simplify a in
+  if (op_expr_order simp_expr simp_a) = 0 then t
+  else
+    (match simp_expr with
+    | OpPlus (left, right) ->
+      Op_simplifications.op_automatic_simplify (OpPlus (substitute left simp_a t, substitute right simp_a t))
+    | OpMinus (left, right) ->
+      Op_simplifications.op_automatic_simplify (OpMinus (substitute left simp_a t, substitute right simp_a t))
+    | OpTimes (left, right) ->
+      Op_simplifications.op_automatic_simplify (OpTimes (substitute left simp_a t, substitute right simp_a t))
+    | OpDivide (left, right) ->
+      Op_simplifications.op_automatic_simplify (OpDivide (substitute left simp_a t, substitute right simp_a t))
+    | OpProduct expr_list ->
+      Op_simplifications.op_automatic_simplify (OpProduct (List.map (fun x -> substitute x simp_a t) expr_list))
+    | OpSum expr_list ->
+      Op_simplifications.op_automatic_simplify (OpSum (List.map (fun x -> substitute x simp_a t) expr_list))
+    | OpLog expression ->
+      Op_simplifications.op_automatic_simplify (OpLog (substitute expression simp_a t))
+    | OpPow (left, right) ->
+      Op_simplifications.op_automatic_simplify (OpPow (substitute left simp_a t, substitute right simp_a t))
+    | _ -> simp_expr)
+  ;;
+
+
+let partial_fraction_3 u v =
+  let part_frac_result = partial_fraction_2 u v in
+  let rec expand_sub expr = (* input to this function is in a form with only one polynomial in the denom *)
+    (match expr with
+    | OpSum sumList ->
+      let test_list = OpSum (List.map expand_sub sumList) in 
+      Op_simplifications.op_automatic_simplify test_list
+    | OpProduct prodList ->
+      let is_denom in_expr = 
+        (match in_expr with
+        | OpPow (base, OpRational exp) when (Mpfr.cmp_si exp 0)<0 && (Mpfr.integer_p exp) ->
+          true
+        | _ ->
+          false
+        ) in
+      let (denom, num) = List.partition is_denom prodList in
+      let simp_num = Op_simplifications.op_automatic_simplify (OpProduct num) in
+      let get_base_exp_of_denom denom = 
+        (match denom with
+        | OpPow (base, exp) ->
+          (base, exp)
+        | _ -> (OpUndefined, OpUndefined) (* should never get here *)
+        ) in
+      let (denom_base, denom_exp) = get_base_exp_of_denom (Op_simplifications.op_automatic_simplify (OpProduct denom)) in	(* denom will be a polynomial in q *)
+      let new_num = polynomial_expansion simp_num denom_base (OpSymbolic_Constant "SPECIAL_INTERNAL_SYMBOL") in
+      let new_expression = Op_simplifications.op_automatic_simplify (algebraic_expand (OpProduct [new_num; OpPow(OpSymbolic_Constant "SPECIAL_INTERNAL_SYMBOL", denom_exp)])) in
+      substitute new_expression (OpSymbolic_Constant "SPECIAL_INTERNAL_SYMBOL") denom_base
+    | _ -> expr
+    ) in
+  expand_sub part_frac_result
+ ;;
+
+(* input is a sum of rational expressions where all the denominators are factored*)
+let rec partial_fraction expr =
+  let simp_expr = Op_simplifications.op_automatic_simplify expr in
+  match simp_expr with
+  | OpSum sumList ->
+    Op_simplifications.op_automatic_simplify (OpSum (List.map partial_fraction sumList))
+  | OpProduct prodList ->
+    let is_denom in_expr = 
+      (match in_expr with
+      | OpPow (base, OpRational exp) when (Mpfr.cmp_si exp 0)<0 && (Mpfr.integer_p exp) ->
+        true
+      | _ ->
+        false
+      ) in
+    let (denom, num) = List.partition is_denom prodList in (* might need to check if either list is empty *)
+    let num_expr = Op_simplifications.op_automatic_simplify (OpProduct num) in
+    let denom_expr = Op_simplifications.op_automatic_simplify (OpProduct denom) in
+    let expanded_num = Op_simplifications.op_automatic_simplify (algebraic_expand (Op_simplifications.op_automatic_simplify num_expr)) in
+    let factored_inverse_denom = Op_simplifications.op_automatic_simplify (OpPow(denom_expr, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near)))) in
+    partial_fraction_3 expanded_num factored_inverse_denom
+  | OpPow (base, OpRational exp) when (Mpfr.cmp_si exp 0)<0 && (Mpfr.integer_p exp) ->
+    let num = OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near)) in
+    let neg_exp = Mpfr.init () in
+    let _ = Mpfr.neg neg_exp exp Mpfr.Near in
+    partial_fraction_3 num (OpPow(base, OpRational neg_exp))
+  | _ -> simp_expr
+  ;;

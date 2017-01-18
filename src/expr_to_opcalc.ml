@@ -114,6 +114,8 @@ let rec expr_to_opCalc expr =
       (match (left, right) with
       | (Input_variable ident, Rational rat) when Mpfr.integer_p rat && (Mpfr.cmp_si rat 0)>0 ->
           expr_to_opCalc (binomial_transform expr)
+      | (Rational rat, Input_variable ident) ->
+          OpDivide(OpMinus(Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpMinus(Q, OpRational rat))
       | _ -> failwith "don't know if anything else can be done here")
   | Binomial (top, bottom) ->
       (match (top, bottom) with

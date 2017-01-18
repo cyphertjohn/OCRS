@@ -16,6 +16,10 @@ let rec complete_tiling op_expr =
       true
   | OpProduct [OpPow (OpSum [OpRational neg_k; Q], OpRational rat2); OpSum [OpRational rat1; Q]] when (Mpfr.cmp_si rat1 (-1))=0 && (Mpfr.cmp_si rat2 0)<0 && (Mpfr.integer_p rat2) ->
       true
+  | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational neg_k; Q], OpRational rat2)] when (Mpfr.cmp_si rat1 (-1))=0 && (Mpfr.cmp_si rat2 (-1))=0 ->
+      true
+  | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational neg_k; Q], OpRational rat2)] when (Mpfr.cmp_si rat1 (-1))=0 && (Mpfr.cmp_si rat2 0)<0 && (Mpfr.integer_p rat2) ->
+      true
   | OpPow (OpSum [OpRational neg_k; Q], OpRational rat1) when (Mpfr.cmp_si rat1 (-1))=0 ->
       true
   | OpSum expr_list ->
@@ -49,6 +53,21 @@ let rec tau_inverse op_expr input_ident =
       let _ = Mpfr.add_ui neg_c rat2 1 Mpfr.Near in
       let _ = Mpfr.neg c neg_c Mpfr.Near in
       Product [Binomial (Input_variable input_ident, Rational c); Pow(Rational k, Sum[Rational neg_c; Input_variable input_ident])]
+  
+  | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational neg_k; Q], OpRational rat2)] when (Mpfr.cmp_si rat1 (-1))=0 && (Mpfr.cmp_si rat2 (-1))=0 ->
+      let k = Mpfr.init () in
+      let _ = Mpfr.neg k neg_k Mpfr.Near in
+      Pow (Rational k, Input_variable input_ident)
+  
+  | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational neg_k; Q], OpRational rat2)] when (Mpfr.cmp_si rat1 (-1))=0 && (Mpfr.cmp_si rat2 0)<0 && (Mpfr.integer_p rat2) ->
+      let k = Mpfr.init () in
+      let _ = Mpfr.neg k neg_k Mpfr.Near in
+      let neg_c = Mpfr.init () in
+      let c = Mpfr.init () in
+      let _ = Mpfr.add_ui neg_c rat2 1 Mpfr.Near in
+      let _ = Mpfr.neg c neg_c Mpfr.Near in
+      Product [Binomial (Input_variable input_ident, Rational c); Pow(Rational k, Sum[Rational neg_c; Input_variable input_ident])]
+
   | OpPow (OpSum [OpRational neg_k; Q], OpRational rat1) when (Mpfr.cmp_si rat1 (-1))=0 ->
       let k = Mpfr.init () in
       let _ = Mpfr.neg k neg_k Mpfr.Near in	(* should automatically simplify these expressions before sending out *)
