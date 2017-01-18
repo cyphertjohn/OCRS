@@ -40,6 +40,11 @@ print_endline (op_expr_to_string (Op_transforms.algebraic_expand testing));;
 print_endline ("");;
 *)
 
+let test = Log( snd(Mpfr.init_set_si 2 Mpfr.Near), Pow(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Sum[Times(Rational (snd(Mpfr.init_set_si 3 Mpfr.Near)), Input_variable "n"); Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))]));;
+
+print_endline (expr_to_string test);;
+print_endline (expr_to_string (Expr_simplifications.automatic_simplify test));;
+
 
 let get_right_left_op_ineq ineq = 
   match ineq with

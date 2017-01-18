@@ -107,7 +107,7 @@ let rec expr_to_opCalc expr =
       expr_to_opCalc (Binomial(expr, (Rational (snd (Mpfr.init_set_si 1 Mpfr.Near)))))
   | Rational rat ->
       OpRational rat
-  | Log expression ->
+  | Log (base, expression) ->
       failwith "haven't done this part yet"
       (* don't know what to do here *)
   | Pow (left, right) ->

@@ -2,8 +2,10 @@
 
 (** {6 Subscript} *)
 
-type subscript = SAdd of string * int	(** n+1, n+2, ... *)
+type subscript = 
+  | SAdd of string * int		(** n+1, n+2, ... *)
   | SSVar of string			(** n *)
+  | SSDiv of string * int		(** n/2, n/3, ... *)
 
 
 (** {6 Recurrences in Elementary form} *)
@@ -22,7 +24,7 @@ type expr =
 	  | Input_variable of string	(** Index variable *)
 	  (* Maybe just make everything floats? *)
 	  | Rational of Mpfr.t		(** @see <http://www.inrialpes.fr/pop-art/people/bjeannet/mlxxxidl-forge/mlgmpidl/html/Mpfr.html> Not the package used here, but is equivalent to the documentation used in ocaml format*)
-	  | Log of expr			(** Base 2 log *)
+	  | Log of Mpfr.t * expr	(** Base b log *)
 	  | Pow of expr * expr		(** Binary exponentiation *)
 	  | Binomial of expr * expr	(** Binomial coeffiecient *)
           | Factorial of expr		(** Factorial *)

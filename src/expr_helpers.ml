@@ -4,6 +4,8 @@ let rec subscript_to_string e =
   match e with
   | SAdd (left, right) ->
     "{" ^ left ^ " + " ^ (string_of_int right) ^ "}"
+  | SSDiv (str, index) ->
+    "{" ^ str ^ "/" ^ (string_of_int index) ^ "}"
   | SSVar ident ->
     ident
   ;;
@@ -33,8 +35,8 @@ let rec expr_to_string e =
       str
   | Rational rat ->
       string_of_float (Mpfr.to_float rat)
-  | Log expression ->
-      "log(" ^ expr_to_string expression ^ ")"
+  | Log (base, expression) ->
+      "log" ^ (string_of_float (Mpfr.to_float base)) ^ "(" ^ expr_to_string expression ^ ")"
   | Pow (left, right) ->
       expr_to_string left ^ " ^ " ^ expr_to_string right			(* Since Power has top precedence don't think need parens *)
   | Binomial (top, bottom) ->
@@ -191,8 +193,8 @@ let rec expr_to_string_IR e =
       "Binomial (" ^ expr_to_string top ^ ", " ^ expr_to_string bottom ^ ")"
   | Factorial child ->
       "Factorial (" ^ (expr_to_string child) ^ ")"
-  | Log expression ->
-      "Log (" ^ (expr_to_string_IR expression)^ ")"
+  | Log (base, expression) ->
+      "Log (" ^ (Mpfr.to_string base) ^ ", " ^ (expr_to_string_IR expression)^ ")"
   | Pow (left, right) ->
       "Pow (" ^ (expr_to_string_IR left) ^ ", " ^ (expr_to_string_IR right) ^ ")"
   | Undefined ->

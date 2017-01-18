@@ -265,16 +265,21 @@ let simplify_minus left right =
   simplify_sum (left :: (simplify_product ((Rational (snd (Mpfr.init_set_si (-1) Mpfr.Near))) :: right :: [])) :: [])
   ;;
   
-let simplify_log expression = 
+let simplify_log base expression = 
   match expression with
   | Rational rat when (Mpfr.cmp_si rat 0) <= 0 ->
       Undefined
   | Rational rat ->
       let result = Mpfr.init () in
-      let _ = Mpfr.log2 result rat Mpfr.Near in
+      let denom = Mpfr.init () in
+      let _ = Mpfr.log result rat Mpfr.Near in
+      let _ = Mpfr.log denom base Mpfr.Near in
+      let _ = Mpfr.div result result denom Mpfr.Near in
       Rational result
+  | Pow (Rational(exp_base), exponent) when (Mpfr.cmp exp_base base)=0 ->
+      exponent
   | _ ->
-      Log expression
+      Log (base, expression)
   ;;
   
 let simplify_factorial expression = 
@@ -347,8 +352,8 @@ let rec automatic_simplify expr =
       let simplified_left = automatic_simplify left in
       let simplified_right = automatic_simplify right in
           simplify_minus simplified_left simplified_right
-  | Log expression ->
-      simplify_log (automatic_simplify expression)
+  | Log (base, expression) ->
+      simplify_log base (automatic_simplify expression)
   | Binomial (top, bottom) ->
       let simplified_top = automatic_simplify top in
       let simplified_bottom = automatic_simplify bottom in

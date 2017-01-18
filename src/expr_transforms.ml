@@ -98,8 +98,8 @@ let rec inverse_binomial expr =
       automatic_simplify (Divide (inverse_binomial num, inverse_binomial denom))
   | Minus (left, right) ->
       automatic_simplify (Minus (inverse_binomial left, inverse_binomial right))
-  | Log expression ->
-      automatic_simplify (Log (inverse_binomial expression))
+  | Log (base, expression) ->
+      automatic_simplify (Log (base, (inverse_binomial expression)))
   | Binomial (top, bottom) ->
       (match (top, bottom) with
       | (_, Rational rat) when (Mpfr.cmp_si rat 0)=0 ->
