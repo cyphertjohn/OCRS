@@ -11,7 +11,7 @@ Library ocrs
   Path:       src
   BuildTools: ocamlbuild
   Modules:    Isolate_Ovar, Type_def, Expr_helpers, Expr_simplifications, Op_simplifications, Tau_inverse, Op_transforms
-  InternalModules: Expr_to_opcalc
+  InternalModules: Expr_to_opcalc, Expr_transforms
   XMETAEnable:	true
   BuildDepends: gmp
   

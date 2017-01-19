@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: df15afd93f241d2bba9ab063c79841a6)
+# DO NOT EDIT (digest: fa45d1f3cd8a3e40e4ea91e54234294f)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
@@ -24,6 +24,7 @@ true: annot, bin_annot
 "src/tau_inverse.cmx": for-pack(Ocrs)
 "src/op_transforms.cmx": for-pack(Ocrs)
 "src/expr_to_opcalc.cmx": for-pack(Ocrs)
+"src/expr_transforms.cmx": for-pack(Ocrs)
 <src/*.ml{,i,y}>: pkg_gmp
 # Executable test
 "test/main.byte": pkg_gmp

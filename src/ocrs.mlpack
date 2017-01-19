@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 0886e3a8d04258dc588b37a304500e93)
+# DO NOT EDIT (digest: 91e960bc19d8a3a2d668b1068510c658)
 Isolate_Ovar
 Type_def
 Expr_helpers
@@ -8,4 +8,5 @@ Op_simplifications
 Tau_inverse
 Op_transforms
 Expr_to_opcalc
+Expr_transforms
 # OASIS_STOP
