@@ -39,13 +39,27 @@ print_endline (op_expr_to_string (Op_simplifications.op_automatic_simplify testi
 print_endline (op_expr_to_string (Op_transforms.algebraic_expand testing));;
 print_endline ("");;
 *)
-
+(*
 let test = Log( snd(Mpfr.init_set_si 2 Mpfr.Near), Pow(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Sum[Times(Rational (snd(Mpfr.init_set_si 3 Mpfr.Near)), Input_variable "n"); Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))]));;
+
+let pow_test = Pow(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Sum[Input_variable "n"; Rational (snd(Mpfr.init_set_si 3 Mpfr.Near))]);;
+
+let pow_test2 = Sum[Product[Rational (snd(Mpfr.init_set_si 4 Mpfr.Near)); Pow(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Sum[Log(snd(Mpfr.init_set_si 2 Mpfr.Near), Sum[Input_variable "n"; Rational(snd(Mpfr.init_set_si 1 Mpfr.Near))]); Rational (snd(Mpfr.init_set_si (-1) Mpfr.Near))])]; Rational (snd(Mpfr.init_set_si (-4) Mpfr.Near)); Product[Rational(snd(Mpfr.init_set_si (-1) Mpfr.Near)); Sum[Log(snd(Mpfr.init_set_si 2 Mpfr.Near), Sum[Input_variable "n"; Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))]); Rational (snd(Mpfr.init_set_si (-1) Mpfr.Near))]]];;
+
+let log_test = Sum[Pow(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Log(snd(Mpfr.init_set_si 2 Mpfr.Near), Input_variable "n")); Product[Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)); Pow(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Product[Rational(snd(Mpfr.init_set_si 2 Mpfr.Near)); Log(snd(Mpfr.init_set_si 2 Mpfr.Near), Input_variable "n")])]];;
 
 print_endline (expr_to_string test);;
 print_endline (expr_to_string (Expr_simplifications.automatic_simplify test));;
 
+print_endline (expr_to_string pow_test);;
+print_endline (expr_to_string (Expr_simplifications.automatic_simplify pow_test));;
 
+print_endline (expr_to_string pow_test2);;
+print_endline (expr_to_string (Expr_simplifications.automatic_simplify pow_test2));;
+
+print_endline (expr_to_string log_test);;
+print_endline (expr_to_string (Expr_simplifications.automatic_simplify log_test));;
+*)
 let get_right_left_op_ineq ineq = 
   match ineq with
   | OpEquals (left, right) ->
@@ -108,7 +122,9 @@ let will_it_work = Equals(Output_variable("y", SAdd("n", 1)), Plus(Times (Ration
 
 let x3 = Equals(Output_variable("y", SAdd("n", 1)), Plus(Output_variable("y", SSVar "n"), Pow(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Sum[Input_variable "n"; Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))])));;
 
-let test_list = [x1; x8; x9; y1; x2; big_test; will_it_work; x3];;
+let x4 = Equals(Output_variable("y", SAdd("n", 1)), Plus(Times(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Output_variable("y", SSVar "n")), Pow(Pow(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Plus(Input_variable "n", Rational (snd(Mpfr.init_set_si 1 Mpfr.Near)))), Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)))));;
+
+let test_list = [x1; x8; x9; y1; x2; big_test; will_it_work; x3; x4];;
 
 List.iter (fun x -> solve_rec x "y" "n") test_list;;
 

@@ -222,7 +222,7 @@ and simplify_integer_power base n =
       | Rational p_int when Mpfr.integer_p p_int ->
           simplify_integer_power r p_int
       | _ ->
-          Pow (r, p)
+          simplify_power r p
       )
   | (Times (left, right), _) ->				(*SINTPOW-5*)
       simplify_product ((simplify_integer_power left n) :: (simplify_integer_power right n) :: [])
@@ -247,6 +247,31 @@ and simplify_power base exp =
       Rational value
   | (_, Rational value) when (Mpfr.integer_p value) ->	(* test value is an integer *)
       simplify_integer_power base value			(* SPOW-4 *)
+  | (_, Sum sumList) ->
+      let aux exponent = 
+        simplify_power base exponent in
+      simplify_product (List.map aux sumList)
+  | (Rational rat_base, Product prodList) ->
+      (*find Rationals and logarithms *)
+      let exp_const = const exp in
+      let exp_var = term exp in
+      (match exp_const with
+        | Rational rat when (Mpfr.cmp_si rat 1) <> 0 ->
+          let new_base = Mpfr.init () in
+          let _ = Mpfr.pow new_base rat_base rat Mpfr.Near in
+          simplify_power (Rational new_base) exp_var
+        | _ -> (*add functionality to look for logs *)
+          Pow (base, exp)
+      )
+  | (Rational bas, Log (lbase, lexpr)) ->
+      let new_exp = Mpfr.init () in
+      let numerator = Mpfr.init () in
+      let denominator = Mpfr.init () in
+      let _ = Mpfr.log numerator bas Mpfr.Near in
+      let _ = Mpfr.log denominator lbase Mpfr.Near in
+      let _ = Mpfr.div new_exp numerator denominator Mpfr.Near in
+      if Mpfr.integer_p new_exp then simplify_power lexpr (Rational new_exp)
+      else Pow (base, exp)
   | _ ->
       Pow (base, exp)					(* SPOW-5 *)
   ;;
@@ -356,6 +381,8 @@ and simplify_log base expression =
       let _ = Mpfr.log denom base Mpfr.Near in
       let _ = Mpfr.div result result denom Mpfr.Near in
       Rational result
+  | Product prodList ->
+      automatic_simplify (Sum (List.map (fun x -> (Log (base, x))) prodList))
   | Pow (exp_base, exponent) ->
       automatic_simplify (Product[exponent; (simplify_log base exp_base)])
   | _ ->
