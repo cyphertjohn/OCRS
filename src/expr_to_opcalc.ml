@@ -114,11 +114,7 @@ let rec expr_to_opCalc expr =
       | (_, Sum sumList) ->
           let aux exp = 
             Pow (left, exp) in
-
-          let temp = Product (List.map aux sumList) in
-          let test = Expr_simplifications.automatic_simplify temp in
-          let _ = print_endline (Expr_helpers.expr_to_string_IR test) in
-          expr_to_opCalc test
+          expr_to_opCalc (Expr_simplifications.automatic_simplify (Product (List.map aux sumList)))
       | (Input_variable ident, Rational rat) when Mpfr.integer_p rat && (Mpfr.cmp_si rat 0)>0 ->
           expr_to_opCalc (binomial_transform expr)
       | (Rational rat, Input_variable ident) ->
