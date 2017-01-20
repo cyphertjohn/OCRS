@@ -60,50 +60,6 @@ print_endline (expr_to_string (Expr_simplifications.automatic_simplify pow_test2
 print_endline (expr_to_string log_test);;
 print_endline (expr_to_string (Expr_simplifications.automatic_simplify log_test));;
 *)
-let get_right_left_op_ineq ineq = 
-  match ineq with
-  | OpEquals (left, right) ->
-    (left, right)
-  | _ -> (OpUndefined, OpUndefined)
-  ;;
-
-
-
-
-
-let solve_rec ineq ovar_ident ivar_ident =
-  let t = Unix.gettimeofday () in (*Sys.time () in *)
-  let _ = Printf.printf "Input:\t\t\t %s\n" (Expr_helpers.inequation_to_string ineq) in
-  let simplify_ineq = Expr_simplifications.automatic_simplify_inequation ineq in
-  let _ = Printf.printf "Simplified Expression:\t %s\n" (Expr_helpers.inequation_to_string simplify_ineq) in
-  let op_ineq = Op_simplifications.op_automatic_simplify_inequation (inequation_to_opCalc simplify_ineq) in
-  let _ = Printf.printf "Operational Calculus:\t %s\n" (Expr_helpers.op_inequation_to_string op_ineq) in
-  let isolated_op_ineq = Isolate_Ovar.solve_for_Ovar op_ineq ovar_ident ivar_ident in
-  let _ = Printf.printf "Isolated Expression:\t %s\n" (Expr_helpers.op_inequation_to_string isolated_op_ineq) in
-  let expanded_ineq = Op_simplifications.op_automatic_simplify_inequation (Op_transforms.algebraic_expand_inequation isolated_op_ineq) in
-  let _ = Printf.printf "Expanded Expression:\t %s\n" (Expr_helpers.op_inequation_to_string expanded_ineq) in
-  if (Tau_inverse.complete_tiling (snd(get_right_left_op_ineq expanded_ineq))) then
-    let initial_result = Tau_inverse.tau_inverse_inequation expanded_ineq ivar_ident in
-    let _ = Printf.printf "Initial Result:\t\t %s\n" (Expr_helpers.inequation_to_string initial_result) in
-    let result = (Expr_transforms.inverse_binomial_ineq (Expr_simplifications.automatic_simplify_inequation initial_result)) in
-    let _ = Printf.printf "Final Result:\t\t %s\n" (Expr_helpers.inequation_to_string result) in
-    let _ = Printf.printf "Execution Time: %fs\n" (Unix.gettimeofday () -. t) in
-    let _ = print_endline "" in
-    print_endline ""
-  else
-    let (left_side, right_side) = get_right_left_op_ineq expanded_ineq in
-    let right_part_frac = Op_transforms.partial_fraction right_side in
-    let new_ineq = OpEquals(left_side, right_part_frac) in
-    let _ = Printf.printf "After Partial Fraction:\t %s\n" (Expr_helpers.op_inequation_to_string new_ineq) in
-    let initial_result = Tau_inverse.tau_inverse_inequation new_ineq ivar_ident in
-    let _ = Printf.printf "Initial Result:\t\t %s\n" (Expr_helpers.inequation_to_string initial_result) in
-    let result = (Expr_transforms.inverse_binomial_ineq (Expr_simplifications.automatic_simplify_inequation initial_result)) in
-    let _ = Printf.printf "Final Result:\t\t %s\n" (Expr_helpers.inequation_to_string result) in
-    let _ = Printf.printf "Execution Time: %fs\n" (Unix.gettimeofday () -. t) in
-    let _ = print_endline "" in
-    print_endline ""
-  ;;
-
 
 
 let x1 = Equals(Output_variable("y", SAdd("n", 1)), Plus(Output_variable("y", SSVar "n"), Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))));;
@@ -124,9 +80,13 @@ let x3 = Equals(Output_variable("y", SAdd("n", 1)), Plus(Output_variable("y", SS
 
 let x4 = Equals(Output_variable("y", SAdd("n", 1)), Plus(Times(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Output_variable("y", SSVar "n")), Pow(Pow(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Plus(Input_variable "n", Rational (snd(Mpfr.init_set_si 1 Mpfr.Near)))), Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)))));;
 
-let test_list = [x1; x8; x9; y1; x2; big_test; will_it_work; x3; x4];;
 
-List.iter (fun x -> solve_rec x "y" "n") test_list;;
+let x5 = Equals(Output_variable("y", SSVar("n")), Plus(Output_variable("y", SAdd("n", (-1))), Input_variable "n"));;
+
+
+let test_list = [x1; x8; x9; y1; x2; big_test; will_it_work; x3; x4; x5];;
+
+List.iter (fun x -> let _ = Solve_rec.solve_rec x in print_endline "") test_list;;
 
 (*let x10 = Equals(Output_variable("y", SAdd("n", 4)), Sum[Times (Output_variable("y", SAdd ("n", 3)), Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)));Times (Output_variable("y", SAdd ("n", 2)), Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))); Times (Output_variable("y", SAdd ("n", 1)), Rational (snd(Mpfr.init_set_si (-5) Mpfr.Near))); Times (Output_variable("y", SSVar "n"), Rational (snd(Mpfr.init_set_si 3 Mpfr.Near)))]);;
 

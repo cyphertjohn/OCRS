@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: ad3bdb29ba73fac1f44eff7927db40f5)
+# DO NOT EDIT (digest: 44cab64de94f526e7bf9a35ef605e3e7)
 src/Isolate_Ovar
 src/Type_def
 src/Expr_helpers
@@ -7,4 +7,5 @@ src/Expr_simplifications
 src/Op_simplifications
 src/Tau_inverse
 src/Op_transforms
+src/Solve_rec
 # OASIS_STOP
