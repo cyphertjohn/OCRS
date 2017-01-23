@@ -88,15 +88,15 @@ let rec tau_inverse op_expr input_ident =
 let tau_inverse_inequation expr input_ident =
     match expr with
     | OpEquals (OpOutput_variable(ident, subscript), right) ->
-        Equals (Output_variable(ident, subscript), (tau_inverse right "n"))
+        Equals (Output_variable(ident, subscript), (tau_inverse right input_ident))
     | OpGreaterEq (OpOutput_variable(ident, subscript), right) ->
-        GreaterEq (Output_variable(ident, subscript), (tau_inverse right "n"))
+        GreaterEq (Output_variable(ident, subscript), (tau_inverse right input_ident))
     | OpGreater (OpOutput_variable(ident, subscript), right) ->
-        Greater (Output_variable(ident, subscript), (tau_inverse right "n"))
+        Greater (Output_variable(ident, subscript), (tau_inverse right input_ident))
     | OpLessEq (OpOutput_variable(ident, subscript), right) ->
-        LessEq (Output_variable(ident, subscript), (tau_inverse right "n"))
+        LessEq (Output_variable(ident, subscript), (tau_inverse right input_ident))
     | OpLess (OpOutput_variable(ident, subscript), right) ->
-        Less (Output_variable(ident, subscript), (tau_inverse right "n"))
+        Less (Output_variable(ident, subscript), (tau_inverse right input_ident))
     | _ -> failwith "The inequation should be solved before we get here"
     ;;
 

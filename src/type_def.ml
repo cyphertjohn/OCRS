@@ -129,9 +129,13 @@ let rec expr_order a b =
     | ( _, Factorial _) ->
         expr_order (Factorial a) b
     | (Log (x, _), _) ->
-        expr_order a (Log (x,b))
+        let res = expr_order a (Log (x,b)) in
+        if res = 0 then 1
+        else res
     | (_, Log (x, _)) ->
-        expr_order (Log (x, a)) b
+        let res = expr_order (Log (x, a)) b in
+        if res = 0 then (-1)
+        else res
     | (Binomial _, _) ->
         expr_order a (Binomial (b, Rational (snd (Mpfr.init_set_si 1 Mpfr.Near))))
     | (_, Binomial _) ->

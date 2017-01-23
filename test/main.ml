@@ -81,10 +81,18 @@ let x3 = Equals(Output_variable("y", SAdd("n", 1)), Plus(Output_variable("y", SS
 let x4 = Equals(Output_variable("y", SAdd("n", 1)), Plus(Times(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Output_variable("y", SSVar "n")), Pow(Pow(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Plus(Input_variable "n", Rational (snd(Mpfr.init_set_si 1 Mpfr.Near)))), Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)))));;
 
 
-let x5 = Equals(Output_variable("y", SSVar("n")), Plus(Output_variable("y", SAdd("n", (-1))), Input_variable "n"));;
+let x5 = Equals(Output_variable("y", SAdd("n", 2)), Plus(Output_variable("y", SAdd("n", (1))), Input_variable "n"));;
+
+let x6 = Equals(Output_variable("y", SSVar "n"), Plus(Output_variable("y", SSDiv("n", 2)), Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))));;
+
+let x7 = Equals(Output_variable("y", SSVar "n"), Plus(Times(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Output_variable("y", SSDiv("n", 2))), Input_variable "n"));;
+
+let x11 = Equals(Output_variable("y", SSVar "n"), Plus(Times(Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)), Output_variable("y", SSDiv("n", 2))), Pow(Input_variable "n", Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)))));;
 
 
-let test_list = [x1; x8; x9; y1; x2; big_test; will_it_work; x3; x4; x5];;
+let x12 = Equals(Output_variable("y", SSVar "n"), Plus(Times(Rational (snd(Mpfr.init_set_si 3 Mpfr.Near)), Output_variable("y", SSDiv("n", 2))), Input_variable "n"));;
+
+let test_list = [x1; x8; x9; y1; x2; big_test; will_it_work; x3; x4; x5; x6; x7; x11; x12];;
 
 List.iter (fun x -> let _ = Solve_rec.solve_rec x in print_endline "") test_list;;
 

@@ -262,10 +262,117 @@ let shift ineq ovar_ident ivar_ident z =
   ;;
 
 
+
+let rec get_beta_expr expr ovar_ident ivar_ident = 
+  match expr with
+  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ ->
+    0
+  | Output_variable (oident, subscript) when oident = ovar_ident ->
+    (match subscript with
+    | SSDiv (iident, beta) when ivar_ident = iident ->
+      beta
+    | _ -> 0)
+  | Pow (base, exp) ->
+    max (get_beta_expr base ovar_ident ivar_ident) (get_beta_expr exp ovar_ident ivar_ident)
+  | Times (left, right) ->
+    max (get_beta_expr left ovar_ident ivar_ident) (get_beta_expr right ovar_ident ivar_ident)
+  | Plus (left, right) ->
+    max (get_beta_expr left ovar_ident ivar_ident) (get_beta_expr right ovar_ident ivar_ident)
+  | Minus (left, right) ->
+    max (get_beta_expr left ovar_ident ivar_ident) (get_beta_expr right ovar_ident ivar_ident)
+  | Divide (left, right) ->
+    max (get_beta_expr left ovar_ident ivar_ident) (get_beta_expr right ovar_ident ivar_ident)
+  | Binomial (left, right) ->
+    max (get_beta_expr left ovar_ident ivar_ident) (get_beta_expr right ovar_ident ivar_ident)
+  | Log (_, expression) ->
+    get_beta_expr expression ovar_ident ivar_ident
+  | Factorial expression ->
+    get_beta_expr expression ovar_ident ivar_ident
+  | Product prodList ->
+    let res_lis = List.map (fun x -> get_beta_expr x ovar_ident ivar_ident) prodList in
+    List.fold_left max 0 res_lis
+  | Sum sumList ->
+    let res_lis = List.map (fun x -> get_beta_expr x ovar_ident ivar_ident) sumList in
+    List.fold_left max 0 res_lis
+  | _ ->
+    failwith "this will need to be filled in for multivariate recurrences"
+  ;;
+
+let get_beta ineq ovar_ident ivar_ident = 
+  match ineq with
+  | Equals (left, right) ->
+    max (get_beta_expr left ovar_ident ivar_ident) (get_beta_expr right ovar_ident ivar_ident)
+  | Less (left, right) ->
+    max (get_beta_expr left ovar_ident ivar_ident) (get_beta_expr right ovar_ident ivar_ident)
+  | LessEq (left, right) ->
+    max (get_beta_expr left ovar_ident ivar_ident) (get_beta_expr right ovar_ident ivar_ident)
+  | Greater (left, right) ->
+    max (get_beta_expr left ovar_ident ivar_ident) (get_beta_expr right ovar_ident ivar_ident)
+  | GreaterEq (left, right) ->
+    max (get_beta_expr left ovar_ident ivar_ident) (get_beta_expr right ovar_ident ivar_ident)
+  ;;
+
+
+
+let rec substitute_expr expr old_term new_term = 
+  if expr = old_term then new_term
+  else
+    (match expr with
+    | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Output_variable _ ->
+      expr
+    | Pow (base, exp) ->
+      Pow (substitute_expr base old_term new_term, substitute_expr exp old_term new_term)
+    | Times (left, right) ->
+      Times (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+    | Plus (left, right) ->
+      Plus (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+    | Minus (left, right) ->
+      Minus (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+    | Divide (left, right) ->
+      Divide (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+    | Binomial (left, right) ->
+      Binomial (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+    | Log (base, expression) ->
+      Log (base, substitute_expr expression old_term new_term)
+    | Factorial expression ->
+      Factorial (substitute_expr expression old_term new_term)
+    | Product prodList ->
+      Product (List.map (fun x -> substitute_expr x old_term new_term) prodList)
+    | Sum sumList ->
+      Sum (List.map (fun x -> substitute_expr x old_term new_term) sumList))
+  ;;
+
+let substitute ineq old_term new_term = 
+  match ineq with
+  | Equals (left, right) ->
+    Equals(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+  | Less (left, right) ->
+    Less(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+  | LessEq (left, right) ->
+    LessEq(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+  | Greater (left, right) ->
+    Greater(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+  | GreaterEq (left, right) ->
+    GreaterEq(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+  ;;
+
+
 let rec solve_rec_recur ineq ovar_ident ivar_ident = 
-  if false (*is_non_linear ineq*) then
-    (*substitute*)
-    failwith "TODO"
+  let beta = get_beta ineq ovar_ident ivar_ident in
+  if beta <> 0 then
+    let _ = Printf.printf "Subsituting:\t\t %s\n" (Expr_helpers.inequation_to_string ineq) in
+    let new_rec = substitute ineq (Output_variable (ovar_ident, SSVar ivar_ident)) (Output_variable ("a", SSVar "k")) in
+    let new_rec = substitute new_rec (Output_variable (ovar_ident, SSDiv (ivar_ident, beta))) (Output_variable ("a", SAdd("k", (-1)))) in
+    let new_rec = substitute new_rec (Input_variable ivar_ident) (Pow(Rational (snd(Mpfr.init_set_si beta Mpfr.Near)), Input_variable "k")) in
+    let _ = Printf.printf "Will Solve:\t\t %s\n" (Expr_helpers.inequation_to_string new_rec) in
+    let res =  solve_rec_recur new_rec "a" "k" in
+    let final_answer = substitute res (Base_case ("a", 0)) (Base_case (ovar_ident, 1)) in
+    let final_answer = substitute final_answer (Output_variable ("a", SSVar "k")) (Output_variable (ovar_ident, SSVar ivar_ident)) in
+    let final_answer = substitute final_answer (Input_variable "k") (Log(snd(Mpfr.init_set_si beta Mpfr.Near), Input_variable ivar_ident)) in
+    let _ = Printf.printf "After Sub back:\t\t %s\n" (Expr_helpers.inequation_to_string final_answer) in
+    let final_answer = Expr_simplifications.automatic_simplify_inequation final_answer in
+    let _ = Printf.printf "Final answer:\t\t %s\n" (Expr_helpers.inequation_to_string final_answer) in
+    final_answer
   else
     let z = find_lowest_add ineq in
     if z <> 0 then
