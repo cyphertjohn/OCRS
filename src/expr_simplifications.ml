@@ -22,6 +22,8 @@ let exponent expr =
 
 let term expr = 
   match expr with
+  | Product ((Rational rat) :: tail :: []) ->
+      tail
   | Product ((Rational rat) :: rest) ->
       Product rest
   | Product lis ->
@@ -220,7 +222,7 @@ and simplify_integer_power base n =
       | Rational p_int when Mpfr.integer_p p_int ->
           simplify_integer_power r p_int
       | _ ->
-          Pow (r, p)
+          simplify_power r p
       )
   | (Times (left, right), _) ->				(*SINTPOW-5*)
       simplify_product ((simplify_integer_power left n) :: (simplify_integer_power right n) :: [])
@@ -245,6 +247,31 @@ and simplify_power base exp =
       Rational value
   | (_, Rational value) when (Mpfr.integer_p value) ->	(* test value is an integer *)
       simplify_integer_power base value			(* SPOW-4 *)
+  | (_, Sum sumList) ->
+      let aux exponent = 
+        simplify_power base exponent in
+      simplify_product (List.map aux sumList)
+  | (Rational rat_base, Product prodList) ->
+      (*find Rationals and logarithms *)
+      let exp_const = const exp in
+      let exp_var = term exp in
+      (match exp_const with
+        | Rational rat when (Mpfr.cmp_si rat 1) <> 0 ->
+          let new_base = Mpfr.init () in
+          let _ = Mpfr.pow new_base rat_base rat Mpfr.Near in
+          simplify_power (Rational new_base) exp_var
+        | _ -> (*add functionality to look for logs *)
+          Pow (base, exp)
+      )
+  | (Rational bas, Log (lbase, lexpr)) ->
+      let new_exp = Mpfr.init () in
+      let numerator = Mpfr.init () in
+      let denominator = Mpfr.init () in
+      let _ = Mpfr.log numerator bas Mpfr.Near in
+      let _ = Mpfr.log denominator lbase Mpfr.Near in
+      let _ = Mpfr.div new_exp numerator denominator Mpfr.Near in
+      if Mpfr.integer_p new_exp then simplify_power lexpr (Rational new_exp)
+      else Pow (base, exp)
   | _ ->
       Pow (base, exp)					(* SPOW-5 *)
   ;;
@@ -263,17 +290,6 @@ let simplify_minus left right =
   simplify_sum (left :: (simplify_product ((Rational (snd (Mpfr.init_set_si (-1) Mpfr.Near))) :: right :: [])) :: [])
   ;;
   
-let simplify_log expression = 
-  match expression with
-  | Rational rat when (Mpfr.cmp_si rat 0) <= 0 ->
-      Undefined
-  | Rational rat ->
-      let result = Mpfr.init () in
-      let _ = Mpfr.log2 result rat Mpfr.Near in
-      Rational result
-  | _ ->
-      Log expression
-  ;;
   
 let simplify_factorial expression = 
   match expression with
@@ -288,8 +304,32 @@ let simplify_factorial expression =
       Factorial expression
   ;;
   
+  
+
 let simplify_binom top bottom = 
-  Binomial (top, bottom)
+  match (top, bottom) with
+  | (_, Rational rat) when (Mpfr.cmp_si rat 0)=0 ->
+    Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))		(*might need a stronger condition *)
+  | (_, Rational rat) when (Mpfr.cmp_si rat 1)=0 ->
+    top
+  | (Rational ratTop, Rational ratBot) when (Mpfr.cmp ratTop ratBot)<0 ->
+    Rational (snd(Mpfr.init_set_si 0 Mpfr.Near))
+  | (Rational ratTop, Rational ratBot) when (Mpfr.cmp_si ratTop 0)>0 && (Mpfr.cmp_si ratBot 0)>0 && (Mpfr.integer_p ratTop) && (Mpfr.integer_p ratBot) ->
+    let binomial x y = 
+      let x_minus_y = Mpfr.init () in
+      let result = Mpfr.init () in
+      let y_temp = Mpfr.init () in
+      let _ = Mpfr.sub x_minus_y x y Mpfr.Near in (* x_minus_y = x-y *)
+      let _ = Mpfr.add_ui result x 1 Mpfr.Near in (* x = x+1 *)
+      let _ = Mpfr.add_ui y_temp y 1 Mpfr.Near in (* y = y+1 *)
+      let _ = Mpfr.add_ui x_minus_y x_minus_y 1 Mpfr.Near in
+      let _ = Mpfr.gamma result result Mpfr.Near in (* x = x! *)
+      let _ = Mpfr.gamma y_temp y_temp Mpfr.Near in (* y = y! *)
+      let _ = Mpfr.gamma x_minus_y x_minus_y Mpfr.Near in (* x_minus_y = x_minus_y! *)
+      let _ = Mpfr.mul y_temp y_temp x_minus_y Mpfr.Near in (* y = y * x_minus_y *)
+      let _ = Mpfr.div result result y_temp Mpfr.Near in (* x = x/y *) result
+    in Rational (binomial ratTop ratBot)
+  | _ -> Binomial (top, bottom)
   ;;
   
 (** Automatically simplify an expression bottom up *)
@@ -321,14 +361,32 @@ let rec automatic_simplify expr =
       let simplified_left = automatic_simplify left in
       let simplified_right = automatic_simplify right in
           simplify_minus simplified_left simplified_right
-  | Log expression ->
-      simplify_log (automatic_simplify expression)
+  | Log (base, expression) ->
+      simplify_log base (automatic_simplify expression)
   | Binomial (top, bottom) ->
       let simplified_top = automatic_simplify top in
       let simplified_bottom = automatic_simplify bottom in
           simplify_binom simplified_top simplified_bottom
   | Factorial expression ->
       simplify_factorial (automatic_simplify expression)
+
+and simplify_log base expression = 
+  match expression with
+  | Rational rat when (Mpfr.cmp_si rat 0) <= 0 ->
+      Undefined
+  | Rational rat ->
+      let result = Mpfr.init () in
+      let denom = Mpfr.init () in
+      let _ = Mpfr.log result rat Mpfr.Near in
+      let _ = Mpfr.log denom base Mpfr.Near in
+      let _ = Mpfr.div result result denom Mpfr.Near in
+      Rational result
+  | Product prodList ->
+      automatic_simplify (Sum (List.map (fun x -> (Log (base, x))) prodList))
+  | Pow (exp_base, exponent) ->
+      automatic_simplify (Product[exponent; (simplify_log base exp_base)])
+  | _ ->
+      Log (base, expression)
   ;;
 
 let automatic_simplify_inequation inequation = 
@@ -344,3 +402,5 @@ let automatic_simplify_inequation inequation =
   | Less (left, right) ->
       Less (automatic_simplify left, automatic_simplify right)
   ;;
+  
+  

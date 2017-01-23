@@ -2,8 +2,10 @@
 
 (** {6 Subscript} *)
 
-type subscript = SAdd of string * int	(** n+1, n+2, ... *)
+type subscript = 
+  | SAdd of string * int        	(** n+1, n+2, ... *)
   | SSVar of string			(** n *)
+  | SSDiv of string * int		(** n/2, n/3, .. *)
   ;;
 
 (** Definition of the comparison between two subscripts. 
@@ -15,12 +17,27 @@ let subscript_order a b =
   | (SSVar a_str, SAdd (b_str, b_index)) ->
       if a_str <> b_str then String.compare a_str b_str
       else (-1)
+  | (SSVar a_str, SSDiv (b_str, b_index)) ->
+      if a_str <> b_str then String.compare a_str b_str
+      else (-1)
   | (SAdd (a_str, a_index), SSVar b_str) ->
+      if a_str <> b_str then String.compare a_str b_str
+      else 1
+  | (SSDiv(a_str, a_index), SSVar b_str) ->
       if a_str <> b_str then String.compare a_str b_str
       else 1
   | (SAdd (a_str, a_index), SAdd (b_str, b_index)) ->
       if a_str <> b_str then String.compare a_str b_str
       else compare a_index b_index
+  | (SSDiv(a_str, a_index), SSDiv (b_str, b_index)) ->
+      if a_str <> b_str then String.compare a_str b_str
+      else compare b_index a_index
+  | (SSDiv(a_str, a_index), SAdd (b_str, b_index)) ->
+      if a_str <> b_str then String.compare a_str b_str
+      else (-1) 
+  | (SAdd(a_str, a_index), SSDiv (b_str, b_index)) ->
+      if a_str <> b_str then String.compare a_str b_str
+      else 1
   ;;
 
 
@@ -40,7 +57,7 @@ type expr =
 	  | Input_variable of string	(** Index variable *)
 	  (* Maybe just make everything floats? *)
 	  | Rational of Mpfr.t		(** @see <http://www.inrialpes.fr/pop-art/people/bjeannet/mlxxxidl-forge/mlgmpidl/html/Mpfr.html> Not the package used here, but is equivalent to the documentation used in ocaml format*)
-	  | Log of expr			(** Base 2 log *)
+	  | Log of Mpfr.t *  expr	(** Base b log *)
 	  | Pow of expr * expr		(** Binary exponentiation *)
 	  | Binomial of expr * expr	(** Binomial coeffiecient *)
           | Factorial of expr		(** Factorial *)
@@ -86,7 +103,7 @@ let rec expr_order a b =
         if (expr_order a_bas b_bas) <> 0 then				(* O-4-1 *)
             expr_order a_bas b_bas
         else expr_order a_exp b_exp			(* O-4-2 *)
-    | (Log a_log, Log b_log) ->
+    | (Log (b, a_log), Log (c, b_log)) ->
         expr_order a_log b_log
     | (Binomial (a_top, a_bot), Binomial (b_top, b_bot)) ->
         if (expr_order a_top b_top) = 0 then expr_order a_bot b_bot
@@ -111,10 +128,14 @@ let rec expr_order a b =
         expr_order a (Factorial b)
     | ( _, Factorial _) ->
         expr_order (Factorial a) b
-    | (Log _, _) ->
-        expr_order a (Log b)
-    | (_, Log _) ->
-        expr_order (Log a) b
+    | (Log (x, _), _) ->
+        let res = expr_order a (Log (x,b)) in
+        if res = 0 then 1
+        else res
+    | (_, Log (x, _)) ->
+        let res = expr_order (Log (x, a)) b in
+        if res = 0 then (-1)
+        else res
     | (Binomial _, _) ->
         expr_order a (Binomial (b, Rational (snd (Mpfr.init_set_si 1 Mpfr.Near))))
     | (_, Binomial _) ->

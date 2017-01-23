@@ -10,8 +10,8 @@ Library ocrs
   Pack:       true
   Path:       src
   BuildTools: ocamlbuild
-  Modules:    Isolate_Ovar, Type_def, Expr_helpers, Expr_simplifications, Op_simplifications, Tau_inverse
-  InternalModules: Expr_to_opcalc
+  Modules:    Isolate_Ovar, Type_def, Expr_helpers, Expr_simplifications, Op_simplifications, Tau_inverse, Op_transforms, Solve_rec
+  InternalModules: Expr_to_opcalc, Expr_transforms
   XMETAEnable:	true
   BuildDepends: gmp
   

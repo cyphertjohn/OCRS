@@ -63,8 +63,7 @@ let rec binomial_transform expr =
 
 (* need to check to make sure the transform is possible namely pointwise multiplication and pointwise divide *)
 
-(* This function is incomplete!!! doesn't tranform other functions such as polynomials
-   Also assumes all output variables are n or higher *)
+(* Also assumes all output variables are n or higher *)
 let rec expr_to_opCalc expr =
   match expr with
   | Plus (left, right) ->							(* should not be called *)
@@ -107,14 +106,23 @@ let rec expr_to_opCalc expr =
       expr_to_opCalc (Binomial(expr, (Rational (snd (Mpfr.init_set_si 1 Mpfr.Near)))))
   | Rational rat ->
       OpRational rat
-  | Log expression ->
+  | Log (base, expression) ->
       failwith "haven't done this part yet"
       (* don't know what to do here *)
   | Pow (left, right) ->
       (match (left, right) with
+      | (_, Sum sumList) ->
+          let aux exp = 
+            Pow (left, exp) in
+          expr_to_opCalc (Expr_simplifications.automatic_simplify (Product (List.map aux sumList)))
       | (Input_variable ident, Rational rat) when Mpfr.integer_p rat && (Mpfr.cmp_si rat 0)>0 ->
           expr_to_opCalc (binomial_transform expr)
-      | _ -> failwith "don't know if anything else can be done here")
+      | (Rational rat, Input_variable ident) ->
+          OpDivide(OpMinus(Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpMinus(Q, OpRational rat))
+      | _ -> 
+          let expand_result = Expr_transforms.algebraic_expand expr in
+          if expand_result <> expr then expr_to_opCalc expand_result
+          else failwith "don't know if anything else can be done here")
   | Binomial (top, bottom) ->
       (match (top, bottom) with
           | (Input_variable ident, Rational k) when (Mpfr.integer_p k) ->	(* if the binomial is of the form n choose k, where k is a constant int *)

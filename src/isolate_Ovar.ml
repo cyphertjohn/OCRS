@@ -92,7 +92,8 @@ let rec move_Ovar_left left right identifier =
 let factor_ovar sum_list ident input_ident =
   let is_appropriate_product expr = (match expr with
                                     | OpProduct prod_list -> 
-                                        (List.exists (fun x -> (op_expr_order (OpOutput_variable (ident, SSVar input_ident)) x) = 0) prod_list)
+                                        (List.exists (fun x ->( contains_Ovar x ident)) prod_list)
+                                    | OpOutput_variable (identifier, SSVar in_ident) when identifier = ident && in_ident = input_ident -> true
                                     | _ -> false) in
   (if (List.for_all is_appropriate_product sum_list) then OpProduct [OpOutput_variable (ident, SSVar input_ident); OpSum (List.map (fun x -> op_automatic_simplify (OpProduct [OpPow(OpOutput_variable (ident, SSVar input_ident), OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near))); x])) sum_list)]
   else failwith "haven't implemented this yet")
