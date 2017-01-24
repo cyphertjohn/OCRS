@@ -1,11 +1,4 @@
 # OASIS_START
-# DO NOT EDIT (digest: 44cab64de94f526e7bf9a35ef605e3e7)
-src/Isolate_Ovar
-src/Type_def
-src/Expr_helpers
-src/Expr_simplifications
-src/Op_simplifications
-src/Tau_inverse
-src/Op_transforms
+# DO NOT EDIT (digest: 758130e4613df220bce5e1c11c0e090f)
 src/Solve_rec
 # OASIS_STOP

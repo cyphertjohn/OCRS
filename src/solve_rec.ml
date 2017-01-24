@@ -396,6 +396,13 @@ let solve_rec ineq =
   ;;
 
 
+let solve_rec_str str = 
+  let lexbuf = Lexing.from_string str in
+  let result = Parser.main Lexer.token lexbuf in
+  solve_rec result
+  ;;
+
+
 (*
 let get_right_left_op_ineq ineq =
   match ineq with
