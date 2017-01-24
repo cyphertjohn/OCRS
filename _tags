@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: cb25174a39f703dde95ade54c85d2626)
+# DO NOT EDIT (digest: 9957a51e05e26649ae90eb4e587e428d)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
@@ -16,6 +16,9 @@ true: annot, bin_annot
 "_darcs": not_hygienic
 # Library ocrs
 "src/ocrs.cmxs": use_ocrs
+"src/solve_rec.cmx": for-pack(Ocrs)
+"src/expr_to_opcalc.cmx": for-pack(Ocrs)
+"src/expr_transforms.cmx": for-pack(Ocrs)
 "src/isolate_Ovar.cmx": for-pack(Ocrs)
 "src/type_def.cmx": for-pack(Ocrs)
 "src/expr_helpers.cmx": for-pack(Ocrs)
@@ -23,13 +26,15 @@ true: annot, bin_annot
 "src/op_simplifications.cmx": for-pack(Ocrs)
 "src/tau_inverse.cmx": for-pack(Ocrs)
 "src/op_transforms.cmx": for-pack(Ocrs)
-"src/solve_rec.cmx": for-pack(Ocrs)
-"src/expr_to_opcalc.cmx": for-pack(Ocrs)
-"src/expr_transforms.cmx": for-pack(Ocrs)
+"src/lexer.cmx": for-pack(Ocrs)
+"src/parser.cmx": for-pack(Ocrs)
 <src/*.ml{,i,y}>: pkg_gmp
-# Executable test
+# Executable REPL
 "test/main.byte": pkg_gmp
 "test/main.byte": use_ocrs
+# Executable test
+"test/test.byte": pkg_gmp
+"test/test.byte": use_ocrs
 <test/*.ml{,i,y}>: pkg_gmp
 <test/*.ml{,i,y}>: use_ocrs
 # OASIS_STOP

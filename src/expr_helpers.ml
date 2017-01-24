@@ -165,6 +165,12 @@ let op_inequation_to_string_IR e =
   ;;
 
 
+let rec subscript_to_string_IR s = 
+  match s with
+  | SSVar ident -> "SSVar (" ^ ident ^ ")"
+  | SSDiv (ident, beta) -> "SSDiv (" ^ ident ^ ", " ^ (string_of_int beta) ^ ")"
+  | SAdd (ident, beta) -> "SAdd (" ^ ident ^ ", " ^ (string_of_int beta) ^ ")"
+
 let rec expr_to_string_IR e =
   match e with
   | Plus (left, right) ->
@@ -184,15 +190,15 @@ let rec expr_to_string_IR e =
   | Base_case (ident, index) ->
       "Base_case (" ^ ident ^ ", " ^ string_of_int index ^ ")"
   | Output_variable (ident , subscript) ->
-      "Output_variable (" ^ ident ^ ", " ^ (subscript_to_string subscript) ^ ")"
+      "Output_variable (" ^ ident ^ ", " ^ (subscript_to_string_IR subscript) ^ ")"
   | Input_variable str ->
       "Input_variable (" ^ str ^ ")"
   | Rational rat ->
       "Rational (" ^ (Mpfr.to_string rat) ^ ")"
   | Binomial (top, bottom) ->
-      "Binomial (" ^ expr_to_string top ^ ", " ^ expr_to_string bottom ^ ")"
+      "Binomial (" ^ expr_to_string_IR top ^ ", " ^ expr_to_string_IR bottom ^ ")"
   | Factorial child ->
-      "Factorial (" ^ (expr_to_string child) ^ ")"
+      "Factorial (" ^ (expr_to_string_IR child) ^ ")"
   | Log (base, expression) ->
       "Log (" ^ (Mpfr.to_string base) ^ ", " ^ (expr_to_string_IR expression)^ ")"
   | Pow (left, right) ->
