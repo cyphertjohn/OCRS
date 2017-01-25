@@ -2,10 +2,8 @@
 {open Parser        (* The type token is defined in parser.mli *)
         exception SyntaxError of string
         }
-        let int = '-'? ['0'-'9']['0'-'9']*
-        let digit = ['0'-'9']
-        let frac = '.' digit*
-        let float = '-'? digit* frac?
+        let int = ['0'-'9']+
+        let float = (['0'-'9']*['.'])?['0'-'9']+
         rule token = parse
             [' ' '\t']     { token lexbuf }     (* skip blanks *)
           | ['\n' ]        { EOL }
