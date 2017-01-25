@@ -1,5 +1,7 @@
 open Type_def
 
+exception Simplification_exception of string
+
 let base expr = 
   match expr with
   | Pow (base, exp) ->
@@ -90,7 +92,7 @@ let rec simplify_sum_rec expr_list =
           merge_sums (u_1 :: []) w				(* SPRDREC-3-2 *)
       )
   | _ ->
-      failwith "An Error has occured in simplify_product_rec"
+      raise (Simplification_exception "Error in simplify_sum_rec")
 
 and merge_sums p q = 
   match (p, q) with
@@ -104,7 +106,7 @@ and merge_sums p q =
       | _ ->
            if h = (p1 :: q1 :: []) then List.append (p1 :: []) (merge_sums rest_p q)	(* MRSM-3-3 *)
            else if h = (q1 :: p1 :: []) then List.append (q1 :: []) (merge_sums p rest_q)	(* MRSM-3-4 *)
-           else failwith "Everything should be convered by the above cases"
+           else raise (Simplification_exception "Error in merge_sums")
       )
 and simplify_sum expr_list = 
   if (List.exists (fun el -> el = Undefined) expr_list) then
@@ -165,7 +167,7 @@ and simplify_product_rec expr_list =
           merge_products (u_1 :: []) w				(* SPRDREC-3-2 *)
       )
   | _ ->
-      failwith "An Error has occured in simplify_product_rec"
+      raise (Simplification_exception "Error in simplify_product_rec")
 and merge_products p q = 
   match (p, q) with
   | (_, []) -> p	(* MRPD-1 *)
@@ -178,7 +180,7 @@ and merge_products p q =
       | _ ->
            if h = (p1 :: q1 :: []) then List.append (p1 :: []) (merge_products rest_p q)	(* MRPD-3-3 *)
            else if h = (q1 :: p1 :: []) then List.append (q1 :: []) (merge_products p rest_q)	(* MRPD-3-4 *)
-           else failwith "Everything should be convered by the above cases"
+           else raise (Simplification_exception "Error in merge_sums")
       )
       
 and simplify_product expr_list = 

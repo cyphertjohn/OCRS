@@ -1,5 +1,7 @@
 open Type_def
 
+exception Op_simplifications_exc of string
+
 let base expr = 
   match expr with
   | OpPow (base, exp) ->
@@ -103,8 +105,8 @@ and merge_sums p q =
       | _ ->
            if h = (p1 :: q1 :: []) then List.append (p1 :: []) (merge_sums rest_p q)	(* MRSM-3-3 *)
            else if h = (q1 :: p1 :: []) then List.append (q1 :: []) (merge_sums p rest_q)	(* MRSM-3-4 *)
-           else failwith "Everything should be convered by the above cases"
-      )
+           else raise (Op_simplifications_exc "Error in merge_sums")
+           )
 and simplify_sum expr_list = 
   if (List.exists (fun el -> el = OpUndefined) expr_list) then
      OpUndefined
@@ -176,7 +178,7 @@ and merge_products p q =
       | _ ->
            if h = (p1 :: q1 :: []) then List.append (p1 :: []) (merge_products rest_p q)	(* MRPD-3-3 *)
            else if h = (q1 :: p1 :: []) then List.append (q1 :: []) (merge_products p rest_q)	(* MRPD-3-4 *)
-           else failwith "Everything should be convered by the above cases"
+           else raise (Op_simplifications_exc "Error in merge_products")
       )
       
 and simplify_product expr_list = 

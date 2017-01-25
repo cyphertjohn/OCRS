@@ -1,6 +1,8 @@
 open Type_def
 open Expr_simplifications
 
+exception Expr_transform_exc of string
+
 let binomial x y =
           let x_minus_y = Mpfr.init () in
           let result = Mpfr.init () in
@@ -20,7 +22,7 @@ let rec expand_product r s =
   match (r, s) with
   | (Sum sumList, _)->
     (match sumList with
-    | [] -> failwith "Sum operand list was empty"
+    | [] -> raise (Expr_transform_exc "Sum operand list was empty")
     | hd :: [] -> expand_product hd s
     | hd :: tail -> automatic_simplify (Sum [expand_product hd s; expand_product (Sum tail) s]))
   | (_, Sum _) -> expand_product s r
@@ -31,7 +33,7 @@ let rec expand_power u n =
   match u with
   | Sum sumList ->
     (match sumList with
-    | [] -> failwith "Sum operandList was empty"
+    | [] -> raise (Expr_transform_exc "Sum operand list was empty")
     | hd :: [] -> expand_power hd n
     | f :: tail ->
       let r = Sum tail in
@@ -55,12 +57,12 @@ let rec algebraic_expand expr =
   match expr with
   | Sum sumList ->
     (match sumList with
-    | [] -> failwith "Sum Operand List was empty"
+    | [] -> raise (Expr_transform_exc "Sum operand list was empty")
     | hd :: [] -> algebraic_expand hd
     | hd :: tail -> automatic_simplify (Sum [algebraic_expand hd; algebraic_expand (Sum tail)]))
   | Product prodList ->
     (match prodList with
-    | [] -> failwith "Product Operand List was empty"
+    | [] -> raise (Expr_transform_exc "Product operand list was empty")
     | hd :: [] -> algebraic_expand hd
     | hd :: tail -> automatic_simplify (expand_product (algebraic_expand hd) (algebraic_expand (Product tail))))
   | Pow (base, exp) ->

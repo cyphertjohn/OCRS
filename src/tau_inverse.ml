@@ -1,5 +1,7 @@
 open Type_def
 
+exception Tau_inverse_exc of string
+
 let is_const op_expr = 
   match op_expr with
   | OpRational _ | OpBase_case _ | OpSymbolic_Constant _ ->
@@ -81,8 +83,8 @@ let rec tau_inverse op_expr input_ident =
   | OpProduct expr_list ->
       let (const_list, term) = List.partition is_const expr_list in
       if (List.length const_list) <> 0 then Product (List.append (List.map (fun x -> tau_inverse x input_ident) const_list) ((tau_inverse (Op_simplifications.op_automatic_simplify (OpProduct term)) input_ident) :: []))
-      else (failwith "This shouldn't happen eventually because we check we don't get here") (* need to do some transformations *)
-  | _ -> failwith "Haven't implemented any other transforms yet"
+      else raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string op_expr))) (* need to do some transformations *)
+  | _ -> raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string op_expr)))
 
 
 let tau_inverse_inequation expr input_ident =
@@ -97,6 +99,6 @@ let tau_inverse_inequation expr input_ident =
         LessEq (Output_variable(ident, subscript), (tau_inverse right input_ident))
     | OpLess (OpOutput_variable(ident, subscript), right) ->
         Less (Output_variable(ident, subscript), (tau_inverse right input_ident))
-    | _ -> failwith "The inequation should be solved before we get here"
+    | _ -> raise (Tau_inverse_exc ("The inequation wasn't solved"))
     ;;
 

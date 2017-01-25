@@ -1,5 +1,6 @@
 open Type_def
 
+exception Expr_to_op_exc of string
 
 let rec binomial_transform expr =
   match expr with
@@ -57,7 +58,7 @@ let rec binomial_transform expr =
       Expr_simplifications.automatic_simplify (Sum (build_sum_lis zero rat))
       (* for k = 0 to deg do Product [Binomial(Input_variable ident, Rational k); Rational ((accumulate 0 k) * 1/k!)] *)
 
-  | _ -> failwith "should never get here"
+  | _ -> raise (Expr_to_op_exc "Error in Binomial Transform")
   ;;
 
 
@@ -99,15 +100,14 @@ let rec expr_to_opCalc expr =
        | SSVar loop_counter ->
            OpOutput_variable (ident, subscript)
        | _ ->
-           (* input in incorrect form panic *)
-	   failwith "input was in incorrect form"
+           raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
        )
   | Input_variable str ->
       expr_to_opCalc (Binomial(expr, (Rational (snd (Mpfr.init_set_si 1 Mpfr.Near)))))
   | Rational rat ->
       OpRational rat
   | Log (base, expression) ->
-      failwith "haven't done this part yet"
+      raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
       (* don't know what to do here *)
   | Pow (left, right) ->
       (match (left, right) with
@@ -122,19 +122,19 @@ let rec expr_to_opCalc expr =
       | _ -> 
           let expand_result = Expr_transforms.algebraic_expand expr in
           if expand_result <> expr then expr_to_opCalc expand_result
-          else failwith "don't know if anything else can be done here")
+          else raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr))))
   | Binomial (top, bottom) ->
       (match (top, bottom) with
           | (Input_variable ident, Rational k) when (Mpfr.integer_p k) ->	(* if the binomial is of the form n choose k, where k is a constant int *)
               let _ = Mpfr.neg k k Mpfr.Near in
               OpPow (OpMinus (Q, OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))), OpRational k)		(* appropriate transformation *)
           | _ ->
-      	      failwith "Bad binomial input"
+              raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
       )
   | Base_case (ident, index) ->
       OpBase_case (ident, index)
   | Factorial child ->
-      failwith "haven't done this part yet"
+      raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
   | Undefined ->
       OpUndefined
   ;;

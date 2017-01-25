@@ -1,5 +1,6 @@
 open Type_def
 
+exception Solve_exc of string
 
 let get_right_left_op_ineq ineq =
   match ineq with
@@ -152,7 +153,7 @@ let rec find_lowest_add_expr expr =
     (match subscript with
     | SSVar _ -> 0
     | SAdd (_, z) -> z
-    | _ -> failwith "non-linear rec should never get here")
+    | _ -> raise (Solve_exc "non-linear rec should never get here"))
   | Pow (base, exp) ->
     let base_res = find_lowest_add_expr base in
     let exp_res = find_lowest_add_expr exp in
@@ -219,7 +220,7 @@ let rec shift_sub expr ovar_ident ivar_ident z =
       let b = a + (-1 * z) in
       if b = 0 then Output_variable (oident, SSVar iident)
       else Output_variable (oident, SAdd (iident, b))
-    | _ -> failwith "this section is only for linear recurrences")
+    | _ -> raise (Solve_exc "this section is only for linear recurrences"))
   | Input_variable iident when iident = ivar_ident ->
     Sum[Input_variable iident; Rational (snd(Mpfr.init_set_si (-1*z) Mpfr.Near))]
   | Pow (base, exp) ->
@@ -255,7 +256,7 @@ let rec shift_sub expr ovar_ident ivar_ident z =
   | Sum sumList ->
     Sum (List.map (fun x -> shift_sub x ovar_ident ivar_ident z) sumList)
   | _ ->
-    failwith "this will need to be filled in for multivariate recurrences"
+    raise (Solve_exc "OCRS is unable to solve multivariate recurrences")
   ;;
 
 let shift ineq ovar_ident ivar_ident z = 
@@ -306,7 +307,7 @@ let rec get_beta_expr expr ovar_ident ivar_ident =
     let res_lis = List.map (fun x -> get_beta_expr x ovar_ident ivar_ident) sumList in
     List.fold_left max 0 res_lis
   | _ ->
-    failwith "this will need to be filled in for multivariate recurrences"
+    raise (Solve_exc "OCRS is unable to solve multivariate recurrences")
   ;;
 
 let get_beta ineq ovar_ident ivar_ident = 
@@ -399,7 +400,7 @@ let solve_rec ineq =
   let ovar_idents = fst identifier_res in
   let ivar_idents = snd identifier_res in
   if (List.length ovar_idents)>1 || (List.length ivar_idents)>1 then
-    failwith "can't do multivariate recurrences yet"
+    raise (Solve_exc "OCRS is unable to solve multivariate recurrences")
   else
     let ovar_ident = List.nth ovar_idents 0 in
     let ivar_ident = List.nth ivar_idents 0 in
@@ -408,53 +409,12 @@ let solve_rec ineq =
 
 
 let solve_rec_str str = 
-  let lexbuf = Lexing.from_string str in
-  let result = Parser.main Lexer.token lexbuf in
-  solve_rec result
+  try 
+    let lexbuf = Lexing.from_string str in
+    let result = Parser.main Lexer.token lexbuf in
+    solve_rec result
+  with e ->
+    let _ = Printf.printf "%s%s\n" (Printexc.to_string e) (Printexc.get_backtrace ()) in
+    Equals(Undefined, Undefined)
   ;;
 
-
-(*
-let get_right_left_op_ineq ineq =
-  match ineq with
-  | OpEquals (left, right) ->
-    (left, right)
-  | _ -> (OpUndefined, OpUndefined)
-  ;;
-
-
-
-
-
-let solve_rec ineq ovar_ident ivar_ident =
-  let t = Unix.gettimeofday () in (*Sys.time () in *)
-  let _ = Printf.printf "Input:\t\t\t %s\n" (Expr_helpers.inequation_to_string ineq) in
-  let simplify_ineq = Expr_simplifications.automatic_simplify_inequation ineq in
-  let _ = Printf.printf "Simplified Expression:\t %s\n" (Expr_helpers.inequation_to_string simplify_ineq) in
-  let op_ineq = Op_simplifications.op_automatic_simplify_inequation (inequation_to_opCalc simplify_ineq) in
-  let _ = Printf.printf "Operational Calculus:\t %s\n" (Expr_helpers.op_inequation_to_string op_ineq) in
-  let isolated_op_ineq = Isolate_Ovar.solve_for_Ovar op_ineq ovar_ident ivar_ident in
-  let _ = Printf.printf "Isolated Expression:\t %s\n" (Expr_helpers.op_inequation_to_string isolated_op_ineq) in
-  let expanded_ineq = Op_simplifications.op_automatic_simplify_inequation (Op_transforms.algebraic_expand_inequation isolated_op_ineq) in
-  let _ = Printf.printf "Expanded Expression:\t %s\n" (Expr_helpers.op_inequation_to_string expanded_ineq) in
-  if (Tau_inverse.complete_tiling (snd(get_right_left_op_ineq expanded_ineq))) then
-    let initial_result = Tau_inverse.tau_inverse_inequation expanded_ineq ivar_ident in
-    let _ = Printf.printf "Initial Result:\t\t %s\n" (Expr_helpers.inequation_to_string initial_result) in
-    let result = (Expr_transforms.inverse_binomial_ineq (Expr_simplifications.automatic_simplify_inequation initial_result)) in
-    let _ = Printf.printf "Final Result:\t\t %s\n" (Expr_helpers.inequation_to_string result) in
-    let _ = Printf.printf "Execution Time: %fs\n" (Unix.gettimeofday () -. t) in
-    let _ = print_endline "" in
-    print_endline ""
-  else
-    let (left_side, right_side) = get_right_left_op_ineq expanded_ineq in
-    let right_part_frac = Op_transforms.partial_fraction right_side in
-    let new_ineq = OpEquals(left_side, right_part_frac) in
-    let _ = Printf.printf "After Partial Fraction:\t %s\n" (Expr_helpers.op_inequation_to_string new_ineq) in
-    let initial_result = Tau_inverse.tau_inverse_inequation new_ineq ivar_ident in
-    let _ = Printf.printf "Initial Result:\t\t %s\n" (Expr_helpers.inequation_to_string initial_result) in
-    let result = (Expr_transforms.inverse_binomial_ineq (Expr_simplifications.automatic_simplify_inequation initial_result)) in
-    let _ = Printf.printf "Final Result:\t\t %s\n" (Expr_helpers.inequation_to_string result) in
-    let _ = Printf.printf "Execution Time: %fs\n" (Unix.gettimeofday () -. t) in
-    let _ = print_endline "" in
-    print_endline ""
-  ;; *)  
