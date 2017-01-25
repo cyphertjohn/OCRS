@@ -76,7 +76,7 @@ let rec tau_inverse op_expr input_ident =
       Product [Sum [Rational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); Pow(Rational k , Input_variable input_ident)]; Pow(Sum [Rational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); Rational k], Rational (snd(Mpfr.init_set_si (-1) Mpfr.Near)))]
   | OpSum expr_list ->
       if complete_tiling op_expr then Sum (List.map (fun x -> tau_inverse x input_ident) expr_list)
-      else failwith "need to do some transforms"
+      else raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string op_expr)))
   | OpRational rat -> Rational rat
   | OpSymbolic_Constant str (* probably some other things *) -> Symbolic_Constant str
   | OpBase_case (str, integer) -> Base_case (str, integer)

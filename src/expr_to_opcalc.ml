@@ -61,7 +61,6 @@ let rec binomial_transform expr =
   | _ -> raise (Expr_to_op_exc "Error in Binomial Transform")
   ;;
 
-
 (* need to check to make sure the transform is possible namely pointwise multiplication and pointwise divide *)
 
 (* Also assumes all output variables are n or higher *)
@@ -76,7 +75,27 @@ let rec expr_to_opCalc expr =
   | Divide (left, right) ->
       OpDivide (expr_to_opCalc left, expr_to_opCalc right)
   | Product expr_list ->
-      OpProduct (List.map expr_to_opCalc expr_list)  					(* TODO only good if linear multiply *)
+      let is_const expr =
+        match expr with
+        | Rational _ | Base_case _ | Symbolic_Constant _ ->
+          true
+        | _ -> false in
+      let (const_list, var_list) = List.partition is_const expr_list in
+      if (List.length const_list) <> 0 then OpProduct ((List.map expr_to_opCalc const_list) @ [expr_to_opCalc (Expr_simplifications.automatic_simplify (Product var_list))])
+      else
+        (match expr_list with
+        | Pow (Rational k, Input_variable str) :: Binomial (Input_variable str1, Rational c) :: [] when str = str1->
+          let const = Mpfr.init () in
+          let c_plus_1 = Mpfr.init () in
+          let _ = Mpfr.pow const k c Mpfr.Near in
+          let _ = Mpfr.add_ui c_plus_1 c 1 Mpfr.Near in
+          OpProduct [OpRational const; OpDivide(OpMinus (Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpPow (OpMinus(Q, OpRational k), OpRational c_plus_1))]
+        | Pow (Rational k, Input_variable str1) :: Pow(Input_variable str, Rational rat) :: [] when str = str1 ->
+          let new_expr = (Expr_transforms.algebraic_expand (Expr_simplifications.automatic_simplify (Product [binomial_transform (Pow (Input_variable str, Rational rat)); Pow(Rational k, Input_variable str)]))) in
+          expr_to_opCalc new_expr
+        | Pow (Rational k, Input_variable str) :: (Input_variable str1) :: [] when str = str1 ->
+          OpProduct [OpRational k; OpDivide(OpMinus (Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpPow(OpMinus(Q, OpRational k), OpRational (snd(Mpfr.init_set_si 2 Mpfr.Near))))]
+        | _ -> raise (Expr_to_op_exc "Can't transform non-linear product"))
   | Sum expr_list ->
       OpSum (List.map expr_to_opCalc expr_list)  					(* convert all list elem to strings concat with star *)
   | Symbolic_Constant ident ->

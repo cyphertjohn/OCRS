@@ -92,11 +92,23 @@ let x11 = Equals(Output_variable("y", SSVar "n"), Plus(Times(Rational (snd(Mpfr.
 
 let x12 = Equals(Output_variable("y", SSVar "n"), Plus(Times(Rational (snd(Mpfr.init_set_si 3 Mpfr.Near)), Output_variable("y", SSDiv("n", 2))), Input_variable "n"));;
 
+let x13 = "y_{n+1} = 3 * y_n + n^2 * 2^n, n"
+
 let test_list = [x1; x8; x9; y1; x2; big_test; will_it_work; x3; x4; x5; x6; x7; x11; x12];;
 
 List.iter (fun x -> let _ = Solve_rec.solve_rec x in print_endline "") test_list;;
 
+Solve_rec.solve_rec_str x13;;
 
+(*let lexbuf = Lexing.from_string "y_n = (n ^ 2) * 2^n, n" in
+let result = Parser.main Lexer.token lexbuf in
+
+let _ = print_endline (Expr_helpers.inequation_to_string_IR result) in
+
+let result  = Expr_simplifications.automatic_simplify_inequation result in
+
+print_endline (Expr_helpers.inequation_to_string_IR result);;
+*)
 (*let x10 = Equals(Output_variable("y", SAdd("n", 4)), Sum[Times (Output_variable("y", SAdd ("n", 3)), Rational (snd(Mpfr.init_set_si 2 Mpfr.Near)));Times (Output_variable("y", SAdd ("n", 2)), Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))); Times (Output_variable("y", SAdd ("n", 1)), Rational (snd(Mpfr.init_set_si (-5) Mpfr.Near))); Times (Output_variable("y", SSVar "n"), Rational (snd(Mpfr.init_set_si 3 Mpfr.Near)))]);;
 
 let simplify_x10 = Expr_simplifications.automatic_simplify_inequation x10;;
