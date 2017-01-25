@@ -121,7 +121,18 @@ let solve_add_linear_rec ineq ovar_ident ivar_ident =
     result
   else
     let (left_side, right_side) = get_right_left_op_ineq expanded_ineq in
-    let right_part_frac = Op_transforms.partial_fraction right_side in
+    let expand_terms_with_no_transform expr = 
+      match expr with
+      | OpSum sumList ->
+        let rec expand_terms expr_list acc i = 
+          if i = List.length expr_list then Op_simplifications.op_automatic_simplify (OpSum acc)
+          else
+            let curr = List.nth expr_list i in
+            if Tau_inverse.complete_tiling curr then expand_terms expr_list (acc @ [curr]) (i+1)
+            else expand_terms expr_list (acc @ [Op_transforms.partial_fraction curr]) (i+1)
+          in expand_terms sumList [] 0
+      | _ -> Op_transforms.partial_fraction expr in
+    let right_part_frac = expand_terms_with_no_transform right_side in
     let new_ineq = OpEquals(left_side, right_part_frac) in
     let _ = Printf.printf "After Partial Fraction:\t %s\n" (Expr_helpers.op_inequation_to_string new_ineq) in
     let initial_result = Tau_inverse.tau_inverse_inequation new_ineq ivar_ident in

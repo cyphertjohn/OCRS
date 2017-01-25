@@ -19,7 +19,7 @@ let binomial x y =
 let rec expand_product r s = 
   let q_minus1 = op_automatic_simplify (OpSum [Q; OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near))]) in
   match (r, s) with
-  | (OpSum sumList, _) when (op_expr_order r q_minus1) <> 0->
+  | (OpSum sumList, _) when (op_expr_order r q_minus1) <> 0-> (* maintain q-1 since they are frequent *)
     (match sumList with
     | [] -> failwith "Sum operand list was empty"
     | hd :: [] -> expand_product hd s
