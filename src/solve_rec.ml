@@ -107,7 +107,7 @@ let find_ovar_ivar ineq =
 
 let solve_add_linear_rec ineq ovar_ident ivar_ident = 
   let simp_ineq = Expr_simplifications.automatic_simplify_inequation ineq in
-  let _ = Printf.printf "Input:\t\t\t %s\n" (Expr_helpers.inequation_to_string simp_ineq) in
+  let _ = Printf.printf "Expression to Solve:\t %s\n" (Expr_helpers.inequation_to_string simp_ineq) in
   let op_ineq = Op_simplifications.op_automatic_simplify_inequation (Expr_to_opcalc.inequation_to_opCalc simp_ineq) in
   let _ = Printf.printf "Operational Calculus:\t %s\n" (Expr_helpers.op_inequation_to_string op_ineq) in
   let isolated_op_ineq = Isolate_Ovar.solve_for_Ovar op_ineq ovar_ident ivar_ident in
@@ -117,7 +117,7 @@ let solve_add_linear_rec ineq ovar_ident ivar_ident =
   if (Tau_inverse.complete_tiling (snd(get_right_left_op_ineq expanded_ineq))) then
     let initial_result = Tau_inverse.tau_inverse_inequation expanded_ineq ivar_ident in
     let _ = Printf.printf "Initial Result:\t\t %s\n" (Expr_helpers.inequation_to_string initial_result) in
-    let result = (Expr_transforms.inverse_binomial_ineq (Expr_simplifications.automatic_simplify_inequation initial_result)) in
+    let result = Expr_simplifications.automatic_simplify_inequation (Expr_transforms.algebraic_expand_inequation (Expr_transforms.inverse_binomial_ineq (Expr_simplifications.automatic_simplify_inequation initial_result))) in
     let _ = Printf.printf "Final Result:\t\t %s\n" (Expr_helpers.inequation_to_string result) in
     result
   else
@@ -138,7 +138,7 @@ let solve_add_linear_rec ineq ovar_ident ivar_ident =
     let _ = Printf.printf "After Partial Fraction:\t %s\n" (Expr_helpers.op_inequation_to_string new_ineq) in
     let initial_result = Tau_inverse.tau_inverse_inequation new_ineq ivar_ident in
     let _ = Printf.printf "Initial Result:\t\t %s\n" (Expr_helpers.inequation_to_string initial_result) in
-    let result = (Expr_transforms.inverse_binomial_ineq (Expr_simplifications.automatic_simplify_inequation initial_result)) in
+    let result = Expr_simplifications.automatic_simplify_inequation (Expr_transforms.algebraic_expand_inequation (Expr_transforms.inverse_binomial_ineq (Expr_simplifications.automatic_simplify_inequation initial_result))) in
     let _ = Printf.printf "Final Result:\t\t %s\n" (Expr_helpers.inequation_to_string result) in
     result
   ;;
@@ -372,7 +372,7 @@ let substitute ineq old_term new_term =
 let rec solve_rec_recur ineq ovar_ident ivar_ident = 
   let beta = get_beta ineq ovar_ident ivar_ident in
   if beta <> 0 then
-    let _ = Printf.printf "Subsituting:\t\t %s\n" (Expr_helpers.inequation_to_string ineq) in
+    let _ = Printf.printf "Subsituting a_k for %s_%s\n" ovar_ident ivar_ident in
     let new_rec = substitute ineq (Output_variable (ovar_ident, SSVar ivar_ident)) (Output_variable ("a", SSVar "k")) in
     let new_rec = substitute new_rec (Output_variable (ovar_ident, SSDiv (ivar_ident, beta))) (Output_variable ("a", SAdd("k", (-1)))) in
     let new_rec = substitute new_rec (Input_variable ivar_ident) (Pow(Rational (snd(Mpfr.init_set_si beta Mpfr.Near)), Input_variable "k")) in
@@ -395,8 +395,9 @@ let rec solve_rec_recur ineq ovar_ident ivar_ident =
 
 
 let solve_rec ineq = 
+  let _ = Printf.printf "Input Expression:\t %s\n" (Expr_helpers.inequation_to_string ineq) in
   let simp_ineq = Expr_simplifications.automatic_simplify_inequation ineq in
-  let identifier_res = find_ovar_ivar ineq in
+  let identifier_res = find_ovar_ivar simp_ineq in
   let ovar_idents = fst identifier_res in
   let ivar_idents = snd identifier_res in
   if (List.length ovar_idents)>1 || (List.length ivar_idents)>1 then
