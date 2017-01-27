@@ -14,7 +14,7 @@ Library ocrs
   InternalModules: Expr_to_opcalc, Expr_transforms, Isolate_Ovar, Type_def, Expr_helpers, Expr_simplifications, Op_simplifications, Tau_inverse, Op_transforms, Lexer, Parser
   XMETAEnable:	true
   BuildDepends: gmp
-  
+ 
 Executable REPL
   Path:       test
   BuildTools: ocamlbuild

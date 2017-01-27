@@ -24,6 +24,8 @@ let rec complete_tiling op_expr =
       true
   | OpPow (OpSum [OpRational neg_k; Q], OpRational rat1) when (Mpfr.cmp_si rat1 (-1))=0 ->
       true
+  | OpPow(OpSum [OpRational neg_a; Q], OpRational neg_c) when (Mpfr.integer_p neg_c) && (Mpfr.cmp_si neg_c 0) < 0 ->
+      true
   | OpSum expr_list ->
       List.for_all complete_tiling expr_list
   | OpRational rat -> true
@@ -74,6 +76,22 @@ let rec tau_inverse op_expr input_ident =
       let k = Mpfr.init () in
       let _ = Mpfr.neg k neg_k Mpfr.Near in	(* should automatically simplify these expressions before sending out *)
       Product [Sum [Rational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); Pow(Rational k , Input_variable input_ident)]; Pow(Sum [Rational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); Rational k], Rational (snd(Mpfr.init_set_si (-1) Mpfr.Near)))]
+  | OpPow(OpSum [OpRational neg_a; Q], OpRational neg_c) when (Mpfr.integer_p neg_c) && (Mpfr.cmp_si neg_c 0)<0 ->
+      let a = Mpfr.init () in
+      let c = Mpfr.init () in
+      let a_plus_1 = Mpfr.init () in
+      let c_plus_1 = Mpfr.init () in
+      let neg_c_plus_1 = Mpfr.init () in
+      let a_minus_1 = Mpfr.init () in
+      let c_minus_1 = Mpfr.init () in
+      let _ = Mpfr.neg a neg_a Mpfr.Near in
+      let _ = Mpfr.neg c neg_c Mpfr.Near in
+      let _ = Mpfr.add_ui a_plus_1 a 1 Mpfr.Near in
+      let _ = Mpfr.add_ui c_plus_1 c 1 Mpfr.Near in
+      let _ = Mpfr.add_ui neg_c_plus_1 neg_c 1 Mpfr.Near in
+      let _ = Mpfr.sub_ui a_minus_1 a 1 Mpfr.Near in
+      let _ = Mpfr.sub_ui c_minus_1 c 1 Mpfr.Near in
+      Divide(Minus(Times(Binomial(Input_variable input_ident, Rational c_minus_1), Pow(Rational a, Sum[Input_variable input_ident; Rational neg_c_plus_1])), tau_inverse (OpPow(OpSum [OpRational neg_a; Q], OpRational neg_c_plus_1)) input_ident), Rational a_minus_1)
   | OpSum expr_list ->
       if complete_tiling op_expr then Sum (List.map (fun x -> tau_inverse x input_ident) expr_list)
       else raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string op_expr)))

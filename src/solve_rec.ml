@@ -137,7 +137,8 @@ let solve_add_linear_rec ineq ovar_ident ivar_ident =
     let new_ineq = OpEquals(left_side, right_part_frac) in
     let _ = Printf.printf "After Partial Fraction:\t %s\n" (Expr_helpers.op_inequation_to_string new_ineq) in
     let initial_result = Tau_inverse.tau_inverse_inequation new_ineq ivar_ident in
-    let _ = Printf.printf "Initial Result:\t\t %s\n" (Expr_helpers.inequation_to_string initial_result) in
+    let s = Printf.sprintf "Initial Result:\t\t %s" (Expr_helpers.inequation_to_string initial_result) in
+    let _ = print_endline s in
     let result = Expr_simplifications.automatic_simplify_inequation (Expr_transforms.algebraic_expand_inequation (Expr_transforms.inverse_binomial_ineq (Expr_simplifications.automatic_simplify_inequation initial_result))) in
     let _ = Printf.printf "Final Result:\t\t %s\n" (Expr_helpers.inequation_to_string result) in
     result
@@ -395,17 +396,21 @@ let rec solve_rec_recur ineq ovar_ident ivar_ident =
 
 
 let solve_rec ineq = 
-  let _ = Printf.printf "Input Expression:\t %s\n" (Expr_helpers.inequation_to_string ineq) in
-  let simp_ineq = Expr_simplifications.automatic_simplify_inequation ineq in
-  let identifier_res = find_ovar_ivar simp_ineq in
-  let ovar_idents = fst identifier_res in
-  let ivar_idents = snd identifier_res in
-  if (List.length ovar_idents)>1 || (List.length ivar_idents)>1 then
-    raise (Solve_exc "OCRS is unable to solve multivariate recurrences")
-  else
-    let ovar_ident = List.nth ovar_idents 0 in
-    let ivar_ident = List.nth ivar_idents 0 in
-    solve_rec_recur simp_ineq ovar_ident ivar_ident
+  try
+    let _ = Printf.printf "Input Expression:\t %s\n" (Expr_helpers.inequation_to_string ineq) in
+    let simp_ineq = Expr_simplifications.automatic_simplify_inequation ineq in
+    let identifier_res = find_ovar_ivar simp_ineq in
+    let ovar_idents = fst identifier_res in
+    let ivar_idents = snd identifier_res in
+    if (List.length ovar_idents)>1 || (List.length ivar_idents)>1 then
+      raise (Solve_exc "OCRS is unable to solve multivariate recurrences")
+    else
+      let ovar_ident = List.nth ovar_idents 0 in
+      let ivar_ident = List.nth ivar_idents 0 in
+      solve_rec_recur simp_ineq ovar_ident ivar_ident
+  with e ->
+    let _ = Printf.printf "%s%s\n" (Printexc.to_string e) (Printexc.get_backtrace ()) in
+    Equals(Undefined, Undefined)
   ;;
 
 
