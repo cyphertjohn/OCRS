@@ -3,15 +3,14 @@ Plugins: META (0.4)
 Name:        OCRS
 Version:     0.1
 Synopsis:    Recurrence solver based on operational calculus
-Authors:     John Cyphert
+Authors:     John Cyphert <jcyphert@wisc.edu>
 License:     LGPL
 
 Library ocrs
-  Pack:       true
   Path:       src
   BuildTools: ocamlbuild
-  Modules:    Solve_rec
-  InternalModules: Expr_to_opcalc, Expr_transforms, Isolate_Ovar, Type_def, Expr_helpers, Expr_simplifications, Op_simplifications, Tau_inverse, Op_transforms, Lexer, Parser
+  Modules:    Type_def, Solve_rec, Expr_helpers
+  InternalModules: Expr_to_opcalc, Expr_transforms, Isolate_Ovar, Expr_simplifications, Op_simplifications, Tau_inverse, Op_transforms, Lexer, Parser
   XMETAEnable:	true
   BuildDepends: gmp
  
@@ -32,7 +31,6 @@ Executable test
 Document "OCRS"
   Type: ocamlbuild (0.4)
   BuildTools: ocamldoc, ocamlbuild
-
   Title: Documentation for OCRS
   XOCamlbuildPath: .
   XOCamlbuildLibraries: ocrs  
