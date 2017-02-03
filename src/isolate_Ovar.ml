@@ -101,27 +101,43 @@ let factor_ovar sum_list ident input_ident =
   else raise (Isolating_exc ("OCRS was unable to factor " ^ (Expr_helpers.op_expr_to_string (OpSum sum_list))))
   ;;
 
-let rec solve_for_Ovar op_inequation ident input_ident = 
+
+let rec solve_for_Ovar_pair left right ident input_ident = 
+  if (contains_Ovar left ident) && (contains_Ovar right ident) then
+    let (new_left, new_right) = move_Ovar_left left right ident in   (* TODO this technique will not work in the case of inequalities, becuase the direction needs to flip *)
+    solve_for_Ovar_pair new_left new_right ident input_ident
+  else
+    (match left with
+    | OpOutput_variable (identifier, SSVar _) when identifier = ident ->
+      (left, right)
+    | OpProduct prod_list when (List.length (List.filter (fun x -> contains_Ovar x ident) prod_list)) = 1 ->
+      let (ovar, non_ovar) = List.partition (fun x -> contains_Ovar x ident) prod_list in
+      let non_ovar_inv = OpPow(OpProduct non_ovar, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near))) in
+      solve_for_Ovar_pair (op_automatic_simplify (OpProduct (List.append prod_list [non_ovar_inv]))) (op_automatic_simplify (OpProduct (right :: non_ovar_inv :: []))) ident input_ident
+    | OpProduct _ -> raise (Isolating_exc ("OCRS is unable to solve " ^ (Expr_helpers.op_inequation_to_string (OpEquals (left, right)))))
+    | OpSum sum_list when List.for_all (fun x -> contains_Ovar x ident) sum_list ->
+      let new_left = factor_ovar sum_list ident input_ident in
+      solve_for_Ovar_pair new_left right ident input_ident
+    | OpSum _ ->
+      raise (Isolating_exc ("OCRS is unable to solve " ^ (Expr_helpers.op_inequation_to_string (OpEquals (left, right)))))
+    | _ -> raise (Isolating_exc ("OCRS is unable to solve " ^ (Expr_helpers.op_inequation_to_string (OpEquals (left, right)))))
+    )
+
+
+let solve_for_Ovar op_inequation ident input_ident = 
   match op_inequation with
   | OpEquals (left, right) ->
-      (if (contains_Ovar left ident) && (contains_Ovar right ident) then
-          let (new_left, new_right) = move_Ovar_left left right ident in   (* TODO this technique will not work in the case of inequalities, becuase the direction needs to flip *)
-          solve_for_Ovar (OpEquals (new_left, new_right)) ident input_ident
-      else
-          (match left with
-          | OpOutput_variable (identifier, SSVar _) when identifier = ident ->
-              OpEquals (left, right)
-          | OpProduct prod_list when (List.length (List.filter (fun x -> contains_Ovar x ident) prod_list)) = 1 ->
-              let (ovar, non_ovar) = List.partition (fun x -> contains_Ovar x ident) prod_list in
-              let non_ovar_inv = OpPow(OpProduct non_ovar, OpRational (snd(Mpfr.init_set_si (-1) Mpfr.Near))) in
-              solve_for_Ovar (op_automatic_simplify_inequation (OpEquals(OpProduct (List.append prod_list [non_ovar_inv]), OpProduct (right :: non_ovar_inv :: [])))) ident input_ident
-          | OpProduct _ -> raise (Isolating_exc ("OCRS is unable to solve " ^ (Expr_helpers.op_inequation_to_string op_inequation)))
-
-          | OpSum sum_list when List.for_all (fun x -> contains_Ovar x ident) sum_list ->
-              let new_left = factor_ovar sum_list ident input_ident in
-              solve_for_Ovar (OpEquals (new_left, right)) ident input_ident
-          | OpSum _ ->
-              raise (Isolating_exc ("OCRS is unable to solve " ^ (Expr_helpers.op_inequation_to_string op_inequation)))
-          | _ -> raise (Isolating_exc ("OCRS is unable to solve " ^ (Expr_helpers.op_inequation_to_string op_inequation)))
-          ))
-  | _ -> raise (Isolating_exc ("OCRS is unable to solve an inequality at this time"))
+    let res = solve_for_Ovar_pair left right ident input_ident in
+    OpEquals (fst res, snd res)
+  | OpGreaterEq (left, right) ->
+    let res = solve_for_Ovar_pair left right ident input_ident in
+    OpGreaterEq (fst res, snd res)
+  | OpGreater (left, right) ->
+    let res = solve_for_Ovar_pair left right ident input_ident in
+    OpGreater (fst res, snd res)
+  | OpLess (left, right) ->
+    let res = solve_for_Ovar_pair left right ident input_ident in
+    OpLess (fst res, snd res)
+  | OpLessEq (left, right) ->
+    let res = solve_for_Ovar_pair left right ident input_ident in
+    OpLessEq (fst res, snd res)

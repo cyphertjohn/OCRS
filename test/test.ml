@@ -96,6 +96,16 @@ let x13 = "y_{n+1} = 3 * y_n + n^2 * 2^n, n";;
 
 let x14 = "y_{n+1} = 2 * y_n + n^2 * 2^n, n";;
 
+let parse str = 
+  let lexbuf = Lexing.from_string str in
+  Parser.main Lexer.token lexbuf;;
+
+let z1 = "x_{n+1} = x_n + 1, n";;
+let z2 = "y_{n+1} = y_n + x_n + 1, n";;
+let z3 = "z_{n+1} = z_n + x_n + y_n +1, n";;
+
+let new_test_list = [parse z1; parse z2; parse z3];;
+
 let test_list = [x1; x8; x9; y1; x2; big_test; will_it_work; x3; x4; x5; x6; x7; x11; x12];;
 
 List.iter (fun x -> let _ = Solve_rec.solve_rec x in print_endline "") test_list;;
@@ -106,6 +116,17 @@ print_endline "";;
 Solve_rec.solve_rec_str x14;;
 print_endline "";;
 
+Solve_rec.solve_rec_str "z_{n+1} = z_n + y_0 + x_0, n";;
+print_endline "";;
+
+let res_list = Solve_rec.solve_rec_list new_test_list;;
+print_endline "";;
+print_endline "";;
+
+List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) res_list;;
+
+print_endline "";;
+Solve_rec.solve_rec_str "y_{k+1} >= y_k + a, k";;
 
 (*let lexbuf = Lexing.from_string "y_n = (n ^ 2) * 2^n, n" in
 let result = Parser.main Lexer.token lexbuf in

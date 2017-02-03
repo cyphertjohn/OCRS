@@ -16,6 +16,20 @@ let get_right_left_op_ineq ineq =
     (left, right)
   ;;
 
+let get_right_left_ineq ineq =
+  match ineq with
+  | Equals (left, right) ->
+    (left, right)
+  | Less (left, right) ->
+    (left, right)
+  | LessEq (left, right) ->
+    (left, right)
+  | Greater (left, right) ->
+    (left, right)
+  | GreaterEq (left, right) ->
+    (left, right)
+  ;;
+
 
 let rec find_ovar_ivar_expr expr = 
   match expr with
@@ -423,4 +437,39 @@ let solve_rec_str str =
     let _ = Printf.printf "%s%s\n" (Printexc.to_string e) (Printexc.get_backtrace ()) in
     Equals(Undefined, Undefined)
   ;;
+
+let solve_rec_list ineq_list = 
+  let rec sub_and_solve lis previous_ovar_sol= 
+    (match lis with
+    | [] -> []
+    | hd :: tl -> 
+      let rec sub_previous_sol pair_list ineq = 
+        (match pair_list with
+        | [] -> ineq
+        | hd :: tl ->
+          let new_ineq = substitute ineq (fst hd) (snd hd) in
+          sub_previous_sol tl new_ineq
+        ) in
+      let new_ineq_to_solve = sub_previous_sol previous_ovar_sol hd in
+      let rec_sol = solve_rec new_ineq_to_solve in
+      let (left, right) = get_right_left_ineq rec_sol in
+      rec_sol :: (sub_and_solve tl (previous_ovar_sol @ [(left, right)]))) in
+  sub_and_solve ineq_list []
+  ;;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
