@@ -1,25 +1,21 @@
 opam-version: "1.2"
-name: "OCRS"
-version: "0.1"
 maintainer: "John Cyphert <jcyphert@wisc.edu>"
-authors: [ "John Cyphert <jcyphert@wisc.edu>" ]
-license: "LGPL"
+authors: "John Cyphert <jcyphert@wisc.edu>"
 homepage: "https://github.com/cyphertjohn/OCRS"
 bug-reports: "https://github.com/cyphertjohn/OCRS/issues"
+license: "LGPL"
 build: [
   ["ocaml" "setup.ml" "-configure" "--prefix" prefix]
   ["ocaml" "setup.ml" "-build"]
 ]
 install: ["ocaml" "setup.ml" "-install"]
-remove: [
-  ["ocamlfind" "remove" "ocrs"]
-]
 build-test: [
   ["ocaml" "setup.ml" "-configure" "--enable-tests"]
   ["ocaml" "setup.ml" "-build"]
   ["ocaml" "setup.ml" "-test"]
 ]
-build-doc: [ "ocaml" "setup.ml" "-doc" ]
+build-doc: ["ocaml" "setup.ml" "-doc"]
+remove: ["ocamlfind" "remove" "ocrs"]
 depends: [
   ("apron" {= "20150518"} | "apron" {= "20140725"} | "apron" {= "0.9.10"} | "mlgmp" | "mlgmpidl")
   "ocamlbuild" {build}
