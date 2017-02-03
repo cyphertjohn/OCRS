@@ -1,8 +1,4 @@
 open Type_def
-open Expr_helpers
-(*open Expr_simplifications*)
-open Expr_to_opcalc
-(*open Expr_opCalc_simp*)
 
 (*
 let x = Sum [Product [Rational (snd (Mpfr.init_set_si 2 Mpfr.Near)); Pow(Symbolic_Constant "x", Rational (snd (Mpfr.init_set_si 3 Mpfr.Near)))]; Product [Pow(Symbolic_Constant "x", Rational (snd (Mpfr.init_set_si 2 Mpfr.Near))) ; Symbolic_Constant "x"]];;

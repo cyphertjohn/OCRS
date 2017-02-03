@@ -456,20 +456,3 @@ let solve_rec_list ineq_list =
       rec_sol :: (sub_and_solve tl (previous_ovar_sol @ [(left, right)]))) in
   sub_and_solve ineq_list []
   ;;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

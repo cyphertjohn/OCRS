@@ -1,8 +1,10 @@
 # OASIS_START
-# DO NOT EDIT (digest: 010aac9fc646c05b0448945827d63817)
+# DO NOT EDIT (digest: cffb81eb1005d119c1f616af5f7ff5d7)
 Type_def
 Solve_rec
 Expr_helpers
+Lexer
+Parser
 Expr_to_opcalc
 Expr_transforms
 Isolate_Ovar
@@ -10,6 +12,4 @@ Expr_simplifications
 Op_simplifications
 Tau_inverse
 Op_transforms
-Lexer
-Parser
 # OASIS_STOP
