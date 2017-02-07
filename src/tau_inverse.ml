@@ -26,6 +26,8 @@ let rec complete_tiling op_expr =
       true
   | OpPow(OpSum [OpRational neg_a; Q], OpRational neg_c) when (Mpfr.integer_p neg_c) && (Mpfr.cmp_si neg_c 0) < 0 ->
       true
+  | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational b; OpProduct[OpRational a; Q]], OpRational rat2)] when (Mpfr.cmp_si rat1 (-1))=0 && (Mpfr.cmp_si rat2 (-1))=0 ->
+      true
   | OpSum expr_list ->
       List.for_all complete_tiling expr_list
   | OpRational rat -> true
@@ -63,6 +65,15 @@ let rec tau_inverse op_expr input_ident =
       let _ = Mpfr.neg k neg_k Mpfr.Near in
       Pow (Rational k, Input_variable input_ident)
   
+  | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational neg_b; OpProduct[OpRational a; Q]], OpRational rat2)] when (Mpfr.cmp_si rat1 (-1))=0 && (Mpfr.cmp_si rat2 (-1))=0 ->
+      let k = Mpfr.init () in
+      let b = Mpfr.init () in
+      let _ = Mpfr.neg b neg_b Mpfr.Near in
+      let _ = Mpfr.div k b a Mpfr.Near in
+      let a_inv = Mpfr.init () in
+      let _ = Mpfr.pow_si a_inv a (-1) Mpfr.Near in
+      Product [Rational a_inv; Pow (Rational k, Input_variable input_ident)]
+
   | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational neg_k; Q], OpRational rat2)] when (Mpfr.cmp_si rat1 (-1))=0 && (Mpfr.cmp_si rat2 0)<0 && (Mpfr.integer_p rat2) ->
       let k = Mpfr.init () in
       let _ = Mpfr.neg k neg_k Mpfr.Near in
