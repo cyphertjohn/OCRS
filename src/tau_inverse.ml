@@ -28,13 +28,18 @@ let rec complete_tiling op_expr =
       true
   | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational b; OpProduct[OpRational a; Q]], OpRational rat2)] when (Mpfr.cmp_si rat1 (-1))=0 && (Mpfr.cmp_si rat2 (-1))=0 ->
       true
+  | OpProduct [OpSum [OpRational neg_one_a; Q]; OpPow(OpSum[Q; OpProduct[OpRational neg_one_b; OpSymbolic_Constant a]], OpRational neg_one_c)] when (Mpfr.cmp_si neg_one_a (-1))=0
+&& (Mpfr.cmp_si neg_one_b (-1))=0 && (Mpfr.cmp_si neg_one_c (-1))=0 ->
+      true
+  | OpPow(OpSum[Q; OpProduct[OpRational neg_one_a; OpSymbolic_Constant a]], OpRational neg_one_b) when (Mpfr.cmp_si neg_one_a (-1))=0 && (Mpfr.cmp_si neg_one_b (-1))=0 ->
+      true
   | OpSum expr_list ->
       List.for_all complete_tiling expr_list
   | OpRational rat -> true
   | OpSymbolic_Constant str (* probably some other things *) -> true
   | OpBase_case (str, integer) -> true
   | OpProduct expr_list ->
-      let (const_list, term) = List.partition is_const expr_list in
+      let (term, const_list) = List.partition Op_transforms.contains_q expr_list in 
       if (List.length const_list) <> 0 then complete_tiling (Op_simplifications.op_automatic_simplify (OpProduct term))
       else false
   | _ -> false (* might be too strong *)
@@ -65,6 +70,11 @@ let rec tau_inverse op_expr input_ident =
       let _ = Mpfr.neg k neg_k Mpfr.Near in
       Pow (Rational k, Input_variable input_ident)
   
+  | OpProduct [OpSum [OpRational neg_one_a; Q]; OpPow(OpSum[Q; OpProduct[OpRational neg_one_b; OpSymbolic_Constant a]], OpRational neg_one_c)] when (Mpfr.cmp_si neg_one_a (-1))=0 && (Mpfr.cmp_si neg_one_b (-1))=0 && (Mpfr.cmp_si neg_one_c (-1))=0 ->
+      Pow (Symbolic_Constant a, Input_variable input_ident)
+  | OpPow(OpSum[Q; OpProduct[OpRational neg_one_a; OpSymbolic_Constant a]], OpRational neg_one_b) when (Mpfr.cmp_si neg_one_a (-1))=0 && (Mpfr.cmp_si neg_one_b (-1))=0 ->
+      Product[Sum[Pow(Symbolic_Constant a, Input_variable input_ident); Rational neg_one_a]; Pow(Sum[Symbolic_Constant a; Rational neg_one_a], Rational neg_one_a)]
+ 
   | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational neg_b; OpProduct[OpRational a; Q]], OpRational rat2)] when (Mpfr.cmp_si rat1 (-1))=0 && (Mpfr.cmp_si rat2 (-1))=0 ->
       let k = Mpfr.init () in
       let b = Mpfr.init () in
@@ -110,9 +120,11 @@ let rec tau_inverse op_expr input_ident =
   | OpSymbolic_Constant str (* probably some other things *) -> Symbolic_Constant str
   | OpBase_case (str, integer) -> Base_case (str, integer)
   | OpProduct expr_list ->
-      let (const_list, term) = List.partition is_const expr_list in
+      let (term, const_list) = List.partition Op_transforms.contains_q expr_list in
       if (List.length const_list) <> 0 then Product (List.append (List.map (fun x -> tau_inverse x input_ident) const_list) ((tau_inverse (Op_simplifications.op_automatic_simplify (OpProduct term)) input_ident) :: []))
       else raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string op_expr))) (* need to do some transformations *)
+  | OpPow (base, exp) when (not (Op_transforms.contains_q base)) && (not (Op_transforms.contains_q exp)) ->
+      Pow (tau_inverse base input_ident, tau_inverse exp input_ident)
   | _ -> raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string op_expr)))
 
 

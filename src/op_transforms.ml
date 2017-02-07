@@ -287,7 +287,7 @@ let partial_fraction_3 u v =
         | _ ->
           false
         ) in
-      let (denom, num) = List.partition is_denom prodList in
+      let (denom, num) = List.partition (fun x -> is_denom x && contains_q x) prodList in
       let simp_num = Op_simplifications.op_automatic_simplify (OpProduct num) in
       let get_base_exp_of_denom denom = 
         (match denom with

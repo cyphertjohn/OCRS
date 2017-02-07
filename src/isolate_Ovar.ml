@@ -102,8 +102,17 @@ let factor_ovar sum_list ident input_ident =
   ;;
 
 
+let sum_contains_non_Ovar expr ident = 
+  match expr with
+  | OpSum sumList ->
+    let (_, non_ovar_list) = List.partition (fun x -> contains_Ovar x ident) sumList in
+    if List.length non_ovar_list = 0 then false
+    else true
+  | _ -> false
+  ;;
+
 let rec solve_for_Ovar_pair left right ident input_ident = 
-  if (contains_Ovar left ident) && (contains_Ovar right ident) then
+  if (contains_Ovar left ident) && (contains_Ovar right ident) || (sum_contains_non_Ovar left ident) then
     let (new_left, new_right) = move_Ovar_left left right ident in   (* TODO this technique will not work in the case of inequalities, becuase the direction needs to flip *)
     solve_for_Ovar_pair new_left new_right ident input_ident
   else
@@ -117,6 +126,8 @@ let rec solve_for_Ovar_pair left right ident input_ident =
     | OpProduct _ -> raise (Isolating_exc ("OCRS is unable to solve " ^ (Expr_helpers.op_inequation_to_string (OpEquals (left, right)))))
     | OpSum sum_list when List.for_all (fun x -> contains_Ovar x ident) sum_list ->
       let new_left = factor_ovar sum_list ident input_ident in
+      
+
       solve_for_Ovar_pair new_left right ident input_ident
     | OpSum _ ->
       raise (Isolating_exc ("OCRS is unable to solve " ^ (Expr_helpers.op_inequation_to_string (OpEquals (left, right)))))

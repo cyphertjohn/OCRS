@@ -408,7 +408,100 @@ let rec solve_rec_recur ineq ovar_ident ivar_ident =
       solve_add_linear_rec ineq ovar_ident ivar_ident
   ;;
 
+let rec contains_ovar_expr expr subscript = 
+  match expr with
+  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ ->
+    false
+  | Output_variable (_, subscript) ->
+    true
+  | Pow (base, exp) ->
+    (contains_ovar_expr base subscript) || (contains_ovar_expr exp subscript)
+  | Times (left, right) ->
+    (contains_ovar_expr left subscript) || (contains_ovar_expr right subscript)
+  | Plus (left, right) ->
+    (contains_ovar_expr left subscript) || (contains_ovar_expr right subscript)
+  | Minus (left, right) ->
+    (contains_ovar_expr left subscript) || (contains_ovar_expr right subscript)
+  | Divide (left, right) ->
+    (contains_ovar_expr left subscript) || (contains_ovar_expr right subscript)
+  | Binomial (left, right) ->
+    (contains_ovar_expr left subscript) || (contains_ovar_expr right subscript)
+  | Log (base, expression) ->
+    (contains_ovar_expr expression subscript)
+  | Factorial expression ->
+    (contains_ovar_expr expression subscript)
+  | Product prodList ->
+    List.exists (fun x -> contains_ovar_expr x subscript) prodList
+  | Sum sumList ->
+    List.exists (fun x -> contains_ovar_expr x subscript) sumList
+  ;;
 
+
+let rec find_all_subscripts expr =
+  match expr with
+  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ ->
+    []
+  | Output_variable (_, subscript) ->
+    subscript :: []
+  | Pow (base, exp) ->
+    (find_all_subscripts base) @ (find_all_subscripts exp)
+  | Times (left, right) ->
+    (find_all_subscripts left) @ (find_all_subscripts right)
+  | Plus (left, right) ->
+    (find_all_subscripts left) @ (find_all_subscripts right)
+  | Product prodList ->
+    List.concat (List.map find_all_subscripts prodList)
+  | Sum sumList ->
+    List.concat (List.map find_all_subscripts sumList)
+  | Divide (left, right) ->
+    (find_all_subscripts left) @ (find_all_subscripts right)
+  | Minus (left, right) ->
+    (find_all_subscripts left) @ (find_all_subscripts right)
+  | Log (_, expr) ->
+    find_all_subscripts expr
+  | Factorial expr ->
+    find_all_subscripts expr
+  | Binomial (left, right) ->
+    (find_all_subscripts left) @ (find_all_subscripts right)
+  ;;
+
+(*
+let rec prepare_for_linear_sub_pair pair subscripts = 
+  match pair with
+  | (Product[Rational b; Sum leftList], Product[Rational c; Sum rightList]) -> 
+    let left_ovar_subscript_list = List.map (fun subscript -> (List.filter (fun expr -> contains_ovar_expr expr subscript) left_list), subscript) subscripts in
+    let right_ovar_subscript_list = List.map (fun subscript -> (List.filter (fun expr -> contains_ovar_expr expr subscript) right_list), subscript) subscripts in
+   
+
+let prepare_for_linear_sub_ineq ineq ivar_ident = 
+  let rec remove_dup lst =
+    (match lst with
+    | [] -> []
+    | h::t -> h::(remove_dup (List.filter (fun x -> x<>h) t))) in
+  match ineq with
+  | Equals (left, right) ->
+     let subscripts = remove_dup (find_all_subscripts left right ivar_ident) in
+     let (ineq_pair, shifted_term, unshifted_term) = prepare_for_linear_sub_pair (left, right) subscripts in
+     (Equals ineq_pair, shifted_term, unshifted_term)
+  | LessEq (left, right) ->
+     let subscripts = remove_dup (find_all_subscripts left right ivar_ident) in
+     let (ineq_pair, shifted_term, unshifted_term) = prepare_for_linear_sub_pair (left, right) subscripts in
+     (LessEq ineq_pair, shifted_term, unshifted_term)
+  | Less (left, right) ->
+     let subscripts = remove_dup (find_all_subscripts left right ivar_ident) in
+     let (ineq_pair, shifted_term, unshifted_term) = prepare_for_linear_sub_pair (left, right) subscripts in
+     (Less ineq_pair, shifted_term, unshifted_term)
+  | Greater (left, right) ->
+     let subscripts = remove_dup (find_all_subscripts left right ivar_ident) in
+     let (ineq_pair, shifted_term, unshifted_term) = prepare_for_linear_sub_pair (left, right) subscripts in
+     (Greater ineq_pair, shifted_term, unshifted_term)
+  | GreaterEq (left, right) ->
+     let subscripts = remove_dup (find_all_subscripts left right ivar_ident) in
+     let (ineq_pair, shifted_term, unshifted_term) = prepare_for_linear_sub_pair (left, right) subscripts in
+     (GreaterEq ineq_pair, shifted_term, unshifted_term)
+  ;;
+
+*)
 let solve_rec ineq = 
   try
     let _ = Printf.printf "Input Expression:\t %s\n" (Expr_helpers.inequation_to_string ineq) in
@@ -416,7 +509,10 @@ let solve_rec ineq =
     let identifier_res = find_ovar_ivar simp_ineq in
     let ovar_idents = fst identifier_res in
     let ivar_idents = snd identifier_res in
-    if (List.length ovar_idents)>1 || (List.length ivar_idents)>1 then
+    if (List.length ovar_idents)>1 && (List.length ivar_idents)=1 then
+      let ivar_ident  = List.nth ivar_idents 0 in
+      Equals(Undefined, Undefined) 
+    else if (List.length ivar_idents) > 1 then
       raise (Solve_exc "OCRS is unable to solve multivariate recurrences")
     else
       let ovar_ident = List.nth ovar_idents 0 in
