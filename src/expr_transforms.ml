@@ -139,3 +139,144 @@ let inverse_binomial_ineq ineq =
   | LessEq(left, right) -> LessEq(inverse_binomial left, inverse_binomial right)
   ;;
 
+
+
+(*
+
+This section might be useful if trying to identify and factor out arbitrary linear terms
+
+let rec get_gcd_of_linear_terms term_list = 
+  let rational_list = List.map (fun x -> 
+                                    (match x with
+                                    | Product ((Rational rat) :: tail) -> Rational rat
+                                    | _ -> Rational (snd(Mpfr.init_set_si 1 Mpfr.Near)))) term_list in
+  let list_with_out_rational = 
+  ;;
+
+*)
+
+(*
+let rec contains_x expr x =
+  if expr = x then true
+  else
+    (match expr with
+    | Plus (left, right) ->
+      (contains_x left x) || (contains_x right x)
+    | Minus (left, right) ->
+      (contains_x left x) || (contains_x right x)
+    | Times (left, right) ->
+      (contains_x left x) || (contains_x right x)
+    | Divide (left, right) ->
+      (contains_x left x) || (contains_x right x)
+    | Product expr_list ->
+      List.exists (fun y -> contains_x y x) expr_list
+    | Sum expr_list ->
+      List.exists (fun y -> contains_x y x) expr_list
+    | Factorial expression ->
+      contains_x expression x
+    | Log (_, expression) ->
+      contains_x expression x
+    | Pow (left, right) ->
+      (contains_x left x) || (contains_x right x)
+    | Binomial (left, right) ->
+      (contains_x left x) || (contains_x right x)
+    | _ -> false)
+  ;;
+
+
+let rec degree_monomial u x =
+  if u=x then (Rational (snd(Mpfr.init_set_si 1 Mpfr.Near)), snd(Mpfr.init_set_si 1 Mpfr.Near))
+  else
+    (match u with
+    | Pow(x, Rational rat) when (Mpfr.cmp_si rat 1)>0 ->
+      (Rational (snd(Mpfr.init_set_si 1 Mpfr.Near)), rat)
+    | Product prodList ->
+      let coef_deg_list = List.map (fun y -> degree_monomial y x) prodList in
+      if List.exists (fun x -> (fst x) = Undefined) coef_deg_list then (Undefined, snd(Mpfr.init_set_si 0 Mpfr.Near))
+      else
+        let max a b =
+          let a_deg = snd a in
+          let b_deg = snd b in
+          let cmp_result = Mpfr.cmp a_deg b_deg in
+          if cmp_result < 0 then b
+          else a in
+        let m = List.fold_left max (Symbolic_Constant "y", snd(Mpfr.init_set_si (-1) Mpfr.Near)) coef_deg_list in
+        (Expr_simplifications.automatic_simplify (Divide(u, Pow (x, Rational (snd m)))), (snd m))
+    | _ ->
+      if contains_x u x then (Undefined, snd(Mpfr.init_set_si 0 Mpfr.Near))
+      else (u, snd(Mpfr.init_set_si 0 Mpfr.Near)))
+  ;;
+
+
+(* the degree of the polynomial u in y *)
+let degree u y =
+  let x = degree_monomial u y in
+  if fst x <> Undefined then x
+  else (match u with
+    | Sum sumList ->
+      let degreelist = List.map (fun a -> degree_monomial a y) sumList in
+      if List.exists (fun x1 -> fst x1 = Undefined) degreelist then (Undefined, snd(Mpfr.init_set_si 0 Mpfr.Near))
+      else
+        let max a b =
+          let a_deg = snd a in
+          let b_deg = snd b in
+          let cmp_result = Mpfr.cmp a_deg b_deg in
+          if cmp_result < 0 then b
+          else a in
+        List.fold_left max (Symbolic_Constant "y", snd(Mpfr.init_set_si (-1) Mpfr.Near)) degreelist
+    | _ -> (Undefined, snd (Mpfr.init_set_si 0 Mpfr.Near)))
+  ;;
+
+(* u and v are polynomials in a *)
+let polynomial_division u v a =
+  let x = degree u a in
+  let y = degree v a in
+  let n = snd y in
+  let lcv = fst y in
+  let rec aux acc m r =
+    let is_zero expr =
+      match expr with
+      | Rational rat when (Mpfr.cmp_si rat 0)=0 -> true
+      | _ -> false in
+    if (Mpfr.cmp m n)<0 || (is_zero r) then (acc, r)
+    else
+      let lcr = fst (degree r a) in
+      let s = Expr_simplifications.automatic_simplify (Divide(lcr, lcv)) in
+      let new_acc = Expr_simplifications.automatic_simplify (Sum[acc; Product[s; Pow(a, Minus(Rational m, Rational n))]]) in
+      let new_r = Expr_simplifications.automatic_simplify (algebraic_expand (Expr_simplifications.automatic_simplify (Minus(Minus(r, Product[lcr; Pow(a, Rational m)]), Product[Minus(v, Product[lcv;Pow(a, Rational n)]);s;Pow(a, Minus(Rational m, Rational n))])))) in
+      let new_m = snd (degree new_r a) in
+      aux new_acc new_m new_r in
+  aux (Rational (snd(Mpfr.init_set_si 0 Mpfr.Near))) (snd x) u
+  ;;
+
+
+let extended_euclidean u v x =
+  match (u, v) with
+  | (Rational rat1, Rational rat2) when (Mpfr.cmp_si rat1 0)=0 && (Mpfr.cmp_si rat2 0)=0 ->
+    [Rational (snd(Mpfr.init_set_si 0 Mpfr.Near)); Rational (snd(Mpfr.init_set_si 0 Mpfr.Near)); Rational (snd(Mpfr.init_set_si 0 Mpfr.Near))]
+  | _ ->
+    let rec aux u v app ap bpp bp =
+      (match v with
+      | Rational rat when (Mpfr.cmp_si rat 0)=0 -> [u; app; bpp;]
+      | _ ->
+        let division_result = polynomial_division u v x in
+        let a = Expr_simplifications.automatic_simplify (Minus (app, Times(fst division_result, ap))) in
+        let b = Expr_simplifications.automatic_simplify (Minus (bpp, Times(fst division_result, bp))) in
+        let new_app = ap in
+        let new_ap = a in
+        let new_bpp = bp in
+        let new_bp = b in
+        let new_u = v in
+        let new_v = snd division_result in
+        aux new_u new_v new_app new_ap new_bpp new_bp) in
+      let aux_result = aux u v (Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))) (Rational (snd(Mpfr.init_set_si 0 Mpfr.Near))) (Rational (snd(Mpfr.init_set_si 0 Mpfr.Near))) (Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))) in
+      let c = fst (degree (List.nth aux_result 0) x) in
+      let _ = print_endline ("u= " ^ (Expr_helpers.expr_to_string (List.nth aux_result 0))) in
+      let _ = print_endline ("App= " ^ (Expr_helpers.expr_to_string (List.nth aux_result 1))) in
+      let _ = print_endline ("Bpp= " ^ (Expr_helpers.expr_to_string (List.nth aux_result 2))) in
+      let app_res = algebraic_expand (Expr_simplifications.automatic_simplify (Divide(List.nth aux_result 1, c))) in
+      let bpp_res = algebraic_expand (Expr_simplifications.automatic_simplify (Divide(List.nth aux_result 2, c))) in
+      let u_res = algebraic_expand (Expr_simplifications.automatic_simplify (Divide(List.nth aux_result 0, c))) in
+      [u_res; app_res; bpp_res]
+  ;;
+*)

@@ -104,25 +104,34 @@ let new_test_list = [parse z1; parse z2; parse z3];;
 
 let test_list = [x1; x8; x9; y1; x2; big_test; will_it_work; x3; x4; x5; x6; x7; x11; x12];;
 
-List.iter (fun x -> let _ = Solve_rec.solve_rec x in print_endline "") test_list;;
+List.iter (fun x -> let _ = Ocrs.solve_rec x true in print_endline "") test_list;;
 
-Solve_rec.solve_rec_str x13;;
+Ocrs.solve_rec_str x13;;
 print_endline "";;
 
-Solve_rec.solve_rec_str x14;;
+Ocrs.solve_rec_str x14;;
 print_endline "";;
 
-Solve_rec.solve_rec_str "z_{n+1} = z_n + y_0 + x_0, n";;
+Ocrs.solve_rec_str "z_{n+1} = z_n + y_0 + x_0, n";;
 print_endline "";;
 
-let res_list = Solve_rec.solve_rec_list new_test_list;;
+let res_list = Ocrs.solve_rec_list new_test_list;;
+let print_list lis = List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) lis;;
+let _ = print_list new_test_list;;
+let _ = print_list res_list;;
 print_endline "";;
 print_endline "";;
 
-List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) res_list;;
+print_endline "";;
+Ocrs.solve_rec_str "y_{k+1} >= y_k + a, k";;
 
 print_endline "";;
-Solve_rec.solve_rec_str "y_{k+1} >= y_k + a, k";;
+Ocrs.solve_rec_str "y_{n+1}-a*y_n = n, n";;
+
+let binary_search_term = Expr_simplifications.automatic_simplify (Minus(Output_variable("hi", SSVar "n"), Output_variable("lo", SSVar "n")));;
+let second_test_list = [(binary_search_term, parse "r_{n+1} = (1/2)*r_n, n"); (Output_variable("x", SSVar "n"), parse z1); (Output_variable("y", SSVar "n"), parse z2); (Output_variable("z", SSVar "n"), parse z3)];;
+let res_second_test_list = Ocrs.solve_rec_list_pair second_test_list;;
+print_list res_second_test_list;;
 
 (*let lexbuf = Lexing.from_string "y_n = (n ^ 2) * 2^n, n" in
 let result = Parser.main Lexer.token lexbuf in

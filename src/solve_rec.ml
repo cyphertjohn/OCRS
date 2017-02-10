@@ -119,20 +119,20 @@ let find_ovar_ivar ineq =
   ;;
   
 
-let solve_add_linear_rec ineq ovar_ident ivar_ident = 
+let solve_add_linear_rec ineq ovar_ident ivar_ident print_steps = 
   let simp_ineq = Expr_simplifications.automatic_simplify_inequation ineq in
-  let _ = Printf.printf "Expression to Solve:\t %s\n" (Expr_helpers.inequation_to_string simp_ineq) in
+  let _ = if print_steps then Printf.printf "Expression to Solve:\t %s\n" (Expr_helpers.inequation_to_string simp_ineq) in
   let op_ineq = Op_simplifications.op_automatic_simplify_inequation (Expr_to_opcalc.inequation_to_opCalc simp_ineq) in
-  let _ = Printf.printf "Operational Calculus:\t %s\n" (Expr_helpers.op_inequation_to_string op_ineq) in
+  let _ = if print_steps then Printf.printf "Operational Calculus:\t %s\n" (Expr_helpers.op_inequation_to_string op_ineq) in
   let isolated_op_ineq = Isolate_Ovar.solve_for_Ovar op_ineq ovar_ident ivar_ident in
-  let _ = Printf.printf "Isolated Expression:\t %s\n" (Expr_helpers.op_inequation_to_string isolated_op_ineq) in
+  let _ = if print_steps then Printf.printf "Isolated Expression:\t %s\n" (Expr_helpers.op_inequation_to_string isolated_op_ineq) in
   let expanded_ineq = Op_simplifications.op_automatic_simplify_inequation (Op_transforms.algebraic_expand_inequation isolated_op_ineq) in
-  let _ = Printf.printf "Expanded Expression:\t %s\n" (Expr_helpers.op_inequation_to_string expanded_ineq) in
+  let _ = if print_steps then Printf.printf "Expanded Expression:\t %s\n" (Expr_helpers.op_inequation_to_string expanded_ineq) in
   if (Tau_inverse.complete_tiling (snd(get_right_left_op_ineq expanded_ineq))) then
     let initial_result = Tau_inverse.tau_inverse_inequation expanded_ineq ivar_ident in
-    let _ = Printf.printf "Initial Result:\t\t %s\n" (Expr_helpers.inequation_to_string initial_result) in
+    let _ = if print_steps then Printf.printf "Initial Result:\t\t %s\n" (Expr_helpers.inequation_to_string initial_result) in
     let result = Expr_simplifications.automatic_simplify_inequation (Expr_transforms.algebraic_expand_inequation (Expr_transforms.inverse_binomial_ineq (Expr_simplifications.automatic_simplify_inequation initial_result))) in
-    let _ = Printf.printf "Final Result:\t\t %s\n" (Expr_helpers.inequation_to_string result) in
+    let _ = if print_steps then Printf.printf "Final Result:\t\t %s\n" (Expr_helpers.inequation_to_string result) in
     result
   else
     let (left_side, right_side) = get_right_left_op_ineq expanded_ineq in
@@ -149,12 +149,11 @@ let solve_add_linear_rec ineq ovar_ident ivar_ident =
       | _ -> Op_transforms.partial_fraction expr in
     let right_part_frac = expand_terms_with_no_transform right_side in
     let new_ineq = OpEquals(left_side, right_part_frac) in
-    let _ = Printf.printf "After Partial Fraction:\t %s\n" (Expr_helpers.op_inequation_to_string new_ineq) in
+    let _ = if print_steps then Printf.printf "After Partial Fraction:\t %s\n" (Expr_helpers.op_inequation_to_string new_ineq) in
     let initial_result = Tau_inverse.tau_inverse_inequation new_ineq ivar_ident in
-    let s = Printf.sprintf "Initial Result:\t\t %s" (Expr_helpers.inequation_to_string initial_result) in
-    let _ = print_endline s in
+    let _ = if print_steps then Printf.printf "Initial Result:\t\t %s\n" (Expr_helpers.inequation_to_string initial_result) in
     let result = Expr_simplifications.automatic_simplify_inequation (Expr_transforms.algebraic_expand_inequation (Expr_transforms.inverse_binomial_ineq (Expr_simplifications.automatic_simplify_inequation initial_result))) in
-    let _ = Printf.printf "Final Result:\t\t %s\n" (Expr_helpers.inequation_to_string result) in
+    let _ = if print_steps then Printf.printf "Final Result:\t\t %s\n" (Expr_helpers.inequation_to_string result) in
     result
   ;;
 
@@ -384,28 +383,28 @@ let substitute ineq old_term new_term =
   ;;
 
 
-let rec solve_rec_recur ineq ovar_ident ivar_ident = 
+let rec solve_rec_recur ineq ovar_ident ivar_ident print_steps = 
   let beta = get_beta ineq ovar_ident ivar_ident in
   if beta <> 0 then
-    let _ = Printf.printf "Subsituting a_k for %s_%s\n" ovar_ident ivar_ident in
+    let _ = if print_steps then Printf.printf "Subsituting a_k for %s_%s\n" ovar_ident ivar_ident in
     let new_rec = substitute ineq (Output_variable (ovar_ident, SSVar ivar_ident)) (Output_variable ("a", SSVar "k")) in
     let new_rec = substitute new_rec (Output_variable (ovar_ident, SSDiv (ivar_ident, beta))) (Output_variable ("a", SAdd("k", (-1)))) in
     let new_rec = substitute new_rec (Input_variable ivar_ident) (Pow(Rational (snd(Mpfr.init_set_si beta Mpfr.Near)), Input_variable "k")) in
-    let _ = Printf.printf "Will Solve:\t\t %s\n" (Expr_helpers.inequation_to_string new_rec) in
-    let res =  solve_rec_recur new_rec "a" "k" in
+    let _ = if print_steps then Printf.printf "Will Solve:\t\t %s\n" (Expr_helpers.inequation_to_string new_rec) in
+    let res =  solve_rec_recur new_rec "a" "k" print_steps in
     let final_answer = substitute res (Base_case ("a", 0)) (Base_case (ovar_ident, 1)) in
     let final_answer = substitute final_answer (Output_variable ("a", SSVar "k")) (Output_variable (ovar_ident, SSVar ivar_ident)) in
     let final_answer = substitute final_answer (Input_variable "k") (Log(snd(Mpfr.init_set_si beta Mpfr.Near), Input_variable ivar_ident)) in
-    let _ = Printf.printf "After Sub back:\t\t %s\n" (Expr_helpers.inequation_to_string final_answer) in
+    let _ = if print_steps then Printf.printf "After Sub back:\t\t %s\n" (Expr_helpers.inequation_to_string final_answer) in
     let final_answer = Expr_simplifications.automatic_simplify_inequation final_answer in
-    let _ = Printf.printf "Final answer:\t\t %s\n" (Expr_helpers.inequation_to_string final_answer) in
+    let _ = if print_steps then Printf.printf "Final answer:\t\t %s\n" (Expr_helpers.inequation_to_string final_answer) in
     final_answer
   else
     let z = find_lowest_add ineq in
     if z <> 0 then
-      solve_rec_recur (shift ineq ovar_ident ivar_ident z) ovar_ident ivar_ident
+      solve_rec_recur (shift ineq ovar_ident ivar_ident z) ovar_ident ivar_ident print_steps
     else
-      solve_add_linear_rec ineq ovar_ident ivar_ident
+      solve_add_linear_rec ineq ovar_ident ivar_ident print_steps
   ;;
 
 let rec contains_ovar_expr expr subscript = 
@@ -465,13 +464,83 @@ let rec find_all_subscripts expr =
     (find_all_subscripts left) @ (find_all_subscripts right)
   ;;
 
+
+let rec sub_base_cases ovar_expr expr base_case_ident = 
+  match expr with
+  | Base_case (base_ident, base_index) when base_ident = base_case_ident ->
+    let rec get_new_base_case ovar_term ident index = 
+      (match ovar_term with
+      | Output_variable (ovar_ident, _) ->
+        Base_case (ovar_ident, index)
+      | Sum sumList ->
+        Sum (List.map (fun x -> get_new_base_case x ident index) sumList)
+      | Product prodList ->
+        Product (List.map (fun x -> get_new_base_case x ident index) prodList)
+      | Pow (left, right) ->
+        Pow (get_new_base_case left ident index, get_new_base_case right ident index)
+      | Times (left, right) ->
+        Times (get_new_base_case left ident index, get_new_base_case right ident index)
+      | Plus (left, right) ->
+        Plus (get_new_base_case left ident index, get_new_base_case right ident index)
+      | Divide (left, right) ->
+        Divide (get_new_base_case left ident index, get_new_base_case right ident index)
+      | Minus (left, right) ->
+        Minus (get_new_base_case left ident index, get_new_base_case right ident index)
+      | Log (base, expr) ->
+        Log (base, get_new_base_case expr ident index)
+      | Binomial(left, right) ->
+        Binomial (get_new_base_case left ident index, get_new_base_case right ident index)
+      | Factorial expr ->
+        Factorial (get_new_base_case expr ident index)
+      | _ -> ovar_term) in
+    get_new_base_case ovar_expr base_ident base_index
+  | Sum sumList ->
+    Sum (List.map (fun x -> sub_base_cases ovar_expr x base_case_ident) sumList)
+  | Product prodList ->
+    Product (List.map (fun x -> sub_base_cases ovar_expr x base_case_ident) prodList)
+  | Pow (left, right) ->
+    Pow (sub_base_cases ovar_expr left base_case_ident, sub_base_cases ovar_expr right base_case_ident)
+  | Times (left, right) ->
+    Times (sub_base_cases ovar_expr left base_case_ident, sub_base_cases ovar_expr right base_case_ident)
+  | Plus (left, right) ->
+    Plus (sub_base_cases ovar_expr left base_case_ident, sub_base_cases ovar_expr right base_case_ident)
+  | Divide (left, right) ->
+    Divide (sub_base_cases ovar_expr left base_case_ident, sub_base_cases ovar_expr right base_case_ident)
+  | Minus (left, right) ->
+    Minus (sub_base_cases ovar_expr left base_case_ident, sub_base_cases ovar_expr right base_case_ident)
+  | Log (base, expre) ->
+    Log (base, sub_base_cases ovar_expr expre base_case_ident)
+  | Binomial (left, right) ->
+    Binomial (sub_base_cases ovar_expr left base_case_ident, sub_base_cases ovar_expr right base_case_ident)
+  | Factorial expre ->
+    Factorial (sub_base_cases ovar_expr expre base_case_ident)
+  | _ -> expr
+  ;;
+
+let sub_base_cases_ineq ovar_term ineq base_case_ident = 
+  match ineq with
+  | Equals(left, right) ->
+    Equals(sub_base_cases ovar_term left base_case_ident, sub_base_cases ovar_term right base_case_ident)
+  | Less (left, right) ->
+    Less(sub_base_cases ovar_term left base_case_ident, sub_base_cases ovar_term right base_case_ident)
+  | LessEq (left, right) ->
+    LessEq (sub_base_cases ovar_term left base_case_ident, sub_base_cases ovar_term right base_case_ident)
+  | Greater (left, right) ->
+    Greater(sub_base_cases ovar_term left base_case_ident, sub_base_cases ovar_term right base_case_ident)
+  | GreaterEq (left, right) ->
+    GreaterEq(sub_base_cases ovar_term left base_case_ident, sub_base_cases ovar_term right base_case_ident)
+  ;;
+
+
 (*
+This section might be useful if trying to factor out arbitrary linear terms
+
 let rec prepare_for_linear_sub_pair pair subscripts = 
   match pair with
-  | (Product[Rational b; Sum leftList], Product[Rational c; Sum rightList]) -> 
+  | (Sum leftList, Sum rightList) -> 
     let left_ovar_subscript_list = List.map (fun subscript -> (List.filter (fun expr -> contains_ovar_expr expr subscript) left_list), subscript) subscripts in
     let right_ovar_subscript_list = List.map (fun subscript -> (List.filter (fun expr -> contains_ovar_expr expr subscript) right_list), subscript) subscripts in
-   
+    
 
 let prepare_for_linear_sub_ineq ineq ivar_ident = 
   let rec remove_dup lst =
@@ -500,55 +569,4 @@ let prepare_for_linear_sub_ineq ineq ivar_ident =
      let (ineq_pair, shifted_term, unshifted_term) = prepare_for_linear_sub_pair (left, right) subscripts in
      (GreaterEq ineq_pair, shifted_term, unshifted_term)
   ;;
-
 *)
-let solve_rec ineq = 
-  try
-    let _ = Printf.printf "Input Expression:\t %s\n" (Expr_helpers.inequation_to_string ineq) in
-    let simp_ineq = Expr_simplifications.automatic_simplify_inequation ineq in
-    let identifier_res = find_ovar_ivar simp_ineq in
-    let ovar_idents = fst identifier_res in
-    let ivar_idents = snd identifier_res in
-    if (List.length ovar_idents)>1 && (List.length ivar_idents)=1 then
-      let ivar_ident  = List.nth ivar_idents 0 in
-      Equals(Undefined, Undefined) 
-    else if (List.length ivar_idents) > 1 then
-      raise (Solve_exc "OCRS is unable to solve multivariate recurrences")
-    else
-      let ovar_ident = List.nth ovar_idents 0 in
-      let ivar_ident = List.nth ivar_idents 0 in
-      solve_rec_recur simp_ineq ovar_ident ivar_ident
-  with e ->
-    let _ = Printf.printf "%s%s\n" (Printexc.to_string e) (Printexc.get_backtrace ()) in
-    Equals(Undefined, Undefined)
-  ;;
-
-
-let solve_rec_str str = 
-  try 
-    let lexbuf = Lexing.from_string str in
-    let result = Parser.main Lexer.token lexbuf in
-    solve_rec result
-  with e ->
-    let _ = Printf.printf "%s%s\n" (Printexc.to_string e) (Printexc.get_backtrace ()) in
-    Equals(Undefined, Undefined)
-  ;;
-
-let solve_rec_list ineq_list = 
-  let rec sub_and_solve lis previous_ovar_sol= 
-    (match lis with
-    | [] -> []
-    | hd :: tl -> 
-      let rec sub_previous_sol pair_list ineq = 
-        (match pair_list with
-        | [] -> ineq
-        | hd :: tl ->
-          let new_ineq = substitute ineq (fst hd) (snd hd) in
-          sub_previous_sol tl new_ineq
-        ) in
-      let new_ineq_to_solve = sub_previous_sol previous_ovar_sol hd in
-      let rec_sol = solve_rec new_ineq_to_solve in
-      let (left, right) = get_right_left_ineq rec_sol in
-      rec_sol :: (sub_and_solve tl (previous_ovar_sol @ [(left, right)]))) in
-  sub_and_solve ineq_list []
-  ;;
