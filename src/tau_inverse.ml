@@ -38,6 +38,7 @@ let rec complete_tiling op_expr =
   | OpRational rat -> true
   | OpSymbolic_Constant str (* probably some other things *) -> true
   | OpBase_case (str, integer) -> true
+  | OpPow(left, right) when not (Op_transforms.contains_q left) && not (Op_transforms.contains_q right) -> true
   | OpProduct expr_list ->
       let (term, const_list) = List.partition Op_transforms.contains_q expr_list in 
       if (List.length const_list) <> 0 then complete_tiling (Op_simplifications.op_automatic_simplify (OpProduct term))

@@ -75,12 +75,7 @@ let rec expr_to_opCalc expr =
   | Divide (left, right) ->
       OpDivide (expr_to_opCalc left, expr_to_opCalc right)
   | Product expr_list ->
-      let is_const expr =
-        match expr with
-        | Rational _ | Base_case _ | Symbolic_Constant _ ->
-          true
-        | _ -> false in
-      let (const_list, var_list) = List.partition is_const expr_list in
+      let (const_list, var_list) = List.partition Expr_helpers.is_const expr_list in
       if (List.length const_list) <> 0 then OpProduct ((List.map expr_to_opCalc const_list) @ [expr_to_opCalc (Expr_simplifications.automatic_simplify (Product var_list))])
       else
         (match expr_list with
@@ -129,16 +124,20 @@ let rec expr_to_opCalc expr =
       raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
       (* don't know what to do here *)
   | Pow (left, right) ->
-      (match (left, right) with
-      | (_, Sum sumList) ->
+      if Expr_helpers.is_const left && Expr_helpers.is_const right then OpPow (expr_to_opCalc left, expr_to_opCalc right)
+      else
+        (match (left, right) with
+        | (_, Sum sumList) ->
           let aux exp = 
             Pow (left, exp) in
           expr_to_opCalc (Expr_simplifications.automatic_simplify (Product (List.map aux sumList)))
-      | (Input_variable ident, Rational rat) when Mpfr.integer_p rat && (Mpfr.cmp_si rat 0)>0 ->
+        | (Input_variable ident, Rational rat) when Mpfr.integer_p rat && (Mpfr.cmp_si rat 0)>0 ->
           expr_to_opCalc (binomial_transform expr)
-      | (Rational rat, Input_variable ident) ->
+        | (Rational rat, Input_variable ident) ->
           OpDivide(OpMinus(Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpMinus(Q, OpRational rat))
-      | _ -> 
+        | (Symbolic_Constant ident, Input_variable ivar_ident) -> 
+          OpDivide(OpMinus(Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpMinus(Q, OpSymbolic_Constant ident))
+        | _ -> 
           let expand_result = Expr_transforms.algebraic_expand expr in
           if expand_result <> expr then expr_to_opCalc expand_result
           else raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr))))

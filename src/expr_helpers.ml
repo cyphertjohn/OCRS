@@ -222,4 +222,31 @@ let inequation_to_string_IR e =
       "Greater (" ^ expr_to_string_IR left ^ ", " ^ expr_to_string_IR right ^ ")"
   ;;
 
+let rec is_const expr =
+  match expr with
+  | Rational _ | Base_case _ | Symbolic_Constant _ ->
+    true
+  | Output_variable _ | Input_variable _ | Undefined -> false
+  | Pow (left, right) ->
+    (is_const left) && (is_const right)
+  | Times (left, right) ->
+    (is_const left) && (is_const right)
+  | Product prod_list ->
+    List.for_all is_const prod_list
+  | Plus (left, right) ->
+    (is_const left) && (is_const right)
+  | Sum sum_list ->
+    List.for_all is_const sum_list
+  | Divide (left, right) ->
+    (is_const left) && (is_const right)
+  | Minus (left, right) ->
+    (is_const left) && (is_const right)
+  | Log (base, expression) ->
+    is_const expression
+  | Binomial (left, right) ->
+    (is_const left) && (is_const right)
+  | Factorial expression ->
+    is_const expression
+  ;;
+
 
