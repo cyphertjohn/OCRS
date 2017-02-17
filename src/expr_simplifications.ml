@@ -49,7 +49,8 @@ let const expr =
 
 (* input list size is >= 2 *)
 let rec simplify_sum_rec expr_list = 
-  match expr_list with
+  (*let _ = print_endline ("simplify_sum_rec " ^ (Expr_helpers.expr_to_string (Sum expr_list))) in
+  *)match expr_list with
   | u_1 :: u_2 :: [] ->
       (match (u_1, u_2) with
       | (Sum p, Sum q) ->	(* SPRDREC-2-1 *)
@@ -125,7 +126,8 @@ and simplify_sum expr_list =
   
 (* input list size is >= 2 *)
 and simplify_product_rec expr_list = 
-  match expr_list with
+  (*let _ = print_endline ("simplify_product_rec " ^ (Expr_helpers.expr_to_string (Product expr_list))) in
+  *)match expr_list with
   | u_1 :: u_2 :: [] ->
       (match (u_1, u_2) with
       | (Product p, Product q) ->	(* SPRDREC-2-1 *)
@@ -151,10 +153,14 @@ and simplify_product_rec expr_list =
           let u_2exp = exponent u_2 in
           if (expr_order u_1base u_2base) = 0 then
               let s = simplify_sum (u_1exp :: u_2exp :: []) in 
-              let p = simplify_power u_1base s in
-              (match p with 
-              | Rational rat when (Mpfr.cmp_si rat 1) = 0 -> []
-              | _ -> (p :: []))
+              (match s with
+              | Sum (a :: b :: []) when u_1exp = a && u_2exp = b || u_2exp =  a && u_1exp = b ->
+                expr_list
+              | _ ->
+                let p = simplify_power u_1base s in
+                (match p with 
+                | Rational rat when (Mpfr.cmp_si rat 1) = 0 -> []
+                | _ -> (p :: [])))
           else if (expr_order u_2 u_1) < 0 then u_2 :: u_1 :: []	(* SPRDREC-1-4 *)
           else expr_list					(* SPRDREC-1-5 *)
       )
@@ -166,8 +172,9 @@ and simplify_product_rec expr_list =
       | _ ->
           merge_products (u_1 :: []) w				(* SPRDREC-3-2 *)
       )
-  | _ ->
-      raise (Simplification_exception "Error in simplify_product_rec")
+  | [] ->
+      (Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))) :: []
+      (*raise (Simplification_exception "Error in simplify_product_rec")*)
 and merge_products p q = 
   match (p, q) with
   | (_, []) -> p	(* MRPD-1 *)
@@ -235,7 +242,8 @@ and simplify_integer_power base n =
 
 (* simplify Pow(base, exp) *)
 and simplify_power base exp = 
-  match (base, exp) with
+  (*let _ = print_endline ("simplify_power " ^ (Expr_helpers.expr_to_string (Pow (base, exp)))) in
+  *)match (base, exp) with
   | (Undefined, _) | (_, Undefined) ->			(* SPOW-1 *)
       Undefined
   | (Rational bas, exponent) when (Mpfr.cmp_si bas 0) = 0 ->	(* SPOW-2 *)

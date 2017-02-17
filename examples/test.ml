@@ -1,4 +1,4 @@
-open Type_def
+open Type_def;;
 
 (*
 let x = Sum [Product [Rational (snd (Mpfr.init_set_si 2 Mpfr.Near)); Pow(Symbolic_Constant "x", Rational (snd (Mpfr.init_set_si 3 Mpfr.Near)))]; Product [Pow(Symbolic_Constant "x", Rational (snd (Mpfr.init_set_si 2 Mpfr.Near))) ; Symbolic_Constant "x"]];;
@@ -56,6 +56,15 @@ print_endline (expr_to_string (Expr_simplifications.automatic_simplify pow_test2
 print_endline (expr_to_string log_test);;
 print_endline (expr_to_string (Expr_simplifications.automatic_simplify log_test));;
 *)
+
+
+
+
+
+
+
+
+
 
 
 let x1 = Equals(Output_variable("y", SAdd("n", 1)), Plus(Output_variable("y", SSVar "n"), Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))));;
@@ -132,6 +141,14 @@ let binary_search_term = Expr_simplifications.automatic_simplify (Minus(Output_v
 let second_test_list = [(binary_search_term, parse "r_{n+1} = (1/2)*r_n, n"); (Output_variable("x", SSVar "n"), parse z1); (Output_variable("y", SSVar "n"), parse z2); (Output_variable("z", SSVar "n"), parse z3)];;
 let res_second_test_list = Ocrs.solve_rec_list_pair second_test_list;;
 print_list res_second_test_list;;
+print_endline "";;
+
+Ocrs.solve_rec_str "y_{n+1} = a*y_n + (b*n^2 + c*n + d)*e^n, n";;
+print_endline "";;
+
+Ocrs.solve_rec_str "y_{n+1} = a*y_n + (b*n^2 + c*n + d)*e^2, n";;
+print_endline "";;
+
 
 (*let lexbuf = Lexing.from_string "y_n = (n ^ 2) * 2^n, n" in
 let result = Parser.main Lexer.token lexbuf in

@@ -120,7 +120,7 @@ let find_ovar_ivar ineq =
   
 
 let solve_add_linear_rec ineq ovar_ident ivar_ident print_steps = 
-  let simp_ineq = Expr_simplifications.automatic_simplify_inequation ineq in
+  let simp_ineq = Expr_simplifications.automatic_simplify_inequation (Expr_transforms.algebraic_expand_inequation ineq) in
   let _ = if print_steps then Printf.printf "Expression to Solve:\t %s\n" (Expr_helpers.inequation_to_string simp_ineq) in
   let op_ineq = Op_simplifications.op_automatic_simplify_inequation (Expr_to_opcalc.inequation_to_opCalc simp_ineq) in
   let _ = if print_steps then Printf.printf "Operational Calculus:\t %s\n" (Expr_helpers.op_inequation_to_string op_ineq) in

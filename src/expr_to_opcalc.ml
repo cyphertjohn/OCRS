@@ -85,11 +85,20 @@ let rec expr_to_opCalc expr =
           let _ = Mpfr.pow const k c Mpfr.Near in
           let _ = Mpfr.add_ui c_plus_1 c 1 Mpfr.Near in
           OpProduct [OpRational const; OpDivide(OpMinus (Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpPow (OpMinus(Q, OpRational k), OpRational c_plus_1))]
+        | Pow (Symbolic_Constant sym, Input_variable str) :: Binomial (Input_variable str1, Rational c) :: [] when str = str1->
+          let c_plus_1 = Mpfr.init () in
+          let _ = Mpfr.add_ui c_plus_1 c 1 Mpfr.Near in
+          OpProduct [OpPow(OpSymbolic_Constant sym, OpRational c); OpDivide(OpMinus (Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpPow (OpMinus(Q, OpSymbolic_Constant sym), OpRational c_plus_1))]
         | Pow (Rational k, Input_variable str1) :: Pow(Input_variable str, Rational rat) :: [] when str = str1 ->
           let new_expr = (Expr_transforms.algebraic_expand (Expr_simplifications.automatic_simplify (Product [binomial_transform (Pow (Input_variable str, Rational rat)); Pow(Rational k, Input_variable str)]))) in
           expr_to_opCalc new_expr
         | Pow (Rational k, Input_variable str) :: (Input_variable str1) :: [] when str = str1 ->
           OpProduct [OpRational k; OpDivide(OpMinus (Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpPow(OpMinus(Q, OpRational k), OpRational (snd(Mpfr.init_set_si 2 Mpfr.Near))))]
+        | Pow (Symbolic_Constant sym, Input_variable str) :: (Input_variable str1) :: [] when str = str1 ->
+          OpProduct [OpSymbolic_Constant sym; OpDivide(OpMinus (Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpPow(OpMinus(Q, OpSymbolic_Constant sym), OpRational (snd(Mpfr.init_set_si 2 Mpfr.Near))))]    
+        | Pow (Symbolic_Constant sym, Input_variable str1) :: Pow(Input_variable str, Rational rat) :: [] when str = str1 ->
+          let new_expr = (Expr_transforms.algebraic_expand (Expr_simplifications.automatic_simplify (Product [binomial_transform (Pow (Input_variable str, Rational rat)); Pow(Symbolic_Constant sym, Input_variable str)]))) in
+          expr_to_opCalc new_expr
         | _ -> raise (Expr_to_op_exc "Can't transform non-linear product"))
   | Sum expr_list ->
       OpSum (List.map expr_to_opCalc expr_list)  					(* convert all list elem to strings concat with star *)

@@ -13,8 +13,8 @@ Description: A package based on Lothar Berg's operational calculus to solve recu
 Library ocrs
   Path:       src
   BuildTools: ocamlbuild
-  Modules:    Ocrs, Type_def,Expr_helpers, Lexer, Parser, Expr_simplifications, Expr_transforms
-  InternalModules: Expr_to_opcalc, Isolate_Ovar, Op_simplifications, Tau_inverse, Op_transforms, Solve_rec
+  Modules:    Ocrs, Type_def, Expr_helpers, Lexer, Parser
+  InternalModules: Expr_to_opcalc, Isolate_Ovar, Tau_inverse, Solve_rec, Expr_simplifications, Expr_transforms, Op_transforms, Op_simplifications
   XMETAEnable:	true
   BuildDepends: gmp
  
