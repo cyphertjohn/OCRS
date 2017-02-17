@@ -137,7 +137,7 @@ Ocrs.solve_rec_str "y_{k+1} >= y_k + a, k";;
 print_endline "";;
 Ocrs.solve_rec_str "y_{n+1}-a*y_n = n, n";;
 
-let binary_search_term = Expr_simplifications.automatic_simplify (Minus(Output_variable("hi", SSVar "n"), Output_variable("lo", SSVar "n")));;
+let binary_search_term = Sum[Output_variable ("hi", SSVar "n"); Product[Rational (snd(Mpfr.init_set_si (-1) Mpfr.Near)); Output_variable ("lo", SSVar "n")]];;
 let second_test_list = [(binary_search_term, parse "r_{n+1} = (1/2)*r_n, n"); (Output_variable("x", SSVar "n"), parse z1); (Output_variable("y", SSVar "n"), parse z2); (Output_variable("z", SSVar "n"), parse z3)];;
 let res_second_test_list = Ocrs.solve_rec_list_pair second_test_list;;
 print_list res_second_test_list;;
