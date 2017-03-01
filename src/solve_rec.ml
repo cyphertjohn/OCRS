@@ -148,7 +148,13 @@ let solve_add_linear_rec ineq ovar_ident ivar_ident print_steps =
           in expand_terms sumList [] 0
       | _ -> Op_transforms.partial_fraction expr in
     let right_part_frac = expand_terms_with_no_transform right_side in
-    let new_ineq = OpEquals(left_side, right_part_frac) in
+    let new_ineq = 
+      (match expanded_ineq with
+      | OpEquals _ -> OpEquals (left_side, right_part_frac)
+      | OpLess _ -> OpLess (left_side, right_part_frac)
+      | OpLessEq _ -> OpLessEq (left_side, right_part_frac)
+      | OpGreater _ -> OpGreater (left_side, right_part_frac)
+      | OpGreaterEq _ -> OpGreaterEq (left_side, right_part_frac)) in
     let _ = if print_steps then Printf.printf "After Partial Fraction:\t %s\n" (Expr_helpers.op_inequation_to_string new_ineq) in
     let initial_result = Tau_inverse.tau_inverse_inequation new_ineq ivar_ident in
     let _ = if print_steps then Printf.printf "Initial Result:\t\t %s\n" (Expr_helpers.inequation_to_string initial_result) in
