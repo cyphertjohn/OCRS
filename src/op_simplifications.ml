@@ -19,7 +19,7 @@ let exponent expr =
   | OpRational _ ->
       OpUndefined
   | _ ->
-      OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))
+      OpRational (Mpq.init_set_si 1 1)
 ;;
 
 let term expr = 
@@ -43,7 +43,7 @@ let const expr =
   | OpRational _ ->
       OpUndefined
   | _ ->
-      OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))
+      OpRational (Mpq.init_set_si 1 1)
 ;;
 
 
@@ -59,14 +59,14 @@ let rec simplify_sum_rec expr_list =
       | (_, OpSum q) ->		(* SPRDREC-2-3 *)
           merge_sums (u_1 :: []) q
       | (OpRational v_1, OpRational v_2) ->	(* SPRDREC-1-1 *)
-          let result = Mpfr.init () in
-          let _ = Mpfr.add result v_1 v_2 Mpfr.Near in
-          (if (Mpfr.cmp_si result 0) = 0 then
+          let result = Mpq.init () in
+          let _ = Mpq.add result v_1 v_2 in
+          (if (Mpq.cmp_si result 0 1) = 0 then
               []	(* don't know if this is allowed *)
            else (OpRational result) :: [] )
-      | (OpRational v_1, _) when (Mpfr.cmp_si v_1 0) = 0 ->	(* SPRDREC-1-2-a *)
+      | (OpRational v_1, _) when (Mpq.cmp_si v_1 0 1) = 0 ->	(* SPRDREC-1-2-a *)
           u_2 :: []
-      | (_, OpRational v_2) when (Mpfr.cmp_si v_2 0) = 0 ->	(* SPRDREC-1-2-b *)
+      | (_, OpRational v_2) when (Mpq.cmp_si v_2 0 1) = 0 ->	(* SPRDREC-1-2-b *)
           u_1 :: []
       | _ ->
           let u_1_term = term u_1 in
@@ -77,7 +77,7 @@ let rec simplify_sum_rec expr_list =
               let s = simplify_sum (u_1_const :: u_2_const :: []) in (* SPRDREC-1-3 *)
               let p = simplify_product (s :: u_1_term :: []) in
               (match p with 
-              | OpRational rat when (Mpfr.cmp_si rat 0) = 0 -> []
+              | OpRational rat when (Mpq.cmp_si rat 0 1) = 0 -> []
               | _ -> (p :: []))
           else	if (op_expr_order u_2 u_1) < 0 then u_2 :: u_1 :: []		(* SPRDREC-1-4 *)
               
@@ -116,7 +116,7 @@ and simplify_sum expr_list =
      | _ ->
          let simp_list = simplify_sum_rec expr_list in 
          (match simp_list with 	
-         | [] -> OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))
+         | [] -> OpRational (Mpq.init_set_si 0 1)
          | v_1 :: [] -> v_1
          | _ -> OpSum simp_list
          )
@@ -134,14 +134,14 @@ and simplify_product_rec expr_list =
       | (_, OpProduct q) ->		(* SPRDREC-2-3 *)
           merge_products (u_1 :: []) q
       | (OpRational v_1, OpRational v_2) ->	(* SPRDREC-1-1 *)
-          let result = Mpfr.init () in
-          let _ = Mpfr.mul result v_1 v_2 Mpfr.Near in
-          (if (Mpfr.cmp_si result 1) = 0 then
+          let result = Mpq.init () in
+          let _ = Mpq.mul result v_1 v_2 in
+          (if (Mpq.cmp_si result 1 1) = 0 then
               []	(* don't know if this is allowed *)
            else (OpRational result) :: [] )
-      | (OpRational v_1, _) when (Mpfr.cmp_si v_1 1) = 0 ->	(* SPRDREC-1-2-a *)
+      | (OpRational v_1, _) when (Mpq.cmp_si v_1 1 1) = 0 ->	(* SPRDREC-1-2-a *)
           u_2 :: []
-      | (_, OpRational v_2) when (Mpfr.cmp_si v_2 1) = 0 ->	(* SPRDREC-1-2-b *)
+      | (_, OpRational v_2) when (Mpq.cmp_si v_2 1 1) = 0 ->	(* SPRDREC-1-2-b *)
           u_1 :: []
       | _ ->							(* SPRDREC-1-3 *)
           let u_1base = base u_1 in
@@ -152,7 +152,7 @@ and simplify_product_rec expr_list =
               let s = simplify_sum (u_1exp :: u_2exp :: []) in 
               let p = simplify_power u_1base s in
               (match p with 
-              | OpRational rat when (Mpfr.cmp_si rat 1) = 0 -> []
+              | OpRational rat when (Mpq.cmp_si rat 1 1) = 0 -> []
               | _ -> (p :: []))
           else if (op_expr_order u_2 u_1) < 0 then u_2 :: u_1 :: []	(* SPRDREC-1-4 *)
           else expr_list					(* SPRDREC-1-5 *)
@@ -185,17 +185,17 @@ and simplify_product expr_list =
   if (List.exists (fun el -> el = OpUndefined) expr_list) then	(* SPRD-1 *)
      OpUndefined
   else if (List.exists (fun el -> (match el with
-                                   | OpRational value when (Mpfr.cmp_si value 0) = 0->	(* SPRD-2 *)
+                                   | OpRational value when (Mpq.cmp_si value 0 1) = 0->	(* SPRD-2 *)
                                        true
                                    | _ ->
-                                       false)) expr_list) then OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))
+                                       false)) expr_list) then OpRational (Mpq.init_set_si 0 1)
   else
      (match expr_list with
      | u_1 :: [] -> u_1		(* SPRD-3 *)
      | _ ->
          let simp_list = simplify_product_rec expr_list in 
          (match simp_list with 	(* SPRD-4 *)
-         | [] -> OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))
+         | [] -> OpRational (Mpq.init_set_si 1 1)
          | v_1 :: [] -> v_1
          | (OpSum sum_lis) :: (OpRational rat) :: [] | (OpRational rat) :: (OpSum sum_lis) :: [] ->
              let distributed_rat = List.map (fun x -> simplify_product [OpRational rat; x]) sum_lis in
@@ -208,18 +208,17 @@ and simplify_product expr_list =
 and simplify_integer_power base n =
   match (base, n) with
   | (OpRational v, _) ->	(* SINTPOW-1 *)
-      let result = Mpfr.init () in
-      let _ = Mpfr.pow result v n Mpfr.Near in
+      let result = Expr_simplifications.exp_by_squaring_int v n in
       OpRational result
       (*simplify_RNE (OpPow (Float (float_of_int v)), Float n)*)      (* base is an int and exponent is an int float *)
-  | (_, value) when (Mpfr.cmp_si value 0) = 0 ->		(* SINTPOW-2 *)
-      OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))
-  | (_, value) when (Mpfr.cmp_si value 1) = 0 ->		(* SINTPOW-3 *)
+  | (_, value) when (Mpq.cmp_si value 0 1) = 0 ->		(* SINTPOW-2 *)
+      OpRational (Mpq.init_set_si 1 1)
+  | (_, value) when (Mpq.cmp_si value 1 1) = 0 ->		(* SINTPOW-3 *)
        base
   | (OpPow (r, s), _) ->	(* SINTPOW-4 *)
       let p = simplify_product (s :: (OpRational n) :: []) in
       (match p with
-      | OpRational p_int when Mpfr.integer_p p_int ->
+      | OpRational p_int when Expr_simplifications.is_int p_int ->
           simplify_integer_power r p_int
       | _ ->
           OpPow (r, p)
@@ -236,16 +235,16 @@ and simplify_power base exp =
   match (base, exp) with
   | (OpUndefined, _) | (_, OpUndefined) ->			(* SPOW-1 *)
       OpUndefined
-  | (OpRational bas, exponent) when (Mpfr.cmp_si bas 0) = 0 ->	(* SPOW-2 *)
+  | (OpRational bas, exponent) when (Mpq.cmp_si bas 0 1) = 0 ->	(* SPOW-2 *)
       (match exponent with
-      | OpRational value when (Mpfr.cmp_si value 0) > 0 ->
-          OpRational (snd (Mpfr.init_set_si 0 Mpfr.Near))
+      | OpRational value when (Mpq.cmp_si value 0 1) > 0 ->
+          OpRational (Mpq.init_set_si 0 1)
       | _ ->
           OpUndefined
       )
-  | (OpRational value, _) when (Mpfr.cmp_si value 1) = 0 ->	(* SPOW-3 *)
+  | (OpRational value, _) when (Mpq.cmp_si value 1 1) = 0 ->	(* SPOW-3 *)
       OpRational value
-  | (_, OpRational value) when (Mpfr.integer_p value) ->	(* test value is an integer *)
+  | (_, OpRational value) when Expr_simplifications.is_int value ->	(* test value is an integer *)
       simplify_integer_power base value			(* SPOW-4 *)
   | _ ->
       OpPow (base, exp)					(* SPOW-5 *)
@@ -255,24 +254,24 @@ and simplify_power base exp =
 
 let rec simplify_divide num denom = 
   match denom with
-  | OpRational rat when (Mpfr.cmp_si rat 0) = 0 ->
+  | OpRational rat when (Mpq.cmp_si rat 0 1) = 0 ->
       OpUndefined
   | _ ->
-      simplify_product (num :: (simplify_power denom (OpRational (snd (Mpfr.init_set_si (-1) Mpfr.Near)))) :: [])
+      simplify_product (num :: (simplify_power denom (OpRational (Mpq.init_set_si (-1) 1))) :: [])
   ;;
   
 let simplify_minus left right =
-  simplify_sum (left :: (simplify_product ((OpRational (snd (Mpfr.init_set_si (-1) Mpfr.Near))) :: right :: [])) :: [])
+  simplify_sum (left :: (simplify_product ((OpRational (Mpq.init_set_si (-1) 1)) :: right :: [])) :: [])
   ;;
   
 let simplify_log expression = 
   match expression with
-  | OpRational rat when (Mpfr.cmp_si rat 0) <= 0 ->
+  | OpRational rat when (Mpq.cmp_si rat 0 1) <= 0 ->
       OpUndefined
-  | OpRational rat ->
+  (*| OpRational rat ->
       let result = Mpfr.init () in
       let _ = Mpfr.log2 result rat Mpfr.Near in
-      OpRational result
+      OpRational result*)
   | _ ->
       OpLog expression
   ;;

@@ -19,7 +19,7 @@ let exponent expr =
   | Rational _ ->
       Undefined
   | _ ->
-      Rational (snd (Mpfr.init_set_si 1 Mpfr.Near))
+      Rational (Mpq.init_set_si 1 1)
 ;;
 
 let term expr = 
@@ -43,9 +43,68 @@ let const expr =
   | Rational _ ->
       Undefined
   | _ ->
-      Rational (snd (Mpfr.init_set_si 1 Mpfr.Near))
+      Rational (Mpq.init_set_si 1 1)
 ;;
 
+let is_int rat =
+  let test_int = Mpz.init () in
+  let _ = Mpq.get_den test_int rat in
+  if (Mpz.cmp_si test_int 1) = 0 then true
+  else false
+  ;;
+
+
+let exp_by_squaring_int x n =
+  let rec exp_by_squaring2 y x n =
+    if (Mpq.cmp_si n 0 1)<0 then
+      let x_inv = Mpq.init () in
+      let neg_n = Mpq.init () in
+      let _ = Mpq.inv x_inv x in
+      let _ = Mpq.neg neg_n n in
+      exp_by_squaring2 y x_inv neg_n
+    else if (Mpq.cmp_si n 0 1) = 0 then y
+    else if (Mpq.cmp_si n 1 1) = 0 then
+      let res = Mpq.init () in
+      let _ = Mpq.mul res x y in res
+    else
+      let n_div2 = Mpq.init () in
+      let _ = Mpq.div_2exp n_div2 n 1 in
+      if (is_int n_div2) then
+        let x_sqr = Mpq.init () in
+        let _ = Mpq.mul x_sqr x x in
+        exp_by_squaring2 y x_sqr n_div2
+      else
+        let x_by_y = Mpq.init () in
+        let x_sqr = Mpq.init () in
+        let n_minus_1 = Mpq.init () in
+        let n_minus_1_div2 = Mpq.init () in
+        let _ = Mpq.mul x_by_y x y in
+        let _ = Mpq.mul x_sqr x x in
+        let _ = Mpq.sub n_minus_1 n (Mpq.init_set_si 1 1) in
+        let _ = Mpq.div_2exp n_minus_1_div2 n_minus_1 1 in
+        exp_by_squaring2 x_by_y x_sqr n_minus_1_div2 in
+  exp_by_squaring2 (Mpq.init_set_si 1 1) x n
+  ;;
+
+let rec factorial_int n = 
+    if (Mpq.cmp_si n 0 1)=0 then (Mpq.init_set_si 1 1)
+    else
+      let n_minus_1 = Mpq.init () in
+      let _ = Mpq.sub n_minus_1 n (Mpq.init_set_si 1 1) in
+      let res = factorial_int n_minus_1 in
+      let ans = Mpq.init () in
+      let _ = Mpq.mul ans res n in
+      ans;;
+
+let binomial x y =
+  let num = factorial_int x in
+  let temp = Mpq.init () in
+  let y_fact = factorial_int y in
+  let _ = Mpq.sub temp x y in
+  let temp_fact = factorial_int temp in
+  let _ = Mpq.mul temp_fact temp_fact y_fact in
+  let _ = Mpq.div num num temp_fact in
+  num;;
 
 (* input list size is >= 2 *)
 let rec simplify_sum_rec expr_list = 
@@ -60,14 +119,14 @@ let rec simplify_sum_rec expr_list =
       | (_, Sum q) ->		(* SPRDREC-2-3 *)
           merge_sums (u_1 :: []) q
       | (Rational v_1, Rational v_2) ->	(* SPRDREC-1-1 *)
-          let result = Mpfr.init () in
-          let _ = Mpfr.add result v_1 v_2 Mpfr.Near in
-          (if (Mpfr.cmp_si result 0) = 0 then
+          let result = Mpq.init () in
+          let _ = Mpq.add result v_1 v_2 in
+          (if (Mpq.cmp_si result 0 1) = 0 then
               []	(* don't know if this is allowed *)
            else (Rational result) :: [] )
-      | (Rational v_1, _) when (Mpfr.cmp_si v_1 0) = 0 ->	(* SPRDREC-1-2-a *)
+      | (Rational v_1, _) when (Mpq.cmp_si v_1 0 1) = 0 ->	(* SPRDREC-1-2-a *)
           u_2 :: []
-      | (_, Rational v_2) when (Mpfr.cmp_si v_2 0) = 0 ->	(* SPRDREC-1-2-b *)
+      | (_, Rational v_2) when (Mpq.cmp_si v_2 0 1) = 0 ->	(* SPRDREC-1-2-b *)
           u_1 :: []
       | _ ->
           let u_1_term = term u_1 in
@@ -78,7 +137,7 @@ let rec simplify_sum_rec expr_list =
               let s = simplify_sum (u_1_const :: u_2_const :: []) in (* SPRDREC-1-3 *)
               let p = simplify_product (s :: u_1_term :: []) in
               (match p with 
-              | Rational rat when (Mpfr.cmp_si rat 0) = 0 -> []
+              | Rational rat when (Mpq.cmp_si rat 0 1) = 0 -> []
               | _ -> (p :: []))
           else	if (expr_order u_2 u_1) < 0 then u_2 :: u_1 :: []		(* SPRDREC-1-4 *)
               
@@ -118,7 +177,7 @@ and simplify_sum expr_list =
      | _ ->
          let simp_list = simplify_sum_rec expr_list in 
          (match simp_list with 	
-         | [] -> Rational (snd (Mpfr.init_set_si 0 Mpfr.Near))
+         | [] -> Rational (Mpq.init_set_si 0 1)
          | v_1 :: [] -> v_1
          | _ -> Sum simp_list
          )
@@ -137,14 +196,14 @@ and simplify_product_rec expr_list =
       | (_, Product q) ->		(* SPRDREC-2-3 *)
           merge_products (u_1 :: []) q
       | (Rational v_1, Rational v_2) ->	(* SPRDREC-1-1 *)
-          let result = Mpfr.init () in
-          let _ = Mpfr.mul result v_1 v_2 Mpfr.Near in
-          (if (Mpfr.cmp_si result 1) = 0 then
+          let result = Mpq.init () in
+          let _ = Mpq.mul result v_1 v_2 in
+          (if (Mpq.cmp_si result 1 1) = 0 then
               []	(* don't know if this is allowed *)
            else (Rational result) :: [] )
-      | (Rational v_1, _) when (Mpfr.cmp_si v_1 1) = 0 ->	(* SPRDREC-1-2-a *)
+      | (Rational v_1, _) when (Mpq.cmp_si v_1 1 1) = 0 ->	(* SPRDREC-1-2-a *)
           u_2 :: []
-      | (_, Rational v_2) when (Mpfr.cmp_si v_2 1) = 0 ->	(* SPRDREC-1-2-b *)
+      | (_, Rational v_2) when (Mpq.cmp_si v_2 1 1) = 0 ->	(* SPRDREC-1-2-b *)
           u_1 :: []
       | _ ->							(* SPRDREC-1-3 *)
           let u_1base = base u_1 in
@@ -159,7 +218,7 @@ and simplify_product_rec expr_list =
               | _ ->
                 let p = simplify_power u_1base s in
                 (match p with 
-                | Rational rat when (Mpfr.cmp_si rat 1) = 0 -> []
+                | Rational rat when (Mpq.cmp_si rat 1 1) = 0 -> []
                 | _ -> (p :: [])))
           else if (expr_order u_2 u_1) < 0 then u_2 :: u_1 :: []	(* SPRDREC-1-4 *)
           else expr_list					(* SPRDREC-1-5 *)
@@ -173,7 +232,7 @@ and simplify_product_rec expr_list =
           merge_products (u_1 :: []) w				(* SPRDREC-3-2 *)
       )
   | [] ->
-      (Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))) :: []
+      (Rational (Mpq.init_set_si 1 1)) :: []
       (*raise (Simplification_exception "Error in simplify_product_rec")*)
 and merge_products p q = 
   match (p, q) with
@@ -194,17 +253,17 @@ and simplify_product expr_list =
   if (List.exists (fun el -> el = Undefined) expr_list) then	(* SPRD-1 *)
      Undefined
   else if (List.exists (fun el -> (match el with
-                                   | Rational value when (Mpfr.cmp_si value 0) = 0->	(* SPRD-2 *)
+                                   | Rational value when (Mpq.cmp_si value 0 1) = 0->	(* SPRD-2 *)
                                        true
                                    | _ ->
-                                       false)) expr_list) then Rational (snd (Mpfr.init_set_si 0 Mpfr.Near))
+                                       false)) expr_list) then Rational (Mpq.init_set_si 0 1)
   else
      (match expr_list with
      | u_1 :: [] -> u_1		(* SPRD-3 *)
      | _ ->
          let simp_list = simplify_product_rec expr_list in 
          (match simp_list with 	(* SPRD-4 *)
-         | [] -> Rational (snd (Mpfr.init_set_si 1 Mpfr.Near))
+         | [] -> Rational (Mpq.init_set_si 1 1)
          | v_1 :: [] -> v_1
          | (Sum sum_lis) :: (Rational rat) :: [] | (Rational rat) :: (Sum sum_lis) :: [] ->
              let distributed_rat = List.map (fun x -> simplify_product [Rational rat; x]) sum_lis in
@@ -213,22 +272,20 @@ and simplify_product expr_list =
          )
       )
 
-(* input is expr and an Mpfr.t int *)
+(* input is expr and an Mpq.t int *)
 and simplify_integer_power base n =
   match (base, n) with
-  | (Rational v, _) ->	(* SINTPOW-1 *)
-      let result = Mpfr.init () in
-      let _ = Mpfr.pow result v n Mpfr.Near in
-      Rational result
+  | (Rational v, _) ->	(* SINTPOW-1 *)       
+      Rational (exp_by_squaring_int v n)
       (*simplify_RNE (Pow (Float (float_of_int v)), Float n)*)      (* base is an int and exponent is an int float *)
-  | (_, value) when (Mpfr.cmp_si value 0) = 0 ->		(* SINTPOW-2 *)
-      Rational (snd (Mpfr.init_set_si 1 Mpfr.Near))
-  | (_, value) when (Mpfr.cmp_si value 1) = 0 ->		(* SINTPOW-3 *)
+  | (_, value) when (Mpq.cmp_si value 0 1) = 0 ->		(* SINTPOW-2 *)
+      Rational (Mpq.init_set_si 1 1)
+  | (_, value) when (Mpq.cmp_si value 1 1) = 0 ->		(* SINTPOW-3 *)
        base
   | (Pow (r, s), _) ->	(* SINTPOW-4 *)
       let p = simplify_product (s :: (Rational n) :: []) in
       (match p with
-      | Rational p_int when Mpfr.integer_p p_int ->
+      | Rational p_int when is_int p_int ->
           simplify_integer_power r p_int
       | _ ->
           simplify_power r p
@@ -246,16 +303,16 @@ and simplify_power base exp =
   *)match (base, exp) with
   | (Undefined, _) | (_, Undefined) ->			(* SPOW-1 *)
       Undefined
-  | (Rational bas, exponent) when (Mpfr.cmp_si bas 0) = 0 ->	(* SPOW-2 *)
+  | (Rational bas, exponent) when (Mpq.cmp_si bas 0 1) = 0 ->	(* SPOW-2 *)
       (match exponent with
-      | Rational value when (Mpfr.cmp_si value 0) > 0 ->
-          Rational (snd (Mpfr.init_set_si 0 Mpfr.Near))
+      | Rational value when (Mpq.cmp_si value 0 1) > 0 ->
+          Rational (Mpq.init_set_si 0 1)
       | _ ->
           Undefined
       )
-  | (Rational value, _) when (Mpfr.cmp_si value 1) = 0 ->	(* SPOW-3 *)
+  | (Rational value, _) when (Mpq.cmp_si value 1 1) = 0 ->	(* SPOW-3 *)
       Rational value
-  | (_, Rational value) when (Mpfr.integer_p value) ->	(* test value is an integer *)
+  | (_, Rational value) when is_int value ->	(* test value is an integer *)
       simplify_integer_power base value			(* SPOW-4 *)
   | (_, Sum sumList) ->
       let aux exponent = 
@@ -266,14 +323,12 @@ and simplify_power base exp =
       let exp_const = const exp in
       let exp_var = term exp in
       (match exp_const with
-        | Rational rat when (Mpfr.cmp_si rat 1) <> 0 ->
-          let new_base = Mpfr.init () in
-          let _ = Mpfr.pow new_base rat_base rat Mpfr.Near in
-          simplify_power (Rational new_base) exp_var
+        | Rational rat when (Mpq.cmp_si rat 1 1) <> 0  && is_int rat ->
+          simplify_power (Rational (exp_by_squaring_int rat_base rat)) exp_var
         | _ -> (*add functionality to look for logs *)
           Pow (base, exp)
       )
-  | (Rational bas, Log (lbase, lexpr)) ->
+  (*| (Rational bas, Log (lbase, lexpr)) ->
       let new_exp = Mpfr.init () in
       let numerator = Mpfr.init () in
       let denominator = Mpfr.init () in
@@ -281,7 +336,7 @@ and simplify_power base exp =
       let _ = Mpfr.log denominator lbase Mpfr.Near in
       let _ = Mpfr.div new_exp numerator denominator Mpfr.Near in
       if Mpfr.integer_p new_exp then simplify_power lexpr (Rational new_exp)
-      else Pow (base, exp)
+      else Pow (base, exp)*)
   | _ ->
       Pow (base, exp)					(* SPOW-5 *)
   ;;
@@ -290,26 +345,23 @@ and simplify_power base exp =
 
 let rec simplify_divide num denom = 
   match denom with
-  | Rational rat when (Mpfr.cmp_si rat 0) = 0 ->
+  | Rational rat when (Mpq.cmp_si rat 0 1) = 0 ->
       Undefined
   | _ ->
-      simplify_product (num :: (simplify_power denom (Rational (snd (Mpfr.init_set_si (-1) Mpfr.Near)))) :: [])
+      simplify_product (num :: (simplify_power denom (Rational (Mpq.init_set_si (-1) 1))) :: [])
   ;;
   
 let simplify_minus left right =
-  simplify_sum (left :: (simplify_product ((Rational (snd (Mpfr.init_set_si (-1) Mpfr.Near))) :: right :: [])) :: [])
+  simplify_sum (left :: (simplify_product ((Rational (Mpq.init_set_si (-1) 1)) :: right :: [])) :: [])
   ;;
   
   
 let simplify_factorial expression = 
   match expression with
-  | Rational rat when (Mpfr.cmp_si rat 0) < 0 ->
+  | Rational rat when (Mpq.cmp_si rat 0 1) < 0 ->
       Undefined
-  | Rational rat ->
-      let result = Mpfr.init () in
-      let _ = Mpfr.add_ui result rat 1 Mpfr.Near in
-      let _ = Mpfr.gamma result result Mpfr.Near in
-      Rational result
+  | Rational rat when is_int rat ->
+      Rational (factorial_int rat)
   | _ ->
       Factorial expression
   ;;
@@ -318,27 +370,14 @@ let simplify_factorial expression =
 
 let simplify_binom top bottom = 
   match (top, bottom) with
-  | (_, Rational rat) when (Mpfr.cmp_si rat 0)=0 ->
-    Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))		(*might need a stronger condition *)
-  | (_, Rational rat) when (Mpfr.cmp_si rat 1)=0 ->
+  | (_, Rational rat) when (Mpq.cmp_si rat 0 1)=0 ->
+    Rational (Mpq.init_set_si 1 1)		(*might need a stronger condition *)
+  | (_, Rational rat) when (Mpq.cmp_si rat 1 1)=0 ->
     top
-  | (Rational ratTop, Rational ratBot) when (Mpfr.cmp ratTop ratBot)<0 ->
-    Rational (snd(Mpfr.init_set_si 0 Mpfr.Near))
-  | (Rational ratTop, Rational ratBot) when (Mpfr.cmp_si ratTop 0)>0 && (Mpfr.cmp_si ratBot 0)>0 && (Mpfr.integer_p ratTop) && (Mpfr.integer_p ratBot) ->
-    let binomial x y = 
-      let x_minus_y = Mpfr.init () in
-      let result = Mpfr.init () in
-      let y_temp = Mpfr.init () in
-      let _ = Mpfr.sub x_minus_y x y Mpfr.Near in (* x_minus_y = x-y *)
-      let _ = Mpfr.add_ui result x 1 Mpfr.Near in (* x = x+1 *)
-      let _ = Mpfr.add_ui y_temp y 1 Mpfr.Near in (* y = y+1 *)
-      let _ = Mpfr.add_ui x_minus_y x_minus_y 1 Mpfr.Near in
-      let _ = Mpfr.gamma result result Mpfr.Near in (* x = x! *)
-      let _ = Mpfr.gamma y_temp y_temp Mpfr.Near in (* y = y! *)
-      let _ = Mpfr.gamma x_minus_y x_minus_y Mpfr.Near in (* x_minus_y = x_minus_y! *)
-      let _ = Mpfr.mul y_temp y_temp x_minus_y Mpfr.Near in (* y = y * x_minus_y *)
-      let _ = Mpfr.div result result y_temp Mpfr.Near in (* x = x/y *) result
-    in Rational (binomial ratTop ratBot)
+  | (Rational ratTop, Rational ratBot) when (Mpq.cmp ratTop ratBot)<0 ->
+    Rational (Mpq.init_set_si 0 1)
+  | (Rational ratTop, Rational ratBot) when (Mpq.cmp_si ratTop 0 1)>0 && (Mpq.cmp_si ratBot 0 1)>0 && is_int ratTop && is_int ratBot ->
+    Rational (binomial ratTop ratBot)
   | _ -> Binomial (top, bottom)
   ;;
   
@@ -382,15 +421,10 @@ let rec automatic_simplify expr =
 
 and simplify_log base expression = 
   match expression with
-  | Rational rat when (Mpfr.cmp_si rat 0) <= 0 ->
+  | Rational rat when (Mpq.cmp_si rat 0 1) <= 0 ->
       Undefined
-  | Rational rat ->
-      let result = Mpfr.init () in
-      let denom = Mpfr.init () in
-      let _ = Mpfr.log result rat Mpfr.Near in
-      let _ = Mpfr.log denom base Mpfr.Near in
-      let _ = Mpfr.div result result denom Mpfr.Near in
-      Rational result
+  | Rational rat when Mpq.equal rat base ->
+      Rational (Mpq.init_set_si 1 1)
   | Product prodList ->
       automatic_simplify (Sum (List.map (fun x -> (Log (base, x))) prodList))
   | Pow (exp_base, exponent) ->

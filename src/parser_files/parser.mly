@@ -73,15 +73,15 @@ ineq:
   | expr GREATEREQ expr	{ GreaterEq($1, $3) }  
 ;
 expr:
-    INT			    { Rational(snd(Mpfr.init_set_si $1 Mpfr.Near)) }
-  | FLOAT                   { Rational(snd(Mpfr.init_set_d ($1) Mpfr.Near)) }
+    INT			    { Rational(Mpq.init_set_si $1 1) }
+  | FLOAT                   { Rational(Mpq.init_set_d ($1)) }
   | LPAREN expr RPAREN      { $2 }
   | expr PLUS expr          { Plus($1, $3) }
   | expr MINUS expr         { Minus($1, $3) }
   | expr TIMES expr         { Times($1, $3) }
   | expr DIV expr           { Divide($1, $3) }
   | expr POW expr	    { Pow($1, $3) }
-  | MINUS expr %prec UMINUS { Times(Rational (snd(Mpfr.init_set_si (-1) Mpfr.Near)), $2) }
+  | MINUS expr %prec UMINUS { Times(Rational (Mpq.init_set_si (-1) 1), $2) }
   | expr BINOMIAL expr	    { Binomial($1, $3) }
   | VAR UNDERSCORE LCURL sub RCURL      { Output_variable ($1, $4) }
   | VAR UNDERSCORE LPAREN sub RPAREN    { Output_variable ($1, $4) }

@@ -242,7 +242,7 @@ let rec shift_sub expr ovar_ident ivar_ident z =
       else Output_variable (oident, SAdd (iident, b))
     | _ -> raise (Solve_exc "this section is only for linear recurrences"))
   | Input_variable iident when iident = ivar_ident ->
-    Sum[Input_variable iident; Rational (snd(Mpfr.init_set_si (-1*z) Mpfr.Near))]
+    Sum[Input_variable iident; Rational (Mpq.init_set_si (-1*z) 1)]
   | Pow (base, exp) ->
     let base_res = shift_sub base ovar_ident ivar_ident z in
     let exp_res = shift_sub exp ovar_ident ivar_ident z in
@@ -395,12 +395,12 @@ let rec solve_rec_recur ineq ovar_ident ivar_ident print_steps =
     let _ = if print_steps then Printf.printf "Subsituting a_k for %s_%s\n" ovar_ident ivar_ident in
     let new_rec = substitute ineq (Output_variable (ovar_ident, SSVar ivar_ident)) (Output_variable ("a", SSVar "k")) in
     let new_rec = substitute new_rec (Output_variable (ovar_ident, SSDiv (ivar_ident, beta))) (Output_variable ("a", SAdd("k", (-1)))) in
-    let new_rec = substitute new_rec (Input_variable ivar_ident) (Pow(Rational (snd(Mpfr.init_set_si beta Mpfr.Near)), Input_variable "k")) in
+    let new_rec = substitute new_rec (Input_variable ivar_ident) (Pow(Rational (Mpq.init_set_si beta 1), Input_variable "k")) in
     let _ = if print_steps then Printf.printf "Will Solve:\t\t %s\n" (Expr_helpers.inequation_to_string new_rec) in
     let res =  solve_rec_recur new_rec "a" "k" print_steps in
     let final_answer = substitute res (Base_case ("a", 0)) (Base_case (ovar_ident, 1)) in
     let final_answer = substitute final_answer (Output_variable ("a", SSVar "k")) (Output_variable (ovar_ident, SSVar ivar_ident)) in
-    let final_answer = substitute final_answer (Input_variable "k") (Log(snd(Mpfr.init_set_si beta Mpfr.Near), Input_variable ivar_ident)) in
+    let final_answer = substitute final_answer (Input_variable "k") (Log(Mpq.init_set_si beta 1, Input_variable ivar_ident)) in
     let _ = if print_steps then Printf.printf "After Sub back:\t\t %s\n" (Expr_helpers.inequation_to_string final_answer) in
     let final_answer = Expr_simplifications.automatic_simplify_inequation final_answer in
     let _ = if print_steps then Printf.printf "Final answer:\t\t %s\n" (Expr_helpers.inequation_to_string final_answer) in

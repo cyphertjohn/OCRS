@@ -307,14 +307,14 @@ let yyact = [|
     let _1 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
 # 76 "parser.mly"
-              ( Rational(snd(Mpfr.init_set_si _1 Mpfr.Near)) )
+              ( Rational(Mpq.init_set_si _1 1) )
 # 312 "parser.ml"
                : 'expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : float) in
     Obj.repr(
 # 77 "parser.mly"
-                            ( Rational(snd(Mpfr.init_set_d (_1) Mpfr.Near)) )
+                            ( Rational(Mpq.init_set_d (_1)) )
 # 319 "parser.ml"
                : 'expr))
 ; (fun __caml_parser_env ->
@@ -368,7 +368,7 @@ let yyact = [|
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
     Obj.repr(
 # 84 "parser.mly"
-                            ( Times(Rational (snd(Mpfr.init_set_si (-1) Mpfr.Near)), _2) )
+                            ( Times(Rational (Mpq.init_set_si (-1) 1), _2) )
 # 373 "parser.ml"
                : 'expr))
 ; (fun __caml_parser_env ->

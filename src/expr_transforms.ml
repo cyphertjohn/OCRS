@@ -3,21 +3,6 @@ open Expr_simplifications
 
 exception Expr_transform_exc of string
 
-let binomial x y =
-          let x_minus_y = Mpfr.init () in
-          let result = Mpfr.init () in
-          let y_temp = Mpfr.init () in
-          let _ = Mpfr.sub x_minus_y x y Mpfr.Near in (* x_minus_y = x-y *)
-          let _ = Mpfr.add_ui result x 1 Mpfr.Near in (* x = x+1 *)
-          let _ = Mpfr.add_ui y_temp y 1 Mpfr.Near in (* y = y+1 *)
-          let _ = Mpfr.add_ui x_minus_y x_minus_y 1 Mpfr.Near in
-          let _ = Mpfr.gamma result result Mpfr.Near in (* x = x! *)
-          let _ = Mpfr.gamma y_temp y_temp Mpfr.Near in (* y = y! *)
-          let _ = Mpfr.gamma x_minus_y x_minus_y Mpfr.Near in (* x_minus_y = x_minus_y! *)
-          let _ = Mpfr.mul y_temp y_temp x_minus_y Mpfr.Near in (* y = y * x_minus_y *)
-          let _ = Mpfr.div result result y_temp Mpfr.Near in (* x = x/y *) result
-  ;;
-
 let rec expand_product r s = 
   match (r, s) with
   | (Sum sumList, _)->
@@ -37,15 +22,15 @@ let rec expand_power u n =
     | hd :: [] -> expand_power hd n
     | f :: tail ->
       let r = Sum tail in
-      let zero = snd (Mpfr.init_set_si 0 Mpfr.Near) in
+      let zero = Mpq.init_set_si 0 1 in
       let rec aux acc k = 
-        if (Mpfr.cmp k n) > 0 then Sum acc
+        if (Mpq.cmp k n) > 0 then Sum acc
         else
-          let c = binomial n k in
-          let n_minus_k = Mpfr.init () in
-          let k_plus1 = Mpfr.init () in
-          let _ = Mpfr.add_ui k_plus1 k 1 Mpfr.Near in
-          let _ = Mpfr.sub n_minus_k n k Mpfr.Near in
+          let c = Expr_simplifications.binomial n k in
+          let n_minus_k = Mpq.init () in
+          let k_plus1 = Mpq.init () in
+          let _ = Mpq.add k_plus1 k (Mpq.init_set_si 1 1) in
+          let _ = Mpq.sub n_minus_k n k in
           aux (acc @ [(expand_product (Product [Rational c; Pow(f, (Rational n_minus_k))]) (expand_power r k))]) k_plus1 in
       automatic_simplify (aux [(Rational zero)] zero))
   | _ -> Pow (u, Rational n)
@@ -67,7 +52,7 @@ let rec algebraic_expand expr =
     | hd :: tail -> automatic_simplify (expand_product (algebraic_expand hd) (algebraic_expand (Product tail))))
   | Pow (base, exp) ->
     (match exp with
-    | Rational rat when (Mpfr.integer_p rat) && (Mpfr.cmp_si rat 2) >= 0 ->
+    | Rational rat when Expr_simplifications.is_int rat && (Mpq.cmp_si rat 2 1) >= 0 ->
       automatic_simplify (expand_power (algebraic_expand base) rat)
     | _ -> Pow (base, exp))
   | _ -> expr
@@ -104,27 +89,27 @@ let rec inverse_binomial expr =
       automatic_simplify (Log (base, (inverse_binomial expression)))
   | Binomial (top, bottom) ->
       (match (top, bottom) with
-      | (_, Rational rat) when (Mpfr.cmp_si rat 0)=0 ->
-        Rational (snd(Mpfr.init_set_si 1 Mpfr.Near))            (*might need a stronger condition *)
-      | (_, Rational rat) when (Mpfr.cmp_si rat 1)=0 ->
+      | (_, Rational rat) when (Mpq.cmp_si rat 0 1)=0 ->
+        Rational (Mpq.init_set_si 1 1)            (*might need a stronger condition *)
+      | (_, Rational rat) when (Mpq.cmp_si rat 1 1)=0 ->
         top
-      | (Rational ratTop, Rational ratBot) when (Mpfr.cmp ratTop ratBot)<0 ->
-        Rational (snd(Mpfr.init_set_si 0 Mpfr.Near))
-      | (Rational ratTop, Rational ratBot) when (Mpfr.cmp_si ratTop 0)>0 && (Mpfr.cmp_si ratBot 0)>0 && (Mpfr.integer_p ratTop) && (Mpfr.integer_p ratBot) ->
+      | (Rational ratTop, Rational ratBot) when (Mpq.cmp ratTop ratBot)<0 ->
+        Rational (Mpq.init_set_si 0 1)
+      | (Rational ratTop, Rational ratBot) when (Mpq.cmp_si ratTop 0 1)>0 && (Mpq.cmp_si ratBot 0 1)>0 && Expr_simplifications.is_int ratTop && Expr_simplifications.is_int ratBot ->
         Rational (binomial ratTop ratBot)
-      | (Input_variable str, Rational rat) when (Mpfr.cmp_si rat 0)>0 && (Mpfr.integer_p rat) ->
-        let rat_minus_1 = Mpfr.init () in
-        let denom = Mpfr.init () in
-        let _ = Mpfr.add_ui denom rat 1 Mpfr.Near in
-        let _ = Mpfr.sub_ui rat_minus_1 rat 1 Mpfr.Near in
-        let _ = Mpfr.gamma denom denom Mpfr.Near in
+      | (Input_variable str, Rational rat) when (Mpq.cmp_si rat 0 1)>0 && Expr_simplifications.is_int rat ->
+        let rat_minus_1 = Mpq.init () in
+        let denom = Mpq.init () in
+        let _ = Mpq.add denom rat (Mpq.init_set_si 1 1) in
+        let _ = Mpq.sub rat_minus_1 rat (Mpq.init_set_si 1 1) in
+        let new_denom = Expr_simplifications.factorial_int denom in
         let rec build_list acc k =
-          if (Mpfr.cmp k rat_minus_1)>0 then acc
+          if (Mpq.cmp k rat_minus_1)>0 then acc
           else
-            let k_plus_1 = Mpfr.init() in
-            let _ = Mpfr.add_ui k_plus_1 k 1 Mpfr.Near in
+            let k_plus_1 = Mpq.init() in
+            let _ = Mpq.add k_plus_1 k (Mpq.init_set_si 1 1) in
             build_list (acc @ [Minus(Input_variable str, Rational k)]) k_plus_1 in
-          algebraic_expand (automatic_simplify (Divide(Product (build_list [] (snd(Mpfr.init_set_si 0 Mpfr.Near))), Rational denom)))
+          algebraic_expand (automatic_simplify (Divide(Product (build_list [] (Mpq.init_set_si 0 1)), Rational new_denom)))
       | _ -> Binomial (top, bottom))
   | Factorial expression ->
       automatic_simplify (Factorial (inverse_binomial expression))

@@ -34,9 +34,9 @@ let rec expr_to_string e =
   | Input_variable str ->
       str
   | Rational rat ->
-      string_of_float (Mpfr.to_float rat)
+      Mpq.to_string rat
   | Log (base, expression) ->
-      "log" ^ (string_of_float (Mpfr.to_float base)) ^ "(" ^ expr_to_string expression ^ ")"
+      "log" ^ (Mpq.to_string base) ^ "(" ^ expr_to_string expression ^ ")"
   | Pow (left, right) ->
       expr_to_string left ^ " ^ " ^ expr_to_string right			(* Since Power has top precedence don't think need parens *)
   | Binomial (top, bottom) ->
@@ -63,7 +63,6 @@ let inequation_to_string e =
   ;;
 
 
-(* Maybe this isn't right *)
 
 let rec op_expr_to_string e =
   match e with
@@ -88,7 +87,7 @@ let rec op_expr_to_string e =
   | OpInput_variable str ->
       str
   | OpRational rat ->
-      string_of_float (Mpfr.to_float rat)
+      Mpq.to_string rat
   | OpLog expression ->
       "log(" ^ op_expr_to_string expression ^ ")"
   | OpPow (left, right) ->
@@ -96,7 +95,7 @@ let rec op_expr_to_string e =
   | Q ->
       "q"
   | OpUndefined ->
-      "UNDEFINED"
+      "OPUNDEFINED"
   ;;
 
 (* convert an inequation to a string *)
@@ -138,7 +137,7 @@ let rec op_expr_to_string_IR e =
   | OpInput_variable str ->
       "OpInput_variable (" ^ str ^ ")"
   | OpRational rat ->
-      "OpRational (" ^ (Mpfr.to_string rat) ^ ")"
+      "OpRational (" ^ (Mpq.to_string rat) ^ ")"
   | OpLog expression ->
       "OpLog (" ^ (op_expr_to_string_IR expression)^ ")"
   | OpPow (left, right) ->
@@ -146,7 +145,7 @@ let rec op_expr_to_string_IR e =
   | Q ->
       "Q"
   | OpUndefined ->
-      "UNDEFINED"
+      "OPUNDEFINED"
   ;;
 
 (* convert an inequation to a string *)
@@ -194,13 +193,13 @@ let rec expr_to_string_IR e =
   | Input_variable str ->
       "Input_variable (" ^ str ^ ")"
   | Rational rat ->
-      "Rational (" ^ (Mpfr.to_string rat) ^ ")"
+      "Rational (" ^ (Mpq.to_string rat) ^ ")"
   | Binomial (top, bottom) ->
       "Binomial (" ^ expr_to_string_IR top ^ ", " ^ expr_to_string_IR bottom ^ ")"
   | Factorial child ->
       "Factorial (" ^ (expr_to_string_IR child) ^ ")"
   | Log (base, expression) ->
-      "Log (" ^ (Mpfr.to_string base) ^ ", " ^ (expr_to_string_IR expression)^ ")"
+      "Log (" ^ (Mpq.to_string base) ^ ", " ^ (expr_to_string_IR expression)^ ")"
   | Pow (left, right) ->
       "Pow (" ^ (expr_to_string_IR left) ^ ", " ^ (expr_to_string_IR right) ^ ")"
   | Undefined ->

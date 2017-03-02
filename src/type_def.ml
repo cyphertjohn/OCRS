@@ -56,8 +56,8 @@ type expr =
 	  | Output_variable of string * subscript (** y_n, y_n+1, y_n+2, ... *)
 	  | Input_variable of string	(** Index variable *)
 	  (* Maybe just make everything floats? *)
-	  | Rational of Mpfr.t		(** @see <http://www.inrialpes.fr/pop-art/people/bjeannet/mlxxxidl-forge/mlgmpidl/html/Mpfr.html> Not the package used here, but is equivalent to the documentation used in ocaml format*)
-	  | Log of Mpfr.t *  expr	(** Base b log *)
+	  | Rational of Mpq.t		(** @see <http://www.inrialpes.fr/pop-art/people/bjeannet/mlxxxidl-forge/mlgmpidl/html/Mpq.html> Not the package used here, but is equivalent to the documentation used in ocaml format*)
+	  | Log of Mpq.t *  expr	(** Base b log *)
 	  | Pow of expr * expr		(** Binary exponentiation *)
 	  | Binomial of expr * expr	(** Binomial coeffiecient *)
           | Factorial of expr		(** Factorial *)
@@ -78,7 +78,7 @@ type inequation = Equals of expr * expr 	(** = *)
 let rec expr_order a b = 
     match (a, b) with
     | (Rational a_v, Rational b_v) ->		(* O-1 *)
-        Mpfr.cmp a_v b_v
+        Mpq.cmp a_v b_v
     | (Symbolic_Constant a_str, Symbolic_Constant b_str) | (Input_variable a_str, Input_variable b_str) -> (* O-2 *)
         String.compare a_str b_str
     | (Base_case (a_ident, a_index), Base_case (b_ident, b_index)) ->
@@ -121,9 +121,9 @@ let rec expr_order a b =
     | ( _, Product _)  ->	
         expr_order (Product [a]) b			(* O-8 *)
     | (Pow _, _) ->
-        expr_order a (Pow (b, Rational (snd (Mpfr.init_set_si 1 Mpfr.Near))))	(* O-9 *)
+        expr_order a (Pow (b, Rational (Mpq.init_set_si 1 1)))	(* O-9 *)
     | (_, Pow _) ->
-        expr_order (Pow (a, Rational (snd (Mpfr.init_set_si 1 Mpfr.Near)))) b	(* O-9 *)
+        expr_order (Pow (a, Rational (Mpq.init_set_si 1 1))) b	(* O-9 *)
     | (Sum _, _) ->
         expr_order a (Sum [b])				(* O-10 *)
     | (_, Sum _) ->
@@ -141,9 +141,9 @@ let rec expr_order a b =
         if res = 0 then (-1)
         else res
     | (Binomial _, _) ->
-        expr_order a (Binomial (b, Rational (snd (Mpfr.init_set_si 1 Mpfr.Near))))
+        expr_order a (Binomial (b, Rational (Mpq.init_set_si 1 1)))
     | (_, Binomial _) ->
-        expr_order (Binomial (a, Rational (snd (Mpfr.init_set_si 1 Mpfr.Near)))) b
+        expr_order (Binomial (a, Rational (Mpq.init_set_si 1 1))) b
     | (Output_variable _, _) -> 1
     | (_, Output_variable _) -> (-1)
     | (Input_variable _, _) -> 1
@@ -165,7 +165,7 @@ type op_expr = OpPlus of op_expr * op_expr         (** Binary addition *)
 	     | OpOutput_variable of string * subscript  (** y_n, y_n+1, y_n+2, ... *)
              | OpInput_variable of string   	 (** Index variable *)
               (* Maybe just make everything floats? *)
-             | OpRational of Mpfr.t           	 (** @see <http://www.inrialpes.fr/pop-art/people/bjeannet/mlxxxidl-forge/mlgmpidl/html/Mpfr.html> Not the package used here, but is equivalent to the documentation used in ocaml format*)
+             | OpRational of Mpq.t           	 (** @see <http://www.inrialpes.fr/pop-art/people/bjeannet/mlxxxidl-forge/mlgmpidl/html/Mpfr.html> Not the package used here, but is equivalent to the documentation used in ocaml format*)
              | OpLog of op_expr                	 (** Base 2 log *)
              | OpPow of op_expr * op_expr        (** Binary exponentiation *)
              | Q				 (** q element in the operational calculus field *)
@@ -186,7 +186,7 @@ type op_inequation = OpEquals of op_expr * op_expr	(** = *)
 let rec op_expr_order a b = 
     match (a, b) with
     | (OpRational a_v, OpRational b_v) ->		(* O-1 *)
-        Mpfr.cmp a_v b_v
+        Mpq.cmp a_v b_v
     | (Q, Q) -> 0
     | (OpSymbolic_Constant a_str, OpSymbolic_Constant b_str) | (OpInput_variable a_str, OpInput_variable b_str) -> (* O-2 *)
         String.compare a_str b_str
@@ -223,9 +223,9 @@ let rec op_expr_order a b =
     | ( _, OpProduct _)  ->	
         op_expr_order (OpProduct [a]) b			(* O-8 *)
     | (OpPow _, _) ->
-        op_expr_order a (OpPow (b, OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))))	(* O-9 *)
+        op_expr_order a (OpPow (b, OpRational (Mpq.init_set_si 1 1)))	(* O-9 *)
     | (_, OpPow _) ->
-        op_expr_order (OpPow (a, OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near)))) b	(* O-9 *)
+        op_expr_order (OpPow (a, OpRational (Mpq.init_set_si 1 1))) b	(* O-9 *)
     | (OpSum _, _) ->
         op_expr_order a (OpSum [b])				(* O-10 *)
     | (_, OpSum _) ->

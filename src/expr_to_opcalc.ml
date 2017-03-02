@@ -4,57 +4,43 @@ exception Expr_to_op_exc of string
 
 let rec binomial_transform expr =
   match expr with
-  | Pow(Input_variable ident, Rational rat) when Mpfr.integer_p rat && (Mpfr.cmp_si rat 0) > 0 ->
+  | Pow(Input_variable ident, Rational rat) when Expr_simplifications.is_int rat && (Mpq.cmp_si rat 0 1) > 0 ->
       let find_first_deg_elem deg = 
           let rec aux a b = 
-              (if (Mpfr.cmp a b) > 0 then [] 
+              (if (Mpq.cmp a b) > 0 then [] 
               else
-                  let pow_res = Mpfr.init () in
-                  let a_plus_1 = Mpfr.init () in 
-                  let _ = Mpfr.pow pow_res a b Mpfr.Near in
-                  let _ = Mpfr.add_ui a_plus_1 a 1 Mpfr.Near in
+                  let pow_res = Expr_simplifications.exp_by_squaring_int a b in
+                  let a_plus_1 = Mpq.init () in 
+                  let _ = Mpq.add a_plus_1 a (Mpq.init_set_si 1 1) in
                   pow_res :: (aux a_plus_1 b)) in
-          aux (snd(Mpfr.init_set_si 0 Mpfr.Near)) deg in
+          aux (Mpq.init_set_si 0 1) deg in
       let val_list = find_first_deg_elem rat in
-      let binomial x y = 
-          let x_minus_y = Mpfr.init () in
-          let result = Mpfr.init () in
-          let y_temp = Mpfr.init () in
-          let _ = Mpfr.sub x_minus_y x y Mpfr.Near in (* x_minus_y = x-y *)
-          let _ = Mpfr.add_ui result x 1 Mpfr.Near in (* x = x+1 *)
-          let _ = Mpfr.add_ui y_temp y 1 Mpfr.Near in (* y = y+1 *)
-          let _ = Mpfr.add_ui x_minus_y x_minus_y 1 Mpfr.Near in
-          let _ = Mpfr.gamma result result Mpfr.Near in (* x = x! *)
-          let _ = Mpfr.gamma y_temp y_temp Mpfr.Near in (* y = y! *)
-          let _ = Mpfr.gamma x_minus_y x_minus_y Mpfr.Near in (* x_minus_y = x_minus_y! *)
-          let _ = Mpfr.mul y_temp y_temp x_minus_y Mpfr.Near in (* y = y * x_minus_y *)
-          let _ = Mpfr.div result result y_temp Mpfr.Near in (* x = x/y *) result in
       let rec accumulate j k = 
-          if (Mpfr.cmp j k) > 0 then (snd(Mpfr.init_set_si 0 Mpfr.Near))
+          if (Mpq.cmp j k) > 0 then (Mpq.init_set_si 0 1)
           else( 
-              let minus_one = snd (Mpfr.init_set_si (-1) Mpfr.Near) in
-              let k_minus_j = Mpfr.init () in
-              let _ = Mpfr.sub k_minus_j k j Mpfr.Near in
-              let j_plus_1 = Mpfr.init () in
-              let _ = Mpfr.add_ui j_plus_1 j 1 Mpfr.Near in
-              let _ = Mpfr.pow minus_one minus_one k_minus_j Mpfr.Near in
-              let binom = binomial k j in
-              let f_j = List.nth val_list (int_of_float(Mpfr.to_float j)) in
-              let result = Mpfr.init () in
-              let _ = Mpfr.mul result minus_one f_j Mpfr.Near in
-              let _ = Mpfr.mul result result binom Mpfr.Near in
+              let minus_one = (Mpq.init_set_si (-1) 1) in
+              let k_minus_j = Mpq.init () in
+              let _ = Mpq.sub k_minus_j k j in
+              let j_plus_1 = Mpq.init () in
+              let _ = Mpq.add j_plus_1 j (Mpq.init_set_si 1 1) in
+              let sign = Expr_simplifications.exp_by_squaring_int minus_one k_minus_j in
+              let binom = Expr_simplifications.binomial k j in
+              let f_j = List.nth val_list (int_of_float(Mpq.to_float j)) in
+              let result = Mpq.init () in
+              let _ = Mpq.mul result sign f_j in
+              let _ = Mpq.mul result result binom in
               let acc = accumulate j_plus_1 k in
-              let _ = Mpfr.add result result acc Mpfr.Near in
+              let _ = Mpq.add result result acc in
               result) in
       let rec build_sum_lis k deg = 
-          if (Mpfr.cmp k deg) > 0 then []
+          if (Mpq.cmp k deg) > 0 then []
           else(
-              let k_plus_1 = Mpfr.init () in
-              let _ = Mpfr.add_ui k_plus_1 k 1 Mpfr.Near in
-              let zero = snd (Mpfr.init_set_si 0 Mpfr.Near) in
+              let k_plus_1 = Mpq.init () in
+              let _ = Mpq.add k_plus_1 k (Mpq.init_set_si 1 1) in
+              let zero = Mpq.init_set_si 0 1 in
               Product [Binomial(Input_variable ident, Rational k); Rational (accumulate zero k)] :: (build_sum_lis k_plus_1 deg)
           ) in
-      let zero = snd (Mpfr.init_set_si 0 Mpfr.Near) in
+      let zero = Mpq.init_set_si 0 1 in
       Expr_simplifications.automatic_simplify (Sum (build_sum_lis zero rat))
       (* for k = 0 to deg do Product [Binomial(Input_variable ident, Rational k); Rational ((accumulate 0 k) * 1/k!)] *)
 
@@ -79,23 +65,22 @@ let rec expr_to_opCalc expr =
       if (List.length const_list) <> 0 then OpProduct ((List.map expr_to_opCalc const_list) @ [expr_to_opCalc (Expr_simplifications.automatic_simplify (Product var_list))])
       else
         (match expr_list with
-        | Pow (Rational k, Input_variable str) :: Binomial (Input_variable str1, Rational c) :: [] when str = str1->
-          let const = Mpfr.init () in
-          let c_plus_1 = Mpfr.init () in
-          let _ = Mpfr.pow const k c Mpfr.Near in
-          let _ = Mpfr.add_ui c_plus_1 c 1 Mpfr.Near in
-          OpProduct [OpRational const; OpDivide(OpMinus (Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpPow (OpMinus(Q, OpRational k), OpRational c_plus_1))]
+        | Pow (Rational k, Input_variable str) :: Binomial (Input_variable str1, Rational c) :: [] when str = str1 && Expr_simplifications.is_int c->
+          let const = Expr_simplifications.exp_by_squaring_int k c in
+          let c_plus_1 = Mpq.init () in
+          let _ = Mpq.add c_plus_1 c (Mpq.init_set_si 1 1) in
+          OpProduct [OpRational const; OpDivide(OpMinus (Q, OpRational (Mpq.init_set_si 1 1)), OpPow (OpMinus(Q, OpRational k), OpRational c_plus_1))]
         | Pow (Symbolic_Constant sym, Input_variable str) :: Binomial (Input_variable str1, Rational c) :: [] when str = str1->
-          let c_plus_1 = Mpfr.init () in
-          let _ = Mpfr.add_ui c_plus_1 c 1 Mpfr.Near in
-          OpProduct [OpPow(OpSymbolic_Constant sym, OpRational c); OpDivide(OpMinus (Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpPow (OpMinus(Q, OpSymbolic_Constant sym), OpRational c_plus_1))]
+          let c_plus_1 = Mpq.init () in
+          let _ = Mpq.add c_plus_1 c (Mpq.init_set_si 1 1) in
+          OpProduct [OpPow(OpSymbolic_Constant sym, OpRational c); OpDivide(OpMinus (Q, OpRational (Mpq.init_set_si 1 1)), OpPow (OpMinus(Q, OpSymbolic_Constant sym), OpRational c_plus_1))]
         | Pow (Rational k, Input_variable str1) :: Pow(Input_variable str, Rational rat) :: [] when str = str1 ->
           let new_expr = (Expr_transforms.algebraic_expand (Expr_simplifications.automatic_simplify (Product [binomial_transform (Pow (Input_variable str, Rational rat)); Pow(Rational k, Input_variable str)]))) in
           expr_to_opCalc new_expr
         | Pow (Rational k, Input_variable str) :: (Input_variable str1) :: [] when str = str1 ->
-          OpProduct [OpRational k; OpDivide(OpMinus (Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpPow(OpMinus(Q, OpRational k), OpRational (snd(Mpfr.init_set_si 2 Mpfr.Near))))]
+          OpProduct [OpRational k; OpDivide(OpMinus (Q, OpRational (Mpq.init_set_si 1 1)), OpPow(OpMinus(Q, OpRational k), OpRational (Mpq.init_set_si 2 1)))]
         | Pow (Symbolic_Constant sym, Input_variable str) :: (Input_variable str1) :: [] when str = str1 ->
-          OpProduct [OpSymbolic_Constant sym; OpDivide(OpMinus (Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpPow(OpMinus(Q, OpSymbolic_Constant sym), OpRational (snd(Mpfr.init_set_si 2 Mpfr.Near))))]    
+          OpProduct [OpSymbolic_Constant sym; OpDivide(OpMinus (Q, OpRational (Mpq.init_set_si 1 1)), OpPow(OpMinus(Q, OpSymbolic_Constant sym), OpRational (Mpq.init_set_si 2 1)))]
         | Pow (Symbolic_Constant sym, Input_variable str1) :: Pow(Input_variable str, Rational rat) :: [] when str = str1 ->
           let new_expr = (Expr_transforms.algebraic_expand (Expr_simplifications.automatic_simplify (Product [binomial_transform (Pow (Input_variable str, Rational rat)); Pow(Symbolic_Constant sym, Input_variable str)]))) in
           expr_to_opCalc new_expr
@@ -108,16 +93,16 @@ let rec expr_to_opCalc expr =
       (match subscript with
        | SAdd (loop_counter, shift) when shift>0 ->
            if shift = 1 then (
-               OpMinus (OpTimes (Q, OpOutput_variable (ident, SSVar loop_counter)), OpTimes (OpMinus (Q, OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))), OpBase_case(ident, 0)))
+               OpMinus (OpTimes (Q, OpOutput_variable (ident, SSVar loop_counter)), OpTimes (OpMinus (Q, OpRational (Mpq.init_set_si 1 1)), OpBase_case(ident, 0)))
                )
            else (
                let expr_list = 
                    (let rec build_list mu m = 
-                       if mu=(m-1) then OpProduct [OpPow (Q, OpRational (snd (Mpfr.init_set_si mu Mpfr.Near))); OpMinus (Q, OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))); OpBase_case (ident, (m-1-mu))] :: []
-                       else OpProduct [OpPow (Q, OpRational (snd (Mpfr.init_set_si mu Mpfr.Near))); OpMinus (Q, OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))); OpBase_case (ident, (m-1-mu))] :: (build_list (mu+1) m)
+                       if mu=(m-1) then OpProduct [OpPow (Q, OpRational (Mpq.init_set_si mu 1)); OpMinus (Q, OpRational (Mpq.init_set_si 1 1)); OpBase_case (ident, (m-1-mu))] :: []
+                       else OpProduct [OpPow (Q, OpRational (Mpq.init_set_si mu 1)); OpMinus (Q, OpRational (Mpq.init_set_si 1 1)); OpBase_case (ident, (m-1-mu))] :: (build_list (mu+1) m)
                    in build_list 0 shift) in
                let right_summation = OpSum expr_list in
-                   OpMinus (OpTimes (OpPow (Q, OpRational (snd (Mpfr.init_set_si shift Mpfr.Near))), OpOutput_variable (ident, SSVar loop_counter)), right_summation)
+                   OpMinus (OpTimes (OpPow (Q, OpRational (Mpq.init_set_si shift 1)), OpOutput_variable (ident, SSVar loop_counter)), right_summation)
                )
        
        | SSVar loop_counter ->
@@ -126,7 +111,7 @@ let rec expr_to_opCalc expr =
            raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
        )
   | Input_variable str ->
-      expr_to_opCalc (Binomial(expr, (Rational (snd (Mpfr.init_set_si 1 Mpfr.Near)))))
+      expr_to_opCalc (Binomial(expr, (Rational (Mpq.init_set_si 1 1))))
   | Rational rat ->
       OpRational rat
   | Log (base, expression) ->
@@ -140,21 +125,21 @@ let rec expr_to_opCalc expr =
           let aux exp = 
             Pow (left, exp) in
           expr_to_opCalc (Expr_simplifications.automatic_simplify (Product (List.map aux sumList)))
-        | (Input_variable ident, Rational rat) when Mpfr.integer_p rat && (Mpfr.cmp_si rat 0)>0 ->
+        | (Input_variable ident, Rational rat) when Expr_simplifications.is_int rat && (Mpq.cmp_si rat 0 1)>0 ->
           expr_to_opCalc (binomial_transform expr)
         | (Rational rat, Input_variable ident) ->
-          OpDivide(OpMinus(Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpMinus(Q, OpRational rat))
+          OpDivide(OpMinus(Q, OpRational (Mpq.init_set_si 1 1)), OpMinus(Q, OpRational rat))
         | (Symbolic_Constant ident, Input_variable ivar_ident) -> 
-          OpDivide(OpMinus(Q, OpRational (snd(Mpfr.init_set_si 1 Mpfr.Near))), OpMinus(Q, OpSymbolic_Constant ident))
+          OpDivide(OpMinus(Q, OpRational (Mpq.init_set_si 1 1)), OpMinus(Q, OpSymbolic_Constant ident))
         | _ -> 
           let expand_result = Expr_transforms.algebraic_expand expr in
           if expand_result <> expr then expr_to_opCalc expand_result
           else raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr))))
   | Binomial (top, bottom) ->
       (match (top, bottom) with
-          | (Input_variable ident, Rational k) when (Mpfr.integer_p k) ->	(* if the binomial is of the form n choose k, where k is a constant int *)
-              let _ = Mpfr.neg k k Mpfr.Near in
-              OpPow (OpMinus (Q, OpRational (snd (Mpfr.init_set_si 1 Mpfr.Near))), OpRational k)		(* appropriate transformation *)
+          | (Input_variable ident, Rational k) when (Expr_simplifications.is_int k) ->	(* if the binomial is of the form n choose k, where k is a constant int *)
+              let _ = Mpq.neg k k in
+              OpPow (OpMinus (Q, OpRational (Mpq.init_set_si 1 1)), OpRational k)		(* appropriate transformation *)
           | _ ->
               raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
       )
