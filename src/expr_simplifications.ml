@@ -275,8 +275,9 @@ and simplify_product expr_list =
 (* input is expr and an Mpq.t int *)
 and simplify_integer_power base n =
   match (base, n) with
-  | (Rational v, _) ->	(* SINTPOW-1 *)       
-      Rational (exp_by_squaring_int v n)
+  | (Rational v, _) ->	(* SINTPOW-1 *)      
+      if (Mpq.cmp_si n 1000000 1) < 0 then Rational (exp_by_squaring_int v n)
+      else Pow (base, Rational n)
       (*simplify_RNE (Pow (Float (float_of_int v)), Float n)*)      (* base is an int and exponent is an int float *)
   | (_, value) when (Mpq.cmp_si value 0 1) = 0 ->		(* SINTPOW-2 *)
       Rational (Mpq.init_set_si 1 1)
@@ -328,8 +329,11 @@ and simplify_power base exp =
         | _ -> (*add functionality to look for logs *)
           Pow (base, exp)
       )
-  (*| (Rational bas, Log (lbase, lexpr)) ->
-      let new_exp = Mpfr.init () in
+  | (Rational bas, Log (lbase, lexpr)) ->
+      if (Mpq.equal bas lbase) then lexpr
+      else
+        Pow(lexpr, Log(lbase, Rational bas))
+      (*let new_exp = Mpfr.init () in
       let numerator = Mpfr.init () in
       let denominator = Mpfr.init () in
       let _ = Mpfr.log numerator bas Mpfr.Near in

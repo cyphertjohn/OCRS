@@ -208,8 +208,8 @@ and simplify_product expr_list =
 and simplify_integer_power base n =
   match (base, n) with
   | (OpRational v, _) ->	(* SINTPOW-1 *)
-      let result = Expr_simplifications.exp_by_squaring_int v n in
-      OpRational result
+      if (Mpq.cmp_si n 1000000 1) < 0 then OpRational (Expr_simplifications.exp_by_squaring_int v n)
+      else OpPow (base, OpRational n)
       (*simplify_RNE (OpPow (Float (float_of_int v)), Float n)*)      (* base is an int and exponent is an int float *)
   | (_, value) when (Mpq.cmp_si value 0 1) = 0 ->		(* SINTPOW-2 *)
       OpRational (Mpq.init_set_si 1 1)
