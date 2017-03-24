@@ -137,11 +137,21 @@ Ocrs.solve_rec_str "y_{k+1} >= y_k + a, k";;
 print_endline "";;
 Ocrs.solve_rec_str "y_{n+1}-a*y_n = n, n";;
 
+
+print_endline "";;
 let binary_search_term = Sum[Output_variable ("hi", SSVar "n"); Product[Rational (Mpq.init_set_si (-1) 1); Output_variable ("lo", SSVar "n")]];;
 let second_test_list = [(binary_search_term, parse "r_{n+1} = (1/2)*r_n, n"); (Output_variable("x", SSVar "n"), parse z1); (Output_variable("y", SSVar "n"), parse z2); (Output_variable("z", SSVar "n"), parse z3)];;
 let res_second_test_list = Ocrs.solve_rec_list_pair second_test_list;;
 print_list res_second_test_list;;
 print_endline "";;
+
+
+let test_list = [(Output_variable("x", SSVar "n"), Equals(Output_variable("x", SAdd ("n", 1)), Plus(Output_variable("x", SSVar "n"), Rational (Mpq.init_set_si 1 1)))); (Output_variable("y", SSVar "n"),  Equals(Output_variable("y", SAdd ("n", 1)), Plus(Output_variable("x", SSVar "n"), Output_variable("y", SSVar "n"))))];;
+
+let res = Ocrs.solve_rec_list_pair test_list;;
+print_list res;;
+print_endline "";;
+
 
 Ocrs.solve_rec_str "y_{n+1} = a*y_n + (b*n^2 + c*n + d)*e^n, n";;
 print_endline "";;

@@ -99,17 +99,15 @@ let rec inverse_binomial expr =
         Rational (binomial ratTop ratBot)
       | (Input_variable str, Rational rat) when (Mpq.cmp_si rat 0 1)>0 && Expr_simplifications.is_int rat ->
         let rat_minus_1 = Mpq.init () in
-        let denom = Mpq.init () in
-        let _ = Mpq.add denom rat (Mpq.init_set_si 1 1) in
         let _ = Mpq.sub rat_minus_1 rat (Mpq.init_set_si 1 1) in
-        let new_denom = Expr_simplifications.factorial_int denom in
+        let new_denom = Expr_simplifications.factorial_int rat in
         let rec build_list acc k =
           if (Mpq.cmp k rat_minus_1)>0 then acc
           else
             let k_plus_1 = Mpq.init() in
             let _ = Mpq.add k_plus_1 k (Mpq.init_set_si 1 1) in
             build_list (acc @ [Minus(Input_variable str, Rational k)]) k_plus_1 in
-          algebraic_expand (automatic_simplify (Divide(Product (build_list [] (Mpq.init_set_si 0 1)), Rational new_denom)))
+        algebraic_expand (automatic_simplify (Divide(Product (build_list [] (Mpq.init_set_si 0 1)), Rational new_denom)))
       | _ -> Binomial (top, bottom))
   | Factorial expression ->
       automatic_simplify (Factorial (inverse_binomial expression))
