@@ -88,8 +88,8 @@ let rec op_expr_to_string e =
       str
   | OpRational rat ->
       Mpq.to_string rat
-  | OpLog expression ->
-      "log(" ^ op_expr_to_string expression ^ ")"
+  | OpLog (b, expression) ->
+      "Oplog" ^ (Mpq.to_string b) ^ "(" ^ op_expr_to_string expression ^ ")"
   | OpPow (left, right) ->
       op_expr_to_string left ^ " ^ " ^ op_expr_to_string right                        (* Since Power has top precedence don't think need parens *)
   | Q ->
@@ -138,8 +138,8 @@ let rec op_expr_to_string_IR e =
       "OpInput_variable (" ^ str ^ ")"
   | OpRational rat ->
       "OpRational (" ^ (Mpq.to_string rat) ^ ")"
-  | OpLog expression ->
-      "OpLog (" ^ (op_expr_to_string_IR expression)^ ")"
+  | OpLog (b, expression) ->
+      "OpLog" ^ (Mpq.to_string b) ^ "(" ^ (op_expr_to_string_IR expression)^ ")"
   | OpPow (left, right) ->
       "OpPow (" ^ (op_expr_to_string_IR left) ^ ", " ^ (op_expr_to_string_IR right) ^ ")"
   | Q ->

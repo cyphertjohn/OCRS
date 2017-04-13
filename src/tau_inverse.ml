@@ -45,6 +45,9 @@ let rec complete_tiling op_expr =
       let (term, const_list) = List.partition Op_transforms.contains_q expr_list in 
       if (List.length const_list) <> 0 then complete_tiling (Op_simplifications.op_automatic_simplify (OpProduct term))
       else false
+  | OpLog (b, expression) ->
+      if Op_transforms.contains_q expression then false
+      else true
   | _ ->false (* might be too strong *)
 
 
@@ -142,6 +145,8 @@ let rec tau_inverse op_expr input_ident =
       else raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string op_expr))) (* need to do some transformations *)
   | OpPow (base, exp) when (not (Op_transforms.contains_q base)) && (not (Op_transforms.contains_q exp)) ->
       Pow (tau_inverse base input_ident, tau_inverse exp input_ident)
+  | OpLog (b, expression) when (not (Op_transforms.contains_q expression))->
+      Log (b, tau_inverse expression input_ident)
   | _ -> raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string op_expr)))
 
 

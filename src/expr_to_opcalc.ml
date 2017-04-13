@@ -115,7 +115,8 @@ let rec expr_to_opCalc expr =
   | Rational rat ->
       OpRational rat
   | Log (base, expression) ->
-      raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
+      if (Expr_helpers.is_const expression) then (OpLog (base, expr_to_opCalc expression))
+      else (raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr))))
       (* don't know what to do here *)
   | Pow (left, right) ->
       if Expr_helpers.is_const left && Expr_helpers.is_const right then OpPow (expr_to_opCalc left, expr_to_opCalc right)

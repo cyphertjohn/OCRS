@@ -264,7 +264,7 @@ let simplify_minus left right =
   simplify_sum (left :: (simplify_product ((OpRational (Mpq.init_set_si (-1) 1)) :: right :: [])) :: [])
   ;;
   
-let simplify_log expression = 
+let simplify_log base expression = 
   match expression with
   | OpRational rat when (Mpq.cmp_si rat 0 1) <= 0 ->
       OpUndefined
@@ -273,7 +273,7 @@ let simplify_log expression =
       let _ = Mpfr.log2 result rat Mpfr.Near in
       OpRational result*)
   | _ ->
-      OpLog expression
+      OpLog (base, expression)
   ;;
   
   
@@ -307,8 +307,8 @@ let rec op_automatic_simplify expr =
       let simplified_left = op_automatic_simplify left in
       let simplified_right = op_automatic_simplify right in
           simplify_minus simplified_left simplified_right
-  | OpLog expression ->
-      simplify_log (op_automatic_simplify expression)
+  | OpLog (b, expression) ->
+      simplify_log b (op_automatic_simplify expression)
   ;;
 
 let op_automatic_simplify_inequation inequation = 

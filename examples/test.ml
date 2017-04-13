@@ -160,6 +160,12 @@ Ocrs.solve_rec_str "y_{n+1} = a*y_n + (b*n^2 + c*n + d)*e^2, n";;
 print_endline "";;
 
 
+
+let symbolic_log = Equals(Output_variable("x", SAdd ("n", 1)), Sum[Output_variable("x", SSVar "n"); Log(Mpq.init_set_si 2 1, Symbolic_Constant "y")]);;
+Ocrs.solve_rec symbolic_log true;;
+print_endline "";; 
+
+
 (*let lexbuf = Lexing.from_string "y_n = (n ^ 2) * 2^n, n" in
 let result = Parser.main Lexer.token lexbuf in
 

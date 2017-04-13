@@ -104,7 +104,8 @@ let rec expr_order a b =
             expr_order a_bas b_bas
         else expr_order a_exp b_exp			(* O-4-2 *)
     | (Log (b, a_log), Log (c, b_log)) ->
-        expr_order a_log b_log
+	if (Mpq.cmp b c) = 0 then expr_order a_log b_log
+	else (Mpq.cmp b c)
     | (Binomial (a_top, a_bot), Binomial (b_top, b_bot)) ->
         if (expr_order a_top b_top) = 0 then expr_order a_bot b_bot
         else expr_order a_top b_top
@@ -166,7 +167,7 @@ type op_expr = OpPlus of op_expr * op_expr         (** Binary addition *)
              | OpInput_variable of string   	 (** Index variable *)
               (* Maybe just make everything floats? *)
              | OpRational of Mpq.t           	 (** @see <http://www.inrialpes.fr/pop-art/people/bjeannet/mlxxxidl-forge/mlgmpidl/html/Mpfr.html> Not the package used here, but is equivalent to the documentation used in ocaml format*)
-             | OpLog of op_expr                	 (** Base 2 log *)
+             | OpLog of Mpq.t * op_expr      	 (** Base b log *)
              | OpPow of op_expr * op_expr        (** Binary exponentiation *)
              | Q				 (** q element in the operational calculus field *)
              | OpUndefined			 (** An expression whose value is undefined. ie x/0, log(-1), etc *)
@@ -212,8 +213,9 @@ let rec op_expr_order a b =
         if (op_expr_order a_bas b_bas) <> 0 then				(* O-4-1 *)
             op_expr_order a_bas b_bas
         else op_expr_order a_exp b_exp			(* O-4-2 *)
-    | (OpLog a_log, OpLog b_log) ->
-        op_expr_order a_log b_log
+    | (OpLog (b, a_log), OpLog (c, b_log)) ->
+	if (Mpq.cmp b c) = 0 then op_expr_order a_log b_log
+	else (Mpq.cmp b c)
     | (OpRational _, _) -> (-1)				(* O-7 *)
     | (_, OpRational _) -> (1)
     | (Q, _) -> (-1)
@@ -230,10 +232,10 @@ let rec op_expr_order a b =
         op_expr_order a (OpSum [b])				(* O-10 *)
     | (_, OpSum _) ->
         op_expr_order (OpSum [a]) b				(* O-10 *)
-    | (OpLog _, _) ->
-        op_expr_order a (OpLog b)
-    | (_, OpLog _) ->
-        op_expr_order (OpLog a) b
+    | (OpLog (x, _), _) ->
+        op_expr_order a (OpLog (x,b))
+    | (_, OpLog (x, _)) ->
+        op_expr_order (OpLog (x, a)) b
     | (OpBase_case _, _) -> (-1)
     | (_, OpBase_case _) -> (1)
     | (OpSymbolic_Constant _, _) -> (-1)

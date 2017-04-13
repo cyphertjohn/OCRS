@@ -91,7 +91,7 @@ let rec contains_q expr=
       false
   | OpRational rat ->
       false
-  | OpLog expression ->
+  | OpLog (_, expression) ->
       contains_q expression
   | OpPow (left, right) ->
       (contains_q left) || (contains_q right)
@@ -250,8 +250,8 @@ let rec substitute expr a t =
       Op_simplifications.op_automatic_simplify (OpProduct (List.map (fun x -> substitute x simp_a t) expr_list))
     | OpSum expr_list ->
       Op_simplifications.op_automatic_simplify (OpSum (List.map (fun x -> substitute x simp_a t) expr_list))
-    | OpLog expression ->
-      Op_simplifications.op_automatic_simplify (OpLog (substitute expression simp_a t))
+    | OpLog (b, expression) ->
+      Op_simplifications.op_automatic_simplify (OpLog (b, substitute expression simp_a t))
     | OpPow (left, right) ->
       Op_simplifications.op_automatic_simplify (OpPow (substitute left simp_a t, substitute right simp_a t))
     | _ -> simp_expr)

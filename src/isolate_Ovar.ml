@@ -28,7 +28,7 @@ let rec contains_Ovar expr identifier =
       false
   | OpRational rat ->
       false
-  | OpLog expression ->
+  | OpLog (b, expression) ->
       contains_Ovar expression identifier
   | OpPow (left, right) ->
       (contains_Ovar left identifier) || (contains_Ovar right identifier)
