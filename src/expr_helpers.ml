@@ -43,6 +43,18 @@ let rec expr_to_string e =
       "(" ^ expr_to_string top ^ " choose " ^ expr_to_string bottom ^ ")"
   | Factorial child ->
       (expr_to_string child) ^ "!"
+  | IDivide (numerator, denom) ->
+      "floor(" ^ expr_to_string numerator ^ " / " ^ Mpq.to_string denom ^ ")"
+  | Sin inner_expr -> 
+      "sin(" ^ expr_to_string inner_expr ^ ")"
+  | Cos inner_expr -> 
+      "cos(" ^ expr_to_string inner_expr ^ ")"
+  | Arctan rat ->
+      "arctan(" ^ Mpq.to_string rat ^ ")"
+  | Mod (left, right) ->
+      "(" ^ expr_to_string left ^ " mod " ^ expr_to_string right ^ ")"
+  | Pi ->
+      "pi"
   | Undefined ->
       "UNDEFINED"
   ;;
@@ -96,6 +108,20 @@ let rec op_expr_to_string e =
       "q"
   | OpUndefined ->
       "OPUNDEFINED"
+  | SymBinom (top, bottom) ->
+      "(" ^ op_expr_to_string top ^ " choose " ^ op_expr_to_string bottom ^ ")"
+  | SymIDivide (numerator, denom) ->
+      "floor(" ^ op_expr_to_string numerator ^ " / " ^ Mpq.to_string denom ^ ")"
+  | SymSin inner_expr -> 
+      "sin(" ^ op_expr_to_string inner_expr ^ ")"
+  | SymCos inner_expr -> 
+      "cos(" ^ op_expr_to_string inner_expr ^ ")"
+  | OpArctan rat ->
+      "arctan(" ^ Mpq.to_string rat ^ ")"
+  | SymMod (left, right) ->
+      "(" ^ op_expr_to_string left ^ " mod " ^ op_expr_to_string right ^ ")"
+  | OpPi ->
+      "pi"
   ;;
 
 (* convert an inequation to a string *)
@@ -146,6 +172,20 @@ let rec op_expr_to_string_IR e =
       "Q"
   | OpUndefined ->
       "OPUNDEFINED"
+  | SymBinom (top, bottom) ->
+      "SymBinom (" ^ op_expr_to_string_IR top ^ ", " ^ op_expr_to_string_IR bottom ^ ")"
+  | SymIDivide (numerator, denom) ->
+      "SymIDivide (" ^ op_expr_to_string_IR numerator ^ ", " ^ Mpq.to_string denom ^ ")"
+  | SymSin inner_expr -> 
+      "SymSin (" ^ op_expr_to_string_IR inner_expr ^ ")"
+  | SymCos inner_expr -> 
+      "SymCos (" ^ op_expr_to_string_IR inner_expr ^ ")"
+  | OpArctan rat ->
+      "OpArctan (" ^ Mpq.to_string rat ^ ")"
+  | SymMod (left, right) ->
+      "SymMod (" ^ op_expr_to_string left ^ ", " ^ op_expr_to_string right ^ ")"
+  | OpPi ->
+      "OpPi"
   ;;
 
 (* convert an inequation to a string *)
@@ -204,6 +244,18 @@ let rec expr_to_string_IR e =
       "Pow (" ^ (expr_to_string_IR left) ^ ", " ^ (expr_to_string_IR right) ^ ")"
   | Undefined ->
       "UNDEFINED"
+  | IDivide (numerator, denom) ->
+      "IDivide (" ^ expr_to_string_IR numerator ^ ", " ^ Mpq.to_string denom ^ ")"
+  | Sin inner_expr -> 
+      "Sin (" ^ expr_to_string_IR inner_expr ^ ")"
+  | Cos inner_expr -> 
+      "Cos (" ^ expr_to_string_IR inner_expr ^ ")"
+  | Arctan rat ->
+      "Arctan (" ^ Mpq.to_string rat ^ ")"
+  | Mod (left, right) ->
+      "Mod (" ^ expr_to_string left ^ ", " ^ expr_to_string right ^ ")"
+  | Pi ->
+      "Pi"
   ;;
 
 (* convert an inequation to a string *)
@@ -223,7 +275,7 @@ let inequation_to_string_IR e =
 
 let rec is_const expr =
   match expr with
-  | Rational _ | Base_case _ | Symbolic_Constant _ ->
+  | Rational _ | Base_case _ | Symbolic_Constant _ | Pi | Arctan _ ->
     true
   | Output_variable _ | Input_variable _ | Undefined -> false
   | Pow (left, right) ->
@@ -246,6 +298,14 @@ let rec is_const expr =
     (is_const left) && (is_const right)
   | Factorial expression ->
     is_const expression
+  | IDivide (num, _) ->
+    is_const num
+  | Sin inner_expr ->
+    is_const inner_expr
+  | Cos inner_expr ->
+    is_const inner_expr
+  | Mod (left, right) ->
+    (is_const left) && (is_const right)
   ;;
 
 

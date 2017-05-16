@@ -81,23 +81,13 @@ let rec contains_q expr=
       List.exists contains_q expr_list
   | OpSum expr_list ->
       List.exists contains_q expr_list
-  | OpSymbolic_Constant _ ->
-      false
-  | OpBase_case (_, _) ->
-      false
-  | OpOutput_variable (ident , subscript) ->
-       false
-  | OpInput_variable str ->
-      false
-  | OpRational rat ->
-      false
   | OpLog (_, expression) ->
       contains_q expression
   | OpPow (left, right) ->
       (contains_q left) || (contains_q right)
   | Q ->
       true
-  | OpUndefined ->
+  | _ ->
       false
   ;;
 

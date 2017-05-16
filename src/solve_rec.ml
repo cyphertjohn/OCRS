@@ -33,7 +33,7 @@ let get_right_left_ineq ineq =
 
 let rec find_ovar_ivar_expr expr = 
   match expr with
-  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined ->
+  | Rational _ | Symbolic_Constant _ | Base_case _ | Arctan _ | Pi | Undefined ->
     ([], [])
   | Output_variable (ovar_ident, subscript) ->
     (match subscript with 
@@ -85,6 +85,16 @@ let rec find_ovar_ivar_expr expr =
   | Factorial expr ->
     find_ovar_ivar_expr expr
   | Binomial (left, right) ->
+    let left_res = find_ovar_ivar_expr left in
+    let right_res = find_ovar_ivar_expr right in
+    ((fst left_res) @ (fst right_res), (snd left_res) @ (snd right_res))
+  | IDivide (numerator, _) ->
+    find_ovar_ivar_expr numerator
+  | Sin inner_expr ->
+    find_ovar_ivar_expr inner_expr
+  | Cos inner_expr ->
+    find_ovar_ivar_expr inner_expr
+  | Mod (left, right) ->
     let left_res = find_ovar_ivar_expr left in
     let right_res = find_ovar_ivar_expr right in
     ((fst left_res) @ (fst right_res), (snd left_res) @ (snd right_res))
@@ -167,7 +177,7 @@ let solve_add_linear_rec ineq ovar_ident ivar_ident print_steps =
 
 let rec find_lowest_add_expr expr = 
   match expr with
-  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ ->
+  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Arctan _ | Pi ->
     max_int
   | Output_variable (_, subscript) ->
     (match subscript with
@@ -208,6 +218,16 @@ let rec find_lowest_add_expr expr =
   | Sum sumList ->
     let res_lst = List.map find_lowest_add_expr sumList in
     List.fold_left min max_int res_lst
+  | IDivide (numerator, _) ->
+    find_lowest_add_expr numerator
+  | Sin inner_expr ->
+    find_lowest_add_expr inner_expr
+  | Cos inner_expr ->
+    find_lowest_add_expr inner_expr
+  | Mod (left, right) ->
+    let left_res = find_lowest_add_expr left in
+    let right_res = find_lowest_add_expr right in
+    min left_res right_res
   ;;
 
 
@@ -350,7 +370,7 @@ let rec substitute_expr expr old_term new_term =
   if expr = old_term then new_term
   else
     (match expr with
-    | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Output_variable _ ->
+    | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Output_variable _ | Arctan _ | Pi ->
       expr
     | Pow (base, exp) ->
       Pow (substitute_expr base old_term new_term, substitute_expr exp old_term new_term)
@@ -371,7 +391,15 @@ let rec substitute_expr expr old_term new_term =
     | Product prodList ->
       Product (List.map (fun x -> substitute_expr x old_term new_term) prodList)
     | Sum sumList ->
-      Sum (List.map (fun x -> substitute_expr x old_term new_term) sumList))
+      Sum (List.map (fun x -> substitute_expr x old_term new_term) sumList)
+    | IDivide (numerator, denom) ->
+      IDivide (substitute_expr numerator old_term new_term, denom)
+    | Sin inner_expr ->
+      Sin (substitute_expr inner_expr old_term new_term)
+    | Cos inner_expr ->
+      Cos (substitute_expr inner_expr old_term new_term)
+    | Mod (left, right) ->
+      Mod (substitute_expr left old_term new_term, substitute_expr right old_term new_term))
   ;;
 
 let substitute ineq old_term new_term = 
@@ -415,7 +443,7 @@ let rec solve_rec_recur ineq ovar_ident ivar_ident print_steps =
 
 let rec contains_ovar_expr expr subscript = 
   match expr with
-  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ ->
+  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Arctan _ | Pi ->
     false
   | Output_variable (_, subscript) ->
     true
@@ -439,12 +467,20 @@ let rec contains_ovar_expr expr subscript =
     List.exists (fun x -> contains_ovar_expr x subscript) prodList
   | Sum sumList ->
     List.exists (fun x -> contains_ovar_expr x subscript) sumList
+  | IDivide (numerator, _) ->
+    (contains_ovar_expr numerator subscript)
+  | Sin inner_expr ->
+    (contains_ovar_expr inner_expr subscript)
+  | Cos inner_expr ->
+    (contains_ovar_expr inner_expr subscript)
+  | Mod (left, right) ->
+    (contains_ovar_expr left subscript) || (contains_ovar_expr right subscript)
   ;;
 
 
 let rec find_all_subscripts expr =
   match expr with
-  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ ->
+  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Arctan _ | Pi ->
     []
   | Output_variable (_, subscript) ->
     subscript :: []
@@ -467,6 +503,14 @@ let rec find_all_subscripts expr =
   | Factorial expr ->
     find_all_subscripts expr
   | Binomial (left, right) ->
+    (find_all_subscripts left) @ (find_all_subscripts right)
+  | IDivide (numerator, _) ->
+    find_all_subscripts numerator
+  | Sin expr ->
+    find_all_subscripts expr
+  | Cos expr ->
+    find_all_subscripts expr
+  | Mod (left, right) ->
     (find_all_subscripts left) @ (find_all_subscripts right)
   ;;
 

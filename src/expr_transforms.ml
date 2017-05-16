@@ -69,7 +69,7 @@ let rec algebraic_expand_inequation ineq =
 
 let rec inverse_binomial expr =
   match expr with
-  | Rational _ | Symbolic_Constant _ | Base_case (_, _) | Output_variable (_, _) | Input_variable _ | Undefined ->
+  | Rational _ | Symbolic_Constant _ | Base_case (_, _) | Output_variable (_, _) | Input_variable _ | Arctan _ | Pi | Undefined ->
      expr
   | Pow (base, exponent) ->
       automatic_simplify (Pow (inverse_binomial base, inverse_binomial exponent))
@@ -109,6 +109,14 @@ let rec inverse_binomial expr =
             build_list (acc @ [Minus(Input_variable str, Rational k)]) k_plus_1 in
         algebraic_expand (automatic_simplify (Divide(Product (build_list [] (Mpq.init_set_si 0 1)), Rational new_denom)))
       | _ -> Binomial (top, bottom))
+  | IDivide (numerator, denom) ->
+      IDivide (inverse_binomial numerator, denom)
+  | Sin inner_expr ->
+      Sin (inverse_binomial inner_expr)
+  | Cos inner_expr ->
+      Cos (inverse_binomial inner_expr)
+  | Mod (left, right) ->
+      Mod (inverse_binomial left, inverse_binomial right)
   | Factorial expression ->
       automatic_simplify (Factorial (inverse_binomial expression))
   ;;

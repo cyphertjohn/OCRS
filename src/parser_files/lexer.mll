@@ -15,6 +15,12 @@
           | '/'            { DIV }
           | '^'		   { POW }
           | "choose"	   { BINOMIAL }
+          | "floor"	   { FLOOR }
+          | "sin"          { SIN }
+          | "cos"          { COS }
+          | "mod"          { MOD }
+          | "pi"           { PI }
+          | "arctan"       { ARCTAN }
           | '('            { LPAREN }
           | ')'            { RPAREN }
           | '{'		   { LCURL }

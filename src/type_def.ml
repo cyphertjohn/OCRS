@@ -60,6 +60,12 @@ type expr =
 	  | Log of Mpq.t *  expr	(** Base b log *)
 	  | Pow of expr * expr		(** Binary exponentiation *)
 	  | Binomial of expr * expr	(** Binomial coeffiecient *)
+          | IDivide of expr * Mpq.t	(** Integer Division *)
+	  | Sin of expr			(** Trigonometric sine *)
+	  | Cos of expr			(** Trigonometric cosine *)
+          | Arctan of Mpq.t		(** Inverse tangent function *)
+          | Mod of expr * expr		(** Modular expression *)
+          | Pi				(** The trancendental number pi *)
           | Factorial of expr		(** Factorial *)
           | Undefined			(** An expression whose value is undefined. ie x/0, log(-1), etc *)
           ;;
@@ -158,19 +164,26 @@ type op_expr = OpPlus of op_expr * op_expr         (** Binary addition *)
              | OpMinus of op_expr * op_expr        (** Binary subtraction *)
              | OpTimes of op_expr * op_expr        (** Binary ring multiplication  *)
              | OpDivide of op_expr * op_expr       (** Binary division *)
-             | OpProduct of op_expr list	   (** N-ary ring multiplication *)
-                                        	 (* want these two for flattening AST not indexed sums and products *)
-             | OpSum of op_expr list           	 (** N-ary addition a+b+c+... *)
-             | OpSymbolic_Constant of string	 (** "x", "y", etc *)
-	     | OpBase_case of string * int	 (** y_0, y_1, ... *)
-	     | OpOutput_variable of string * subscript  (** y_n, y_n+1, y_n+2, ... *)
-             | OpInput_variable of string   	 (** Index variable *)
+             | OpProduct of op_expr list           (** N-ary ring multiplication *)
+                                                 (* want these two for flattening AST not indexed sums and products *)
+             | OpSum of op_expr list             (** N-ary addition a+b+c+... *)
+             | OpSymbolic_Constant of string     (** "x", "y", etc *)
+             | OpBase_case of string * int       (** y_0, y_1, ... *)
+             | OpOutput_variable of string * subscript  (** y_n, y_n+1, y_n+2, ... *)
+             | OpInput_variable of string        (** Index variable *)
               (* Maybe just make everything floats? *)
-             | OpRational of Mpq.t           	 (** @see <http://www.inrialpes.fr/pop-art/people/bjeannet/mlxxxidl-forge/mlgmpidl/html/Mpfr.html> Not the package used here, but is equivalent to the documentation used in ocaml format*)
-             | OpLog of Mpq.t * op_expr      	 (** Base b log *)
+             | OpRational of Mpq.t               (** @see <http://www.inrialpes.fr/pop-art/people/bjeannet/mlxxxidl-forge/mlgmpidl/html/Mpq.html> Not the package used here, but is equivalent to the documentation used in ocaml format*)
+             | OpLog of Mpq.t * op_expr          (** Base b log *)
              | OpPow of op_expr * op_expr        (** Binary exponentiation *)
-             | Q				 (** q element in the operational calculus field *)
-             | OpUndefined			 (** An expression whose value is undefined. ie x/0, log(-1), etc *)
+             | SymBinom of op_expr * op_expr     (** Symbolic Binomial *)
+             | SymIDivide of op_expr * Mpq.t     (** Symbolic Integer Divide *)
+             | SymSin of op_expr                 (** Symbolic sine *)
+             | SymCos of op_expr                 (** Symbolic cosine *)
+             | OpArctan of Mpq.t                 (** Symbolic Arctan *)
+             | SymMod of op_expr * op_expr       (** Symbolic mod *)
+             | OpPi                              (** The constant pi *)
+             | Q                                 (** q element in the operational calculus field *)
+             | OpUndefined                       (** An expression whose value is undefined. ie x/0, log(-1), etc *)
              ;;
                   
 type op_inequation = OpEquals of op_expr * op_expr	(** = *)
@@ -246,3 +259,18 @@ let rec op_expr_order a b =
     | (_, OpInput_variable _) -> (-1)
     | _ -> failwith "all cases should have been taken care of"
     ;;
+
+
+
+(** {6 Matrix Recurrences} *)
+
+type ovec = Ovec of string array * subscript;;
+
+type matrix_rec =
+          | VEquals of ovec * Mpq.t array array * ovec * expr array
+          | VLess of ovec * Mpq.t array array * ovec * expr array
+          | VLessEq of ovec * Mpq.t array array * ovec * expr array
+          | VGreater of ovec * Mpq.t array array * ovec * expr array
+          | VGreaterEq of ovec * Mpq.t array array * ovec * expr array
+          ;;
+

@@ -281,7 +281,7 @@ let simplify_log base expression =
 (** Automatically simplify an expression bottom up *)
 let rec op_automatic_simplify expr = 
   match expr with
-  | OpRational _ | OpSymbolic_Constant _ | OpBase_case (_, _) | OpOutput_variable (_, _) | OpInput_variable _ | OpUndefined | Q ->
+  | OpRational _ | OpSymbolic_Constant _ | OpBase_case (_, _) | OpOutput_variable (_, _) | OpInput_variable _ | OpUndefined | Q | SymBinom _ | SymIDivide _ | SymSin _ | SymCos _ | OpArctan _ | SymMod _ | OpPi ->
      expr
   | OpPow (base, exponent) ->
       let simplified_base = op_automatic_simplify base in

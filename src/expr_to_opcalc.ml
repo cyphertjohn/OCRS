@@ -150,6 +150,24 @@ let rec expr_to_opCalc expr =
       raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
   | Undefined ->
       OpUndefined
+  | IDivide (num, denom) when Expr_helpers.is_const num ->
+      SymIDivide (expr_to_opCalc num, denom)
+  | IDivide (Input_variable ident, denom) ->
+      if Expr_simplifications.is_int denom then
+        OpDivide(OpRational (Mpq.init_set_si 1 1), OpMinus(OpPow(Q, OpRational denom), OpRational (Mpq.init_set_si 1 1)))
+      else raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
+  | IDivide _ -> (* can do more here *)
+      raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
+  | Sin _ -> (*(Product prod_list) ->*) (* haven't done this part yet *)
+      raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
+  | Cos _ ->
+      raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
+  | Arctan (value) ->
+      OpArctan (value)
+  | Mod (left, right) ->
+      raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
+  | Pi ->
+      OpPi
   ;;
 
 

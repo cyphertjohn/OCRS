@@ -17,24 +17,14 @@ let rec contains_Ovar expr identifier =
       List.exists (fun x -> contains_Ovar x identifier) expr_list
   | OpSum expr_list ->
       List.exists (fun x -> contains_Ovar x identifier) expr_list
-  | OpSymbolic_Constant _ ->
-      false
-  | OpBase_case (_, _) ->
-      false
   | OpOutput_variable (ident , subscript) ->
       if ident = identifier then true
       else false
-  | OpInput_variable str ->
-      false
-  | OpRational rat ->
-      false
   | OpLog (b, expression) ->
       contains_Ovar expression identifier
   | OpPow (left, right) ->
       (contains_Ovar left identifier) || (contains_Ovar right identifier)
-  | Q ->
-      false
-  | OpUndefined ->
+  | OpUndefined | OpSymbolic_Constant _ | OpBase_case _ | OpInput_variable _ | Q | SymBinom _ | SymIDivide _ | SymSin _ | SymCos _ | OpArctan _ | OpRational _ | SymMod _ | OpPi ->
       false
   ;;
 
