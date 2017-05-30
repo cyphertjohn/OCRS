@@ -166,6 +166,30 @@ Ocrs.solve_rec symbolic_log true;;
 print_endline "";; 
 
 
+(*let one = Mpq.init_set_si 1 1;;
+let one_copy = Mpq.init_set_si 1 1;;
+let minus_2 = Mpq.init_set_si (-2) 1;;
+let four = Mpq.init_set_si 4 1;;
+
+let matrix_test = VEquals (Ovec ([|"x"; "y"|], SAdd("n", 1)), [|[|one; one_copy|];[|minus_2; four|]|], Ovec ([|"x"; "y"|], SSVar "n"), [|Input_variable "n"; Rational (Mpq.init_set_si 1 1)|]);;
+
+let result = Solve_mat_rec.solve_mat_rec matrix_test;; *)
+
+
+let r = [|[|Mpz.init_set_si 0;Mpz.init_set_si 0;Mpz.init_set_si 1;Mpz.init_set_si 0;Mpz.init_set_si 1;Mpz.init_set_si 0|];
+          [|Mpz.init_set_si 0;Mpz.init_set_si 4;Mpz.init_set_si 3;Mpz.init_set_si 3;Mpz.init_set_si 1;Mpz.init_set_si 1|];
+          [|Mpz.init_set_si 0;Mpz.init_set_si 0;Mpz.init_set_si 1;Mpz.init_set_si 1;Mpz.init_set_si 2;Mpz.init_set_si 0|];
+          [|Mpz.init_set_si 0;Mpz.init_set_si 0;Mpz.init_set_si 3;Mpz.init_set_si 4;Mpz.init_set_si 2;Mpz.init_set_si 0|];
+          [|Mpz.init_set_si 0;Mpz.init_set_si 0;Mpz.init_set_si 2;Mpz.init_set_si 4;Mpz.init_set_si 1;Mpz.init_set_si 0|];
+          [|Mpz.init_set_si 0;Mpz.init_set_si 1;Mpz.init_set_si 3;Mpz.init_set_si 3;Mpz.init_set_si 1;Mpz.init_set_si 4|]|];;
+
+let five = Mpz.init_set_si 5;;
+let big_s = Factor.auxiliary_basis r 6 five;;
+
+List.iter (fun x -> print_endline (Expr_helpers.op_expr_to_string x)) big_s;;
+
+
+
 (*let lexbuf = Lexing.from_string "y_n = (n ^ 2) * 2^n, n" in
 let result = Parser.main Lexer.token lexbuf in
 

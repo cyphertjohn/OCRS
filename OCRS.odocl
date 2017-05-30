@@ -1,8 +1,14 @@
 # OASIS_START
-# DO NOT EDIT (digest: 51656a442fe0146dd5bc9b5af13a9f6e)
+# DO NOT EDIT (digest: 54cc0d412c8d4d5a19b9d2aaa4300058)
+src/Factor
+src/Solve_mat_rec
+src/Mat_functions
+src/Mat_helpers
 src/Ocrs
 src/Type_def
 src/Expr_helpers
 src/Lexer
 src/Parser
+src/Op_transforms
+src/Op_simplifications
 # OASIS_STOP

@@ -53,7 +53,7 @@ let rec algebraic_expand expr =
     (match exp with
     | OpRational rat when Expr_simplifications.is_int rat && (Mpq.cmp_si rat 2 1) >= 0 ->
       op_automatic_simplify (expand_power (algebraic_expand base) rat)
-    | _ -> OpPow (base, exp))
+    | _ -> OpPow (algebraic_expand base, exp))
   | _ -> expr
   ;;
 
