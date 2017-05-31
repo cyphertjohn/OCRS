@@ -307,3 +307,30 @@ let rec partial_fraction expr =
     partial_fraction_3 num (OpPow(base, OpRational neg_exp))
   | _ -> simp_expr
   ;;
+
+
+
+let polynomial_derivative_q poly =
+  let term_derivative term = 
+    (match term with
+    | OpProduct prod_list ->
+      let (contain_q, not_contain_q) = List.partition contains_q prod_list in
+        (match contain_q with
+        | [Q] -> Op_simplifications.op_automatic_simplify (OpProduct not_contain_q)
+        | [OpPow (Q, OpRational exp)] -> Op_simplifications.op_automatic_simplify (OpProduct ((OpRational exp) :: (OpPow(Q, OpMinus(OpRational exp, OpRational (Mpq.init_set_si 1 1)))) :: not_contain_q))
+        | _ when (List.for_all (fun x -> not (contains_q x)) prod_list) -> OpRational (Mpq.init_set_si 0 1)
+        | _ -> failwith "input wasn't a polynomial term"
+        )
+    | Q -> OpRational (Mpq.init_set_si 1 1 )
+    | OpPow(Q, OpRational exp) ->
+      Op_simplifications.op_automatic_simplify (OpTimes (OpRational exp, OpPow(Q, OpMinus(OpRational exp, OpRational (Mpq.init_set_si 1 1)))))
+    | _ when (not (contains_q term)) -> OpRational (Mpq.init_set_si 0 1)
+    | _ ->  failwith "input wasn't an integer polynomial"
+    )
+  in
+  match poly with
+  | OpSum sum_list ->
+    Op_simplifications.op_automatic_simplify (OpSum (List.map term_derivative sum_list))
+  | _ -> term_derivative poly
+  ;;
+
