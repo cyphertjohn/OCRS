@@ -402,7 +402,7 @@ let pseudo_division u v =
   let delta = max (old_m - n + 1) 0 in
   let lcv = fst (Op_transforms.degree v) in 
   let rec aux p s m sigma = 
-    if m < n then (
+    if m < n || m = 0 then (
       let q = Op_simplifications.op_automatic_simplify (Op_transforms.algebraic_expand (Op_simplifications.op_automatic_simplify (OpTimes(OpPow(lcv, OpRational (Mpq.init_set_si (delta - sigma) 1)), p)))) in
       let r = Op_simplifications.op_automatic_simplify (Op_transforms.algebraic_expand (Op_simplifications.op_automatic_simplify (OpTimes(OpPow(lcv, OpRational (Mpq.init_set_si (delta - sigma) 1)), s)))) in
       (q, r)
@@ -585,7 +585,7 @@ let gen_extend_sigma_p v p =
   let g = List.map (fun x -> Op_simplifications.op_automatic_simplify (poly_to_z_sym_p (Op_transforms.algebraic_expand (Op_simplifications.op_automatic_simplify (OpProduct (List.filter (fun y -> Type_def.op_expr_order x y <> 0) v)))) p)) v in 
   let len = List.length g in
   if len = 2 then (
-    let res = euclidean_algorithm_p (List.nth v 0) (List.nth v 1) p in
+    let res = euclidean_algorithm_p (List.nth g 0) (List.nth g 1) p in
     List.tl res
   ) else (
     let rec aux acc gcd remaining_lis = 
@@ -696,17 +696,72 @@ let hensel_lift u big_s p old_k =
 
 let irreducible_factor u =
   let (l, n) = Op_transforms.degree u in
-  let n_minus_1 = Mpq.init() in
-  let _ = Mpq.sub n_minus_1 n (Mpq.init_set_si 1 1) in
-  let v = Op_simplifications.op_automatic_simplify (Op_transforms.algebraic_expand (Op_transforms.substitute (OpTimes(OpPow(l, OpRational n_minus_1), u)) Q (OpDivide (Q, l)))) in
-  let p = find_prime v in
-  let big_s = berlekamp_factor (poly_to_z_p v p) p in
-  if (List.length big_s) = 1 then u
+  if (Mpq.cmp_si n 0 1) <= 0 then u
   else (
-    let k = find_k v p in
-    let big_w = hensel_lift v (List.map (fun x -> poly_to_z_sym_p x p) big_s) p k in
-    let big_w = List.map (fun x -> Op_transforms.substitute x Q (OpTimes(l, Q))) big_w in
-    Op_simplifications.op_automatic_simplify (OpProduct (List.map (fun x -> Op_transforms.algebraic_expand (OpDivide (x, OpRational (Mpq.init_set_z (content x))))) big_w))
+    let n_minus_1 = Mpq.init() in
+    let _ = Mpq.sub n_minus_1 n (Mpq.init_set_si 1 1) in
+    let v = Op_simplifications.op_automatic_simplify (Op_transforms.algebraic_expand (Op_transforms.substitute (OpTimes(OpPow(l, OpRational n_minus_1), u)) Q (OpDivide (Q, l)))) in
+    let p = find_prime v in
+    let big_s = berlekamp_factor (poly_to_z_p v p) p in
+    if (List.length big_s) = 1 then u
+    else (
+      let k = find_k v p in
+      let big_w = hensel_lift v (List.map (fun x -> poly_to_z_sym_p x p) big_s) p k in
+      let big_w = List.map (fun x -> Op_transforms.substitute x Q (OpTimes(l, Q))) big_w in
+      Op_simplifications.op_automatic_simplify (OpProduct (List.map (fun x -> Op_transforms.algebraic_expand (OpDivide (x, OpRational (Mpq.init_set_z (content x))))) big_w))
+    )
   )
   ;;
 
+
+
+let factor_z u = 
+  let square_free = square_free_factor_z u in
+  let factor_square_free fact = 
+    (match fact with
+    | OpPow (poly, exp) -> OpPow (irreducible_factor poly, exp)
+    | _ -> irreducible_factor fact) in
+  (match square_free with
+  | OpProduct prod_list -> Op_simplifications.op_automatic_simplify (OpProduct (List.map factor_square_free prod_list))
+  | _ -> factor_square_free square_free
+  )
+  ;;
+
+
+let find_big_m u = 
+  let rec get_coef poly_q acc =
+    if (Type_def.op_expr_order poly_q (OpRational (Mpq.init_set_si 0 1))) = 0 then acc
+    else ( 
+      let (lc, deg) = Op_transforms.degree poly_q in
+      let denom = 
+        (match lc with
+        | OpRational rat ->
+          let denominator = Mpz.init() in
+          let _ = Mpq.get_den denominator rat in
+          denominator
+        | _ -> failwith "input wasn't a polynomial"
+        )
+      in
+      let new_poly = Op_simplifications.op_automatic_simplify (OpMinus (poly_q, OpTimes(lc, OpPow (Q, OpRational deg)))) in
+      get_coef new_poly (denom :: acc)
+    )
+  in
+  let lcm a b =
+    let res = Mpz.init () in
+    let _ = Mpz.lcm res a b in
+    res
+  in
+  List.fold_left lcm (Mpz.init_set_si 1) (get_coef u [])
+  ;;
+
+
+let factor_q u = 
+  let big_m = find_big_m u in
+  let v = Op_simplifications.op_automatic_simplify (Op_transforms.algebraic_expand (OpTimes(OpRational (Mpq.init_set_z big_m), u))) in
+  let cont_v = content v in
+  let pp_v = pp v in
+  let sign_v = if (Type_def.op_expr_order (fst (Op_transforms.degree u)) (OpRational (Mpq.init_set_si 0 1))) < 0 then OpRational (Mpq.init_set_si (-1) 1) else OpRational (Mpq.init_set_si 1 1) in
+  let v_fact = factor_z pp_v in
+  Op_simplifications.op_automatic_simplify (OpTimes(OpDivide(OpTimes(OpRational (Mpq.init_set_z cont_v), sign_v), OpRational (Mpq.init_set_z big_m)), v_fact))
+  
+  ;;
