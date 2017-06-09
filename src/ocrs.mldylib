@@ -1,14 +1,14 @@
 # OASIS_START
-# DO NOT EDIT (digest: 7f83a03998f50aad3bd61fa42fa22bf7)
+# DO NOT EDIT (digest: 3fb63636c6e4e89169d1e3cfa91a2b61)
 Ocrs
 Type_def
 Expr_helpers
 Lexer
 Parser
+Mat_helpers
 Factor
 Solve_mat_rec
 Mat_functions
-Mat_helpers
 Expr_to_opcalc
 Isolate_Ovar
 Tau_inverse
