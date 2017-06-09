@@ -53,7 +53,7 @@ let rec algebraic_expand expr =
     (match exp with
     | OpRational rat when Expr_simplifications.is_int rat && (Mpq.cmp_si rat 2 1) >= 0 ->
       op_automatic_simplify (expand_power (algebraic_expand base) rat)
-    | _ -> OpPow (base, exp))
+    | _ -> OpPow (algebraic_expand base, exp))
   | _ -> expr
   ;;
 
@@ -81,23 +81,13 @@ let rec contains_q expr=
       List.exists contains_q expr_list
   | OpSum expr_list ->
       List.exists contains_q expr_list
-  | OpSymbolic_Constant _ ->
-      false
-  | OpBase_case (_, _) ->
-      false
-  | OpOutput_variable (ident , subscript) ->
-       false
-  | OpInput_variable str ->
-      false
-  | OpRational rat ->
-      false
   | OpLog (_, expression) ->
       contains_q expression
   | OpPow (left, right) ->
       (contains_q left) || (contains_q right)
   | Q ->
       true
-  | OpUndefined ->
+  | _ ->
       false
   ;;
 
@@ -317,3 +307,83 @@ let rec partial_fraction expr =
     partial_fraction_3 num (OpPow(base, OpRational neg_exp))
   | _ -> simp_expr
   ;;
+
+
+
+let polynomial_derivative_q poly =
+  let term_derivative term = 
+    (match term with
+    | OpProduct prod_list ->
+      let (contain_q, not_contain_q) = List.partition contains_q prod_list in
+        (match contain_q with
+        | [Q] -> Op_simplifications.op_automatic_simplify (OpProduct not_contain_q)
+        | [OpPow (Q, OpRational exp)] -> Op_simplifications.op_automatic_simplify (OpProduct ((OpRational exp) :: (OpPow(Q, OpMinus(OpRational exp, OpRational (Mpq.init_set_si 1 1)))) :: not_contain_q))
+        | _ when (List.for_all (fun x -> not (contains_q x)) prod_list) -> OpRational (Mpq.init_set_si 0 1)
+        | _ -> failwith "input wasn't a polynomial term"
+        )
+    | Q -> OpRational (Mpq.init_set_si 1 1 )
+    | OpPow(Q, OpRational exp) ->
+      Op_simplifications.op_automatic_simplify (OpTimes (OpRational exp, OpPow(Q, OpMinus(OpRational exp, OpRational (Mpq.init_set_si 1 1)))))
+    | _ when (not (contains_q term)) -> OpRational (Mpq.init_set_si 0 1)
+    | _ ->  failwith "input wasn't an integer polynomial"
+    )
+  in
+  match poly with
+  | OpSum sum_list ->
+    Op_simplifications.op_automatic_simplify (OpSum (List.map term_derivative sum_list))
+  | _ -> term_derivative poly
+  ;;
+
+
+let rec get_num_denom_of_term unsimp_term =
+  let term = Op_simplifications.op_automatic_simplify unsimp_term in
+  (match term with
+  | OpPow (base, OpRational exp) when (Mpq.cmp_si exp 0 1) < 0 ->
+    let pos_exp = Mpq.init () in
+    let _ = Mpq.neg pos_exp exp in
+    (OpRational (Mpq.init_set_si 1 1), Op_simplifications.op_automatic_simplify (OpPow(base, OpRational pos_exp)))
+  | OpProduct prod_list ->
+    let num_denom_list = List.map get_num_denom_of_term prod_list in
+    let (num_list, denom_list) = List.split num_denom_list in
+    (Op_simplifications.op_automatic_simplify (OpProduct num_list), Op_simplifications.op_automatic_simplify (OpProduct denom_list))
+  | _ -> (term, OpRational (Mpq.init_set_si 1 1))
+  )
+  ;;
+
+let rec make_rat_expr unsimp_expr =
+  let expr = Op_simplifications.op_automatic_simplify unsimp_expr in
+  let rec get_new rat_exp =
+    (match rat_exp with
+    | OpSum sumList ->
+      let rat_sum_list = List.map get_new sumList in
+      let (nums, denoms) = List.split (List.map get_num_denom_of_term rat_sum_list) in
+      let new_denom = Op_simplifications.op_automatic_simplify (OpProduct denoms) in
+      let new_num_list = List.map2 (fun num denom -> fst (polynomial_division (Op_simplifications.op_automatic_simplify (algebraic_expand (OpProduct [new_denom; num]))) (Op_simplifications.op_automatic_simplify (algebraic_expand denom)))) nums denoms in
+      let rat_num = OpSum new_num_list in
+      Op_simplifications.op_automatic_simplify (OpDivide(rat_num, new_denom))
+    | OpProduct prodList ->
+      Op_simplifications.op_automatic_simplify (OpProduct (List.map get_new prodList))
+    | OpPow (base, exp) ->
+      Op_simplifications.op_automatic_simplify (OpPow (get_new base, get_new exp))
+    | OpPlus _ | OpMinus _ | OpTimes _ | OpDivide _ -> get_new rat_exp
+    | _ -> rat_exp
+    )
+  in
+  get_new expr
+
+
+let simp_rat_expr expr = 
+  let (num, denom) = get_num_denom_of_term expr in
+  let expanded_num = algebraic_expand num in
+  let expanded_denom = algebraic_expand denom in
+  let gcd = List.nth (extended_euclidean expanded_num expanded_denom) 0 in
+  if (Type_def.op_expr_order gcd (OpRational (Mpq.init_set_si 1 1))) = 0 then
+    Op_simplifications.op_automatic_simplify (OpDivide (num, denom))
+  else (
+    let (new_num, _) = polynomial_division expanded_num gcd in
+    let (new_denom, _) = polynomial_division expanded_denom gcd in
+    Op_simplifications.op_automatic_simplify (OpDivide (new_num, new_denom))
+  )
+  ;;
+
+

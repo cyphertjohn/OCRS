@@ -4,7 +4,13 @@ type token =
   | VAR of (string)
   | COMMA
   | UNDERSCORE
+  | PI
   | BINOMIAL
+  | MOD
+  | FLOOR
+  | SIN
+  | COS
+  | ARCTAN
   | EQUALS
   | LESS
   | LESSEQ
