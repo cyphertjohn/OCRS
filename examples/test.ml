@@ -171,12 +171,49 @@ let one_copy = Mpq.init_set_si 1 1;;
 let minus_2 = Mpq.init_set_si (-2) 1;;
 let four = Mpq.init_set_si 4 1;;
 
-let matrix_test = VEquals (Ovec ([|"x"; "y"|], SAdd("n", 1)), [|[|one; one_copy|];[|minus_2; four|]|], Ovec ([|"x"; "y"|], SSVar "n"), [|Input_variable "n"; Rational (Mpq.init_set_si 1 1)|]);;
+let matrix_test_1 = VEquals (Ovec ([|"x"; "y"|], SAdd("n", 1)), [|[|one; one_copy|];[|minus_2; four|]|], Ovec ([|"x"; "y"|], SSVar "n"), [|Input_variable "n"; Rational (Mpq.init_set_si 1 1)|]);;
 
-let result = Solve_mat_rec.solve_mat_rec matrix_test;;
+
+print_endline "";;
+print_endline (Mat_helpers.matrix_rec_to_string matrix_test_1);;
+let result = Ocrs.solve_mat_recurrence matrix_test_1;;
+print_endline "";;
+
 
 
 List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
+
+(*let matrix_test = VEquals (Ovec ([|"x"|], SAdd("n", 1)), [|[|four|]|], Ovec ([|"x"|], SSVar "n"), [|Input_variable "n"|]);;
+
+print_endline "";;
+print_endline (Mat_helpers.matrix_rec_to_string matrix_test);;
+let result = Ocrs.solve_mat_recurrence matrix_test;;
+print_endline "";;
+List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
+*)
+
+let matrix_test_2 = VEquals (Ovec ([|"x"; "y"; "z"|], SAdd("n", 1)), [|[|(Mpq.init_set_si 5 1); Mpq.init_set_si 2 1; Mpq.init_set_si (-2) 1;|];[|Mpq.init_set_si 2 1; Mpq.init_set_si 5 1;Mpq.init_set_si (-2) 1|];[|Mpq.init_set_si (-2) 1; Mpq.init_set_si (-2) 1; Mpq.init_set_si 5 1|]|], Ovec ([|"x"; "y"; "z"|], SSVar "n"), [|Rational (Mpq.init_set_si 1 1); Rational (Mpq.init_set_si 0 1); Rational (Mpq.init_set_si 0 1)|]);;
+
+print_endline "";;
+print_endline (Mat_helpers.matrix_rec_to_string matrix_test_2);;
+let result = Ocrs.solve_mat_recurrence matrix_test_2;;
+print_endline "";;
+List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
+
+
+
+let stratified_test_lower = VEquals (Ovec ([|"x"; "y"|], SAdd("n", 1)), [|[|one; one_copy|];[|minus_2; four|]|], Ovec ([|"x"; "y"|], SSVar "n"), [|Input_variable "n"; Rational (Mpq.init_set_si 1 1)|]);;
+
+let stratified_test_higher = VEquals (Ovec ([|"u"; "v"; "z"|], SAdd("n", 1)), [|[|(Mpq.init_set_si 5 1); Mpq.init_set_si 2 1; Mpq.init_set_si (-2) 1;|];[|Mpq.init_set_si 2 1; Mpq.init_set_si 5 1;Mpq.init_set_si (-2) 1|];[|Mpq.init_set_si (-2) 1; Mpq.init_set_si (-2) 1; Mpq.init_set_si 5 1|]|], Ovec ([|"u"; "v"; "z"|], SSVar "n"), [|Rational (Mpq.init_set_si 1 1); Output_variable ("x", SSVar "n"); Rational (Mpq.init_set_si 0 1)|]);;
+
+let stratified_test = [stratified_test_lower;stratified_test_higher];;
+
+
+print_endline "";;
+List.iter (fun x -> print_endline (Mat_helpers.matrix_rec_to_string x)) stratified_test;;
+let results = Ocrs.solve_mat_recurrence_list stratified_test;;
+print_endline "";;
+List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) results;;
 
 
 (*let lexbuf = Lexing.from_string "y_n = (n ^ 2) * 2^n, n" in

@@ -124,13 +124,14 @@ let sub_matrix a b =
   ;;
 
 
+
 let add_vectors a b = 
   if (Array.length a) <> (Array.length b) then failwith "Adding vectors of different length"
   else
     (
     let a_lis = Array.to_list a in
     let b_lis = Array.to_list b in
-    let answer_list = List.map2 (fun x y -> Op_simplifications.op_automatic_simplify (OpPlus(x, y))) a_lis b_lis in
+    let answer_list = List.map2 (fun x y -> Op_simplifications.op_automatic_simplify (Op_transforms.make_rat_expr (OpPlus(x, y)))) a_lis b_lis in
     Array.of_list answer_list
     )
   ;;
@@ -142,7 +143,7 @@ let add_matrix a b =
     (
     let a_lis = Array.to_list (Array.map Array.to_list a) in
     let b_lis = Array.to_list (Array.map Array.to_list b) in
-    let answer_list = List.map2 (fun x y -> (List.map2 (fun w z -> Op_simplifications.op_automatic_simplify (OpPlus(w, z))) x y)) a_lis b_lis in
+    let answer_list = List.map2 (fun x y -> (List.map2 (fun w z -> Op_simplifications.op_automatic_simplify (Op_transforms.make_rat_expr (OpPlus (w, z)))) x y)) a_lis b_lis in
     Array.of_list (List.map Array.of_list answer_list)
     )
   ;;

@@ -334,3 +334,56 @@ let polynomial_derivative_q poly =
   | _ -> term_derivative poly
   ;;
 
+
+let rec get_num_denom_of_term unsimp_term =
+  let term = Op_simplifications.op_automatic_simplify unsimp_term in
+  (match term with
+  | OpPow (base, OpRational exp) when (Mpq.cmp_si exp 0 1) < 0 ->
+    let pos_exp = Mpq.init () in
+    let _ = Mpq.neg pos_exp exp in
+    (OpRational (Mpq.init_set_si 1 1), Op_simplifications.op_automatic_simplify (OpPow(base, OpRational pos_exp)))
+  | OpProduct prod_list ->
+    let num_denom_list = List.map get_num_denom_of_term prod_list in
+    let (num_list, denom_list) = List.split num_denom_list in
+    (Op_simplifications.op_automatic_simplify (OpProduct num_list), Op_simplifications.op_automatic_simplify (OpProduct denom_list))
+  | _ -> (term, OpRational (Mpq.init_set_si 1 1))
+  )
+  ;;
+
+let rec make_rat_expr unsimp_expr =
+  let expr = Op_simplifications.op_automatic_simplify unsimp_expr in
+  let rec get_new rat_exp =
+    (match rat_exp with
+    | OpSum sumList ->
+      let rat_sum_list = List.map get_new sumList in
+      let (nums, denoms) = List.split (List.map get_num_denom_of_term rat_sum_list) in
+      let new_denom = Op_simplifications.op_automatic_simplify (OpProduct denoms) in
+      let new_num_list = List.map2 (fun num denom -> fst (polynomial_division (Op_simplifications.op_automatic_simplify (algebraic_expand (OpProduct [new_denom; num]))) (Op_simplifications.op_automatic_simplify (algebraic_expand denom)))) nums denoms in
+      let rat_num = OpSum new_num_list in
+      Op_simplifications.op_automatic_simplify (OpDivide(rat_num, new_denom))
+    | OpProduct prodList ->
+      Op_simplifications.op_automatic_simplify (OpProduct (List.map get_new prodList))
+    | OpPow (base, exp) ->
+      Op_simplifications.op_automatic_simplify (OpPow (get_new base, get_new exp))
+    | OpPlus _ | OpMinus _ | OpTimes _ | OpDivide _ -> get_new rat_exp
+    | _ -> rat_exp
+    )
+  in
+  get_new expr
+
+
+let simp_rat_expr expr = 
+  let (num, denom) = get_num_denom_of_term expr in
+  let expanded_num = algebraic_expand num in
+  let expanded_denom = algebraic_expand denom in
+  let gcd = List.nth (extended_euclidean expanded_num expanded_denom) 0 in
+  if (Type_def.op_expr_order gcd (OpRational (Mpq.init_set_si 1 1))) = 0 then
+    Op_simplifications.op_automatic_simplify (OpDivide (num, denom))
+  else (
+    let (new_num, _) = polynomial_division expanded_num gcd in
+    let (new_denom, _) = polynomial_division expanded_denom gcd in
+    Op_simplifications.op_automatic_simplify (OpDivide (new_num, new_denom))
+  )
+  ;;
+
+

@@ -77,3 +77,70 @@ let solve_rec_list_pair pair_list =
       else after_base_sub :: (sub_and_solve tl previous_ovar_sol)) in
   sub_and_solve pair_list []
   ;;
+
+
+let solve_mat_recurrence mat_rec = 
+  Solve_mat_rec.solve_mat_rec_ineq mat_rec
+  ;;
+
+
+let solve_rec_list ineq_list =
+  let rec sub_and_solve lis previous_ovar_sol=
+    (match lis with
+    | [] -> []
+    | hd :: tl ->
+      let rec sub_previous_sol pair_list ineq =
+        (match pair_list with
+        | [] -> ineq
+        | hd :: tl ->
+          let new_ineq = substitute ineq (fst hd) (snd hd) in
+          sub_previous_sol tl new_ineq
+        ) in
+      let new_ineq_to_solve = sub_previous_sol previous_ovar_sol hd in
+      let rec_sol = solve_rec new_ineq_to_solve false in
+      let (left, right) = get_right_left_ineq rec_sol in
+      rec_sol :: (sub_and_solve tl (previous_ovar_sol @ [(left, right)]))) in
+  sub_and_solve ineq_list []
+  ;;
+
+
+
+let solve_mat_recurrence_list mat_rec_list =
+  let rec sub_and_solve lis previous_sol_pairs = 
+    (match lis with
+    | [] -> []
+    | hd :: tl ->
+      let rec sub_previous_sol pair_list mat_rec =
+        (match pair_list with
+        | [] -> mat_rec
+        | hd :: tl ->
+          (match mat_rec with
+          | VEquals (primed, mat, unprimed, add) ->
+            let new_add = Array.map (fun x -> substitute_expr x (fst hd) (snd hd)) add in
+            let new_mat_rec = VEquals (primed, mat, unprimed, new_add) in
+            sub_previous_sol tl new_mat_rec
+          | VLess (primed, mat, unprimed, add) ->
+            let new_add = Array.map (fun x -> substitute_expr x (fst hd) (snd hd)) add in
+            let new_mat_rec = VLess (primed, mat, unprimed, new_add) in
+            sub_previous_sol tl new_mat_rec
+          | VLessEq (primed, mat, unprimed, add) ->
+            let new_add = Array.map (fun x -> substitute_expr x (fst hd) (snd hd)) add in
+            let new_mat_rec = VLessEq (primed, mat, unprimed, new_add) in
+            sub_previous_sol tl new_mat_rec
+          | VGreater (primed, mat, unprimed, add) ->
+            let new_add = Array.map (fun x -> substitute_expr x (fst hd) (snd hd)) add in
+            let new_mat_rec = VGreater (primed, mat, unprimed, new_add) in
+            sub_previous_sol tl new_mat_rec
+          | VGreaterEq (primed, mat, unprimed, add) ->
+            let new_add = Array.map (fun x -> substitute_expr x (fst hd) (snd hd)) add in
+            let new_mat_rec = VGreaterEq (primed, mat, unprimed, new_add) in
+            sub_previous_sol tl new_mat_rec
+          )
+        ) in
+      let new_mat_rec_to_solve = sub_previous_sol previous_sol_pairs hd in
+      let rec_sol = solve_mat_recurrence new_mat_rec_to_solve in
+      let left_right_lis = List.map get_right_left_ineq rec_sol in
+      rec_sol :: (sub_and_solve tl (previous_sol_pairs @ left_right_lis))
+    ) in
+  List.concat (sub_and_solve mat_rec_list [])
+  ;;

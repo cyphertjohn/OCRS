@@ -1,6 +1,6 @@
 open Type_def
 
-
+(*
 let rec get_num_denom_of_term unsimp_term =
   let term = Op_simplifications.op_automatic_simplify unsimp_term in
   (match term with 
@@ -34,15 +34,10 @@ let rec make_rat_expr unsimp_expr =
   | _ -> expr
   )
   ;;
+*)
 
-
-
-(* input is a sum of rational expressions where all the denominators are factored*)
-let rec partial_fraction expr =
-  let simp_expr = Op_simplifications.op_automatic_simplify expr in
-  match simp_expr with
-  | OpSum sumList ->
-    Op_simplifications.op_automatic_simplify (OpSum (List.map partial_fraction sumList))
+let new_part_frac expr = 
+  match expr with
   | OpProduct prodList ->
     let is_denom in_expr =
       (match in_expr with
@@ -51,20 +46,24 @@ let rec partial_fraction expr =
       | _ ->
         false
       ) in
-    let (denom, num) = List.partition is_denom prodList in (* might need to check if either list is empty *)
+    let (denom, num) = List.partition is_denom prodList in
     let num_expr = Op_simplifications.op_automatic_simplify (OpProduct num) in
     let denom_expr = Op_simplifications.op_automatic_simplify (OpProduct denom) in
     let expanded_num = Op_simplifications.op_automatic_simplify (Op_transforms.algebraic_expand (Op_simplifications.op_automatic_simplify num_expr)) in
-    let factored_inverse_denom = Factor.factor_q (Op_transforms.algebraic_expand (Op_simplifications.op_automatic_simplify (OpPow(denom_expr, OpRational (Mpq.init_set_si (-1) 1))))) in
-    Op_transforms.partial_fraction_3 expanded_num factored_inverse_denom
-  | OpPow (base, OpRational exp) when (Mpq.cmp_si exp 0 1)<0 && Expr_simplifications.is_int exp ->
-    let num = OpRational (Mpq.init_set_si 1 1) in
-    let neg_exp = Mpq.init () in
-    let _ = Mpq.neg neg_exp exp in
-    Op_transforms.partial_fraction_3 num (OpPow(base, OpRational neg_exp))
-  | _ -> simp_expr
+    let expanded_denom = Op_transforms.algebraic_expand (Op_simplifications.op_automatic_simplify (OpPow(denom_expr, OpRational (Mpq.init_set_si (-1) 1)))) in
+    let (q, r) = Op_transforms.polynomial_division expanded_num expanded_denom in
+    if (Type_def.op_expr_order r (OpRational (Mpq.init_set_si 0 1))) = 0 then Op_simplifications.op_automatic_simplify q
+    else (
+      let factored_inverse_denom = Factor.factor_q expanded_denom in
+      Op_simplifications.op_automatic_simplify (OpSum[q; Op_transforms.partial_fraction_3 (Op_simplifications.op_automatic_simplify r) factored_inverse_denom])
+    )
+  | _ -> Op_transforms.partial_fraction expr
   ;;
 
+
+let simplify_inv_matrix matrix = 
+  Array.map (fun x -> Array.map (fun y -> Op_transforms.simp_rat_expr (Op_transforms.make_rat_expr y)) x) matrix
+  ;;
 
 let solve_mat_rec primed matrix unprimed add constr = 
   (* check to make sure primed subscript is n+1 *)
@@ -103,12 +102,18 @@ let solve_mat_rec primed matrix unprimed add constr =
   let new_vec = Mat_functions.multiply_scalar_through_vector base_case_vec (OpMinus(Q, OpRational (Mpq.init_set_si 1 1))) in
   let new_vec = Mat_functions.add_vectors new_vec add_vec_op_calc in
   let new_matrix = Mat_functions.invert_matrix_fast (Mat_functions.sub_matrix q_matrix op_rational_matrix) in
-  let op_calc_results = Mat_functions.matrix_times_vector new_matrix new_vec in
-  let rat_expr_results = Array.map make_rat_expr op_calc_results in
-  let expanded_results = Array.map Op_transforms.algebraic_expand rat_expr_results in
-  let partial_fraction = Array.map partial_fraction expanded_results in
+  let simp_matrix = simplify_inv_matrix new_matrix in
+  let op_calc_results = Mat_functions.matrix_times_vector simp_matrix new_vec in
+  let rat_expr_results = Array.map Op_transforms.make_rat_expr op_calc_results in
+  let _ = Array.iter (fun x -> print_endline (Expr_helpers.op_expr_to_string x)) rat_expr_results in
+  let _ = print_endline "" in
+  let partial_fraction = Array.map new_part_frac rat_expr_results in
+  let _ = Array.iter (fun x -> print_endline (Expr_helpers.op_expr_to_string x)) partial_fraction in
+  let _ = print_endline "" in
   let result_exprs = Array.map (fun x -> Tau_inverse.tau_inverse x ivar_ident) partial_fraction in
-  let simp_result_exprs = Array.map Expr_simplifications.automatic_simplify result_exprs in
+  let _ = Array.iter (fun x -> print_endline (Expr_helpers.expr_to_string x)) result_exprs in
+  let _ = print_endline "" in
+  let simp_result_exprs = Array.map (fun x -> Expr_transforms.algebraic_expand (Expr_simplifications.automatic_simplify x)) result_exprs in
   let answer_vec_with_subs = Mat_helpers.apply_subscript_to_ovec (Ovec (primed_idents, (SSVar ivar_ident))) in
   let result_exprs_list = Array.to_list simp_result_exprs in
   let answer_vec_with_subs_list = Array.to_list answer_vec_with_subs in
@@ -127,7 +132,7 @@ let solve_mat_rec primed matrix unprimed add constr =
   ;;
 
 
-let solve_mat_rec mat_ineq = 
+let solve_mat_rec_ineq mat_ineq = 
   match mat_ineq with
   | VEquals (primed, mat, unprimed, add) ->
     solve_mat_rec primed mat unprimed add "=="

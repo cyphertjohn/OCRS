@@ -402,7 +402,7 @@ let pseudo_division u v =
   let delta = max (old_m - n + 1) 0 in
   let lcv = fst (Op_transforms.degree v) in 
   let rec aux p s m sigma = 
-    if m < n || m = 0 then (
+    if m < n then (
       let q = Op_simplifications.op_automatic_simplify (Op_transforms.algebraic_expand (Op_simplifications.op_automatic_simplify (OpTimes(OpPow(lcv, OpRational (Mpq.init_set_si (delta - sigma) 1)), p)))) in
       let r = Op_simplifications.op_automatic_simplify (Op_transforms.algebraic_expand (Op_simplifications.op_automatic_simplify (OpTimes(OpPow(lcv, OpRational (Mpq.init_set_si (delta - sigma) 1)), s)))) in
       (q, r)
@@ -411,7 +411,8 @@ let pseudo_division u v =
       let new_p = Op_simplifications.op_automatic_simplify (OpPlus(OpTimes(lcv,p), OpTimes(lcs,OpPow(Q, OpRational (Mpq.init_set_si (m-n) 1))))) in
       let new_s = Op_simplifications.op_automatic_simplify (Op_transforms.algebraic_expand (Op_simplifications.op_automatic_simplify (OpMinus(OpTimes(lcv, s), OpTimes(OpTimes(lcs, v), OpPow(Q, OpRational (Mpq.init_set_si (m-n) 1))))))) in
       let new_m = Mpz.get_int (get_mpz_of_rat_expr (OpRational (snd (Op_transforms.degree new_s)))) in
-      aux new_p new_s new_m (sigma + 1)
+      if m = 0 && n = 0 then aux new_p new_s (-1) (sigma + 1)
+      else aux new_p new_s new_m (sigma + 1)
     )
   in
   aux (OpRational (Mpq.init_set_si 0 1)) u old_m 0
