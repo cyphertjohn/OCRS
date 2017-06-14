@@ -67,6 +67,7 @@ type expr =
           | Mod of expr * expr		(** Modular expression *)
           | Pi				(** The trancendental number pi *)
           | Factorial of expr		(** Factorial *)
+          | Iif of string * string	(** Impliciltly intrepreted function *)
           | Undefined			(** An expression whose value is undefined. ie x/0, log(-1), etc *)
           ;;
 
@@ -87,6 +88,9 @@ let rec expr_order a b =
         Mpq.cmp a_v b_v
     | (Symbolic_Constant a_str, Symbolic_Constant b_str) | (Input_variable a_str, Input_variable b_str) -> (* O-2 *)
         String.compare a_str b_str
+    | (Iif (op_expr_stra, identa), Iif (op_expr_strb, identb)) ->
+        if (String.compare identa identb) <> 0 then (String.compare identa identb)
+        else String.compare op_expr_stra op_expr_strb
     | (Base_case (a_ident, a_index), Base_case (b_ident, b_index)) ->
         if a_ident <> b_ident then String.compare a_ident b_ident
         else compare a_index b_index
@@ -155,6 +159,8 @@ let rec expr_order a b =
     | (_, Output_variable _) -> (-1)
     | (Input_variable _, _) -> 1
     | (_, Input_variable _) -> (-1)
+    | (Iif _, _) -> 1
+    | (_, Iif _) -> (-1)
     | _ -> failwith "all cases should have been taken care of"
     ;;
 

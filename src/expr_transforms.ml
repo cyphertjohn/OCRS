@@ -69,7 +69,7 @@ let rec algebraic_expand_inequation ineq =
 
 let rec inverse_binomial expr =
   match expr with
-  | Rational _ | Symbolic_Constant _ | Base_case (_, _) | Output_variable (_, _) | Input_variable _ | Arctan _ | Pi | Undefined ->
+  | Rational _ | Symbolic_Constant _ | Base_case (_, _) | Output_variable (_, _) | Input_variable _ | Arctan _ | Pi | Undefined | Iif _ ->
      expr
   | Pow (base, exponent) ->
       automatic_simplify (Pow (inverse_binomial base, inverse_binomial exponent))

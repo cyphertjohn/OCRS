@@ -132,22 +132,24 @@ let rec tau_inverse op_expr input_ident =
       let _ = Mpq.sub c_minus_1 c (Mpq.init_set_si 1 1) in
       Divide(Minus(Times(Binomial(Input_variable input_ident, Rational c_minus_1), Pow(Symbolic_Constant a, Sum[Input_variable input_ident; Rational neg_c_plus_1])), tau_inverse (OpPow(OpSum [Q; OpProduct[OpRational neg_one; OpSymbolic_Constant a]], OpRational neg_c_plus_1)) input_ident), Minus(Symbolic_Constant a, Rational (Mpq.init_set_si 1 1)))
   | OpSum expr_list ->
-      if complete_tiling op_expr then Sum (List.map (fun x -> tau_inverse x input_ident) expr_list)
+      Sum (List.map (fun x -> tau_inverse x input_ident) expr_list)
+      (*if complete_tiling op_expr then Sum (List.map (fun x -> tau_inverse x input_ident) expr_list)
       else 
         let first_term_cant_solve = List.nth (List.filter (fun x -> not (complete_tiling x)) expr_list) 0 in
-        raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string first_term_cant_solve)))
+        raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string first_term_cant_solve)))*)
   | OpRational rat -> Rational rat
   | OpSymbolic_Constant str (* probably some other things *) -> Symbolic_Constant str
   | OpBase_case (str, integer) -> Base_case (str, integer)
   | OpProduct expr_list ->
       let (term, const_list) = List.partition Op_transforms.contains_q expr_list in
       if (List.length const_list) <> 0 then Product (List.append (List.map (fun x -> tau_inverse x input_ident) const_list) ((tau_inverse (Op_simplifications.op_automatic_simplify (OpProduct term)) input_ident) :: []))
-      else raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string op_expr))) (* need to do some transformations *)
+      else Iif(Expr_helpers.op_expr_to_string op_expr, input_ident)
+      (*raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string op_expr))) (* need to do some transformations *)*)
   | OpPow (base, exp) when (not (Op_transforms.contains_q base)) && (not (Op_transforms.contains_q exp)) ->
       Pow (tau_inverse base input_ident, tau_inverse exp input_ident)
   | OpLog (b, expression) when (not (Op_transforms.contains_q expression))->
       Log (b, tau_inverse expression input_ident)
-  | _ -> raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string op_expr)))
+  | _ -> Iif(Expr_helpers.op_expr_to_string op_expr, input_ident)
 
 
 let tau_inverse_inequation expr input_ident =

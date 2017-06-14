@@ -34,6 +34,7 @@ type expr =
           | Mod of expr * expr          (** Modular expression *)
           | Pi                          (** The trancendental number pi *)
           | Factorial of expr           (** Factorial *)
+          | Iif of string * string	(** Implicitly interpreted function *)
           | Undefined                   (** An expression whose value is undefined. ie x/0, log(-1), etc *)
           ;;
 

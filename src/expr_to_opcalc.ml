@@ -166,6 +166,8 @@ let rec expr_to_opCalc expr =
       OpArctan (value)
   | Mod (left, right) ->
       raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
+  | Iif (left, right) ->
+      raise (Expr_to_op_exc ("Don't expect an Iif as input at the moment"))
   | Pi ->
       OpPi
   ;;

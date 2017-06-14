@@ -5,7 +5,7 @@ let rec substitute_expr expr old_term new_term =
   if expr = old_term then new_term
   else
     (match expr with
-    | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Output_variable _ | Arctan _ | Pi ->
+    | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Output_variable _ | Arctan _ | Pi | Iif _ ->
       expr
     | Pow (base, exp) ->
       Pow (substitute_expr base old_term new_term, substitute_expr exp old_term new_term)

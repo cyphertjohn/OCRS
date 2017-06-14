@@ -33,7 +33,7 @@ let get_right_left_ineq ineq =
 
 let rec find_ovar_ivar_expr expr = 
   match expr with
-  | Rational _ | Symbolic_Constant _ | Base_case _ | Arctan _ | Pi | Undefined ->
+  | Rational _ | Symbolic_Constant _ | Base_case _ | Arctan _ | Pi | Iif _ | Undefined ->
     ([], [])
   | Output_variable (ovar_ident, subscript) ->
     (match subscript with 
@@ -177,7 +177,7 @@ let solve_add_linear_rec ineq ovar_ident ivar_ident print_steps =
 
 let rec find_lowest_add_expr expr = 
   match expr with
-  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Arctan _ | Pi ->
+  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Arctan _ | Pi | Iif _ ->
     max_int
   | Output_variable (_, subscript) ->
     (match subscript with
@@ -370,7 +370,7 @@ let rec substitute_expr expr old_term new_term =
   if expr = old_term then new_term
   else
     (match expr with
-    | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Output_variable _ | Arctan _ | Pi ->
+    | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Output_variable _ | Arctan _ | Pi | Iif _ ->
       expr
     | Pow (base, exp) ->
       Pow (substitute_expr base old_term new_term, substitute_expr exp old_term new_term)
@@ -443,7 +443,7 @@ let rec solve_rec_recur ineq ovar_ident ivar_ident print_steps =
 
 let rec contains_ovar_expr expr subscript = 
   match expr with
-  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Arctan _ | Pi ->
+  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Arctan _ | Pi | Iif _ ->
     false
   | Output_variable (_, subscript) ->
     true
@@ -480,7 +480,7 @@ let rec contains_ovar_expr expr subscript =
 
 let rec find_all_subscripts expr =
   match expr with
-  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Arctan _ | Pi ->
+  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Arctan _ | Pi | Iif _ ->
     []
   | Output_variable (_, subscript) ->
     subscript :: []

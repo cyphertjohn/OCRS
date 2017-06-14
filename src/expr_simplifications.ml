@@ -388,7 +388,7 @@ let simplify_binom top bottom =
 (** Automatically simplify an expression bottom up *)
 let rec automatic_simplify expr = 
   match expr with
-  | Rational _ | Symbolic_Constant _ | Base_case (_, _) | Output_variable (_, _) | Input_variable _ | Undefined | Pi | Arctan _ ->
+  | Rational _ | Symbolic_Constant _ | Base_case (_, _) | Output_variable (_, _) | Input_variable _ | Undefined | Pi | Arctan _ | Iif _ ->
      expr
   | Pow (base, exponent) ->
       let simplified_base = automatic_simplify base in

@@ -55,6 +55,8 @@ let rec expr_to_string e =
       "(" ^ expr_to_string left ^ " mod " ^ expr_to_string right ^ ")"
   | Pi ->
       "pi"
+  | Iif (op_expr_str, ident) ->
+    "f{"^ op_expr_str ^ "}(" ^ ident ^")"
   | Undefined ->
       "UNDEFINED"
   ;;
@@ -254,6 +256,8 @@ let rec expr_to_string_IR e =
       "Arctan (" ^ Mpq.to_string rat ^ ")"
   | Mod (left, right) ->
       "Mod (" ^ expr_to_string left ^ ", " ^ expr_to_string right ^ ")"
+  | Iif (op_expr_str, ident) ->
+      "Iif (" ^ op_expr_str ^ ", " ^ ident ^ ")"
   | Pi ->
       "Pi"
   ;;
@@ -275,7 +279,7 @@ let inequation_to_string_IR e =
 
 let rec is_const expr =
   match expr with
-  | Rational _ | Base_case _ | Symbolic_Constant _ | Pi | Arctan _ ->
+  | Rational _ | Base_case _ | Symbolic_Constant _ | Pi | Arctan _ | Iif _ ->
     true
   | Output_variable _ | Input_variable _ | Undefined -> false
   | Pow (left, right) ->
