@@ -79,8 +79,8 @@ let solve_rec_list_pair pair_list =
   ;;
 
 
-let solve_mat_recurrence mat_rec = 
-  Solve_mat_rec.solve_mat_rec_ineq mat_rec
+let solve_mat_recurrence mat_rec print = 
+  Solve_mat_rec.solve_mat_rec_ineq mat_rec print
   ;;
 
 
@@ -105,7 +105,7 @@ let solve_rec_list ineq_list =
 
 
 
-let solve_mat_recurrence_list mat_rec_list =
+let solve_mat_recurrence_list mat_rec_list print_steps =
   let rec sub_and_solve lis previous_sol_pairs = 
     (match lis with
     | [] -> []
@@ -138,7 +138,7 @@ let solve_mat_recurrence_list mat_rec_list =
           )
         ) in
       let new_mat_rec_to_solve = sub_previous_sol previous_sol_pairs hd in
-      let rec_sol = solve_mat_recurrence new_mat_rec_to_solve in
+      let rec_sol = solve_mat_recurrence new_mat_rec_to_solve print_steps in
       let left_right_lis = List.map get_right_left_ineq rec_sol in
       rec_sol :: (sub_and_solve tl (previous_sol_pairs @ left_right_lis))
     ) in

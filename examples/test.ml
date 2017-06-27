@@ -1,40 +1,6 @@
 open Type_def;;
 
-(*
-let x = Sum [Product [Rational (snd (Mpfr.init_set_si 2 Mpfr.Near)); Pow(Symbolic_Constant "x", Rational (Mpq.init_set_si 3 1))]; Product [Pow(Symbolic_Constant "x", Rational (snd (Mpfr.init_set_si 2 Mpfr.Near))) ; Symbolic_Constant "x"]];;
 
-let y = Product [Divide (Rational (Mpq.init_set_si 1 1), Symbolic_Constant "a"); Symbolic_Constant "b"; Symbolic_Constant "a"];;
-
-let z = Minus (Symbolic_Constant "x", Symbolic_Constant "x");;
-
-let x1 = Times (Divide (Symbolic_Constant "x", Symbolic_Constant "y"), Divide (Symbolic_Constant "y", Symbolic_Constant "x"));;
-
-let x2 = Times (Rational (snd (Mpfr.init_set_si 2 Mpfr.Near)), Plus(Symbolic_Constant "x", Symbolic_Constant "y"));;
-
-let x3 = Plus(Plus(Symbolic_Constant "a", Symbolic_Constant "b"), Times (Rational (Mpq.init_set_si (-1) 1), Plus(Symbolic_Constant "a", Symbolic_Constant "b")));;
-
-let x4 = Times( Rational (Mpq.init_set_si 3 1), Sum [Times (Rational (Mpq.init_set_si 2 1), Symbolic_Constant "x") ; Symbolic_Constant "y"]);;
-
-let x5 = Times(Rational (Mpq.init_set_si 3 1), Times (Rational (Mpq.init_set_si 2 1), Sum [Symbolic_Constant "x" ; Symbolic_Constant "y"]));;
-
-let x6 = Divide(Minus(Symbolic_Constant "y", Symbolic_Constant "y"), Sum [Pow (Symbolic_Constant "x", Rational (Mpq.init_set_si 2 1)); Symbolic_Constant "x"; Product [Rational (Mpq.init_set_si (-1) 1); Symbolic_Constant "x"; Sum [Symbolic_Constant "x"; Rational (Mpq.init_set_si 1 1)]]]);;
-
-let x7 = Divide(Minus(Symbolic_Constant "y", Symbolic_Constant "y"), Minus (Symbolic_Constant "y", Symbolic_Constant "y"));;
-
-let x9 = Sum [Symbolic_Constant "x"; Product [Rational (snd(Mpfr.init_set_si (-2) Mpfr.Near)); Symbolic_Constant "x"]];;
-
-let lis = [x;y;z;x1; x2; x3; x4; x5; x6; x7; x9];;
-
-List.iter (fun x -> begin print_endline (expr_to_string x); print_endline (expr_to_string (Expr_simplifications.automatic_simplify x)); print_endline "" end) lis;;
-
-
-let testing = OpProduct [OpSum [OpSymbolic_Constant "x"; OpRational (Mpq.init_set_si 2 1)]; OpSum [OpSymbolic_Constant "x"; OpRational (snd(Mpfr.init_set_si (1) Mpfr.Near))]];;
-
-
-print_endline (op_expr_to_string (Op_simplifications.op_automatic_simplify testing));;
-print_endline (op_expr_to_string (Op_transforms.algebraic_expand testing));;
-print_endline ("");;
-*)
 (*
 let test = Log( Mpq.init_set_si 2 1, Pow(Rational (Mpq.init_set_si 2 1), Sum[Times(Rational (Mpq.init_set_si 3 1), Input_variable "n"); Rational (Mpq.init_set_si 1 1)]));;
 
@@ -55,10 +21,8 @@ print_endline (expr_to_string (Expr_simplifications.automatic_simplify pow_test2
 
 print_endline (expr_to_string log_test);;
 print_endline (expr_to_string (Expr_simplifications.automatic_simplify log_test));;
+
 *)
-
-
-
 
 
 
@@ -166,6 +130,7 @@ Ocrs.solve_rec symbolic_log true;;
 print_endline "";; 
 
 
+
 let one = Mpq.init_set_si 1 1;;
 let one_copy = Mpq.init_set_si 1 1;;
 let minus_2 = Mpq.init_set_si (-2) 1;;
@@ -176,30 +141,29 @@ let matrix_test_1 = VEquals (Ovec ([|"x"; "y"|], SAdd("n", 1)), [|[|one; one_cop
 
 print_endline "";;
 print_endline (Mat_helpers.matrix_rec_to_string matrix_test_1);;
-let result = Ocrs.solve_mat_recurrence matrix_test_1;;
+let result = Ocrs.solve_mat_recurrence matrix_test_1 false;;
 print_endline "";;
 
 
 
 List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
 
-(*let matrix_test = VEquals (Ovec ([|"x"|], SAdd("n", 1)), [|[|four|]|], Ovec ([|"x"|], SSVar "n"), [|Input_variable "n"|]);;
+let matrix_test = VEquals (Ovec ([|"x"|], SAdd("n", 1)), [|[|four|]|], Ovec ([|"x"|], SSVar "n"), [|Input_variable "n"|]);;
 
 print_endline "";;
 print_endline (Mat_helpers.matrix_rec_to_string matrix_test);;
-let result = Ocrs.solve_mat_recurrence matrix_test;;
+let result = Ocrs.solve_mat_recurrence matrix_test false;;
 print_endline "";;
 List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
-*)
+
 
 let matrix_test_2 = VEquals (Ovec ([|"x"; "y"; "z"|], SAdd("n", 1)), [|[|(Mpq.init_set_si 5 1); Mpq.init_set_si 2 1; Mpq.init_set_si (-2) 1;|];[|Mpq.init_set_si 2 1; Mpq.init_set_si 5 1;Mpq.init_set_si (-2) 1|];[|Mpq.init_set_si (-2) 1; Mpq.init_set_si (-2) 1; Mpq.init_set_si 5 1|]|], Ovec ([|"x"; "y"; "z"|], SSVar "n"), [|Rational (Mpq.init_set_si 1 1); Times((Pow(Rational (Mpq.init_set_si 3 1), Input_variable "n")),Pow(Input_variable "n", Rational (Mpq.init_set_si 2 1))); Pow(Rational (Mpq.init_set_si 2 1), Input_variable "n")|]);;
 
 print_endline "";;
 print_endline (Mat_helpers.matrix_rec_to_string matrix_test_2);;
-let result = Ocrs.solve_mat_recurrence matrix_test_2;;
+let result = Ocrs.solve_mat_recurrence matrix_test_2 false;;
 print_endline "";;
 List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
-
 
 
 let one = Mpq.init_set_si 1 1;;
@@ -212,7 +176,7 @@ let matrix_test_1 = VEquals (Ovec ([|"x"; "y"|], SAdd("n", 1)), [|[|one; one_cop
 
 print_endline "";;
 print_endline (Mat_helpers.matrix_rec_to_string matrix_test_1);;
-let result = Ocrs.solve_mat_recurrence matrix_test_1;;
+let result = Ocrs.solve_mat_recurrence matrix_test_1 false;;
 print_endline "";;
 
 
@@ -226,12 +190,13 @@ let matrix_test_1 = VEquals (Ovec ([|"x"; "y"|], SAdd("n", 1)), [|[|one; one_cop
 
 print_endline "";;
 print_endline (Mat_helpers.matrix_rec_to_string matrix_test_1);;
-let result = Ocrs.solve_mat_recurrence matrix_test_1;;
+let result = Ocrs.solve_mat_recurrence matrix_test_1 false;;
 print_endline "";;
 
 
 
 List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
+
 
 (*
 

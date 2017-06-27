@@ -53,6 +53,10 @@ let rec algebraic_expand expr =
     (match exp with
     | OpRational rat when Expr_simplifications.is_int rat && (Mpq.cmp_si rat 2 1) >= 0 ->
       op_automatic_simplify (expand_power (algebraic_expand base) rat)
+    | OpRational rat when Expr_simplifications.is_int rat && (Mpq.cmp_si rat (-2) 1) <= 0 ->
+      let neg_rat = Mpq.init() in
+      let _ = Mpq.neg neg_rat rat in
+      op_automatic_simplify (OpDivide(OpRational (Mpq.init_set_si 1 1), expand_power (algebraic_expand base) neg_rat))
     | _ -> OpPow (algebraic_expand base, exp))
   | _ -> expr
   ;;
@@ -109,7 +113,8 @@ let rec degree_monomial u =
         if cmp_result < 0 then b 
         else a in
       let m = List.fold_left max (OpSymbolic_Constant "y", Mpq.init_set_si (-1) 1) coef_deg_list in
-      (Op_simplifications.op_automatic_simplify (OpDivide(u, OpPow (Q, OpRational (snd m)))), (snd m))
+      let res = (Op_simplifications.op_automatic_simplify (OpDivide(u, OpPow (Q, OpRational (snd m)))), (snd m)) in
+      res
   | _ ->
     if contains_q u then (OpUndefined, Mpq.init_set_si 0 1)
     else (u, Mpq.init_set_si 0 1)
@@ -130,8 +135,14 @@ let degree u =
           let b_deg = snd b in
           let cmp_result = Mpq.cmp a_deg b_deg in
           if cmp_result < 0 then b
-          else a in
-        List.fold_left max (OpSymbolic_Constant "y", Mpq.init_set_si (-1) 1) degreelist
+          else if cmp_result > 0 then a 
+          else a 
+            (*let a_coef = fst a in
+            let b_coef = fst b in
+            (Op_simplifications.op_automatic_simplify (OpPlus(a_coef, b_coef)), a_deg)*)
+          in
+        let res = List.fold_left max (OpSymbolic_Constant "y", Mpq.init_set_si (-1) 1) degreelist in
+        res
     | _ -> (OpUndefined, Mpq.init_set_si 0 1))
   ;;
 
@@ -141,8 +152,13 @@ let polynomial_division u v =
   let y = degree v in
   let n = snd y in
   let lcv = fst y in
+  (*let _ = print_endline ("v: " ^ (Expr_helpers.op_expr_to_string v)) in
+  let _ = print_endline ("lcv: " ^ (Expr_helpers.op_expr_to_string lcv)) in
+  let _ = print_endline ("n: " ^ (Mpq.to_string n)) in*)
   let rec aux acc m r =
-    let is_zero expr = 
+    (*let _ = print_endline ("acc: " ^ (Expr_helpers.op_expr_to_string acc)) in
+    let _ = print_endline ("r: " ^ (Expr_helpers.op_expr_to_string r)) in
+    *)let is_zero expr = 
       match expr with
       | OpRational rat when (Mpq.cmp_si rat 0 1)=0 -> true
       | _ -> false in
@@ -164,12 +180,13 @@ let extended_euclidean u v =
     [OpRational (Mpq.init_set_si 0 1); OpRational (Mpq.init_set_si 0 1); OpRational (Mpq.init_set_si 0 1)]
   | _ ->
     let rec aux u v app ap bpp bp =
+
       (match v with
       | OpRational rat when (Mpq.cmp_si rat 0 1)=0 -> [u; app; bpp;] 
       | _ ->
         let division_result = polynomial_division u v in
-        let a = Op_simplifications.op_automatic_simplify (OpMinus (app, OpTimes(fst division_result, ap))) in
-        let b = Op_simplifications.op_automatic_simplify (OpMinus (bpp, OpTimes(fst division_result, bp))) in
+        let a = Op_simplifications.op_automatic_simplify (algebraic_expand (OpMinus (app, OpTimes(fst division_result, ap)))) in
+        let b = Op_simplifications.op_automatic_simplify (algebraic_expand (OpMinus (bpp, OpTimes(fst division_result, bp)))) in
         let new_app = ap in
         let new_ap = a in
         let new_bpp = bp in

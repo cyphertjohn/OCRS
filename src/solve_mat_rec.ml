@@ -65,7 +65,7 @@ let simplify_inv_matrix matrix =
   Array.map (fun x -> Array.map (fun y -> Op_transforms.simp_rat_expr (Op_transforms.make_rat_expr y)) x) matrix
   ;;
 
-let solve_mat_rec primed matrix unprimed add constr = 
+let solve_mat_rec primed matrix unprimed add constr print = 
   (* check to make sure primed subscript is n+1 *)
   let size = Array.length matrix in
   let q_matrix = Array.make_matrix size size (OpRational (Mpq.init_set_si 0 1)) in
@@ -104,15 +104,24 @@ let solve_mat_rec primed matrix unprimed add constr =
   let new_matrix = Mat_functions.invert_matrix_fast (Mat_functions.sub_matrix q_matrix op_rational_matrix) in
   let simp_matrix = simplify_inv_matrix new_matrix in
   let op_calc_results = Mat_functions.matrix_times_vector simp_matrix new_vec in
-  let rat_expr_results = Array.map Op_transforms.make_rat_expr op_calc_results in
-  let _ = Array.iter (fun x -> print_endline (Expr_helpers.op_expr_to_string x)) rat_expr_results in
-  let _ = print_endline "" in
+  let rat_expr_results = Array.map (fun x -> (Op_transforms.make_rat_expr x)) op_calc_results in
+  let _ = 
+    if print then
+      let _ = Array.iter (fun x -> print_endline (Expr_helpers.op_expr_to_string x)) rat_expr_results in
+      print_endline "" 
+    in
   let partial_fraction = Array.map new_part_frac rat_expr_results in
-  let _ = Array.iter (fun x -> print_endline (Expr_helpers.op_expr_to_string x)) partial_fraction in
-  let _ = print_endline "" in
+  let _ = 
+    if print then
+      let _ = Array.iter (fun x -> print_endline (Expr_helpers.op_expr_to_string x)) partial_fraction in
+      print_endline "" 
+    in
   let result_exprs = Array.map (fun x -> Tau_inverse.tau_inverse x ivar_ident) partial_fraction in
-  let _ = Array.iter (fun x -> print_endline (Expr_helpers.expr_to_string x)) result_exprs in
-  let _ = print_endline "" in
+  let _ = 
+    if print then
+      let _ = Array.iter (fun x -> print_endline (Expr_helpers.expr_to_string x)) result_exprs in
+      print_endline "" 
+    in
   let simp_result_exprs = Array.map (fun x -> Expr_transforms.algebraic_expand (Expr_transforms.inverse_binomial (Expr_simplifications.automatic_simplify x))) result_exprs in
   let answer_vec_with_subs = Mat_helpers.apply_subscript_to_ovec (Ovec (primed_idents, (SSVar ivar_ident))) in
   let result_exprs_list = Array.to_list simp_result_exprs in
@@ -132,16 +141,16 @@ let solve_mat_rec primed matrix unprimed add constr =
   ;;
 
 
-let solve_mat_rec_ineq mat_ineq = 
+let solve_mat_rec_ineq mat_ineq print = 
   match mat_ineq with
   | VEquals (primed, mat, unprimed, add) ->
-    solve_mat_rec primed mat unprimed add "=="
+    solve_mat_rec primed mat unprimed add "==" print
   | VLess (primed, mat, unprimed, add) ->
-    solve_mat_rec primed mat unprimed add "<"
+    solve_mat_rec primed mat unprimed add "<" print
   | VLessEq (primed, mat, unprimed, add) ->
-    solve_mat_rec primed mat unprimed add "<="
+    solve_mat_rec primed mat unprimed add "<=" print
   | VGreater (primed, mat, unprimed, add) ->
-    solve_mat_rec primed mat unprimed add ">"
+    solve_mat_rec primed mat unprimed add ">" print
   | VGreaterEq (primed, mat, unprimed, add) ->
-    solve_mat_rec primed mat unprimed add ">="
+    solve_mat_rec primed mat unprimed add ">=" print
   ;;
