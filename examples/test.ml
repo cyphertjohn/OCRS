@@ -31,6 +31,11 @@ print_endline (expr_to_string (Expr_simplifications.automatic_simplify log_test)
 
 
 
+
+
+
+
+
 let x1 = Equals(Output_variable("y", SAdd("n", 1)), Plus(Output_variable("y", SSVar "n"), Rational (Mpq.init_set_si 1 1)));;
 
 let y1 = Equals(Output_variable("y", SAdd("n", 1)), Times (Output_variable("y", SSVar "n"), Rational (Mpq.init_set_si 2 1)));;
@@ -161,10 +166,9 @@ let matrix_test_2 = VEquals (Ovec ([|"x"; "y"; "z"|], SAdd("n", 1)), [|[|(Mpq.in
 
 print_endline "";;
 print_endline (Mat_helpers.matrix_rec_to_string matrix_test_2);;
-let result = Ocrs.solve_mat_recurrence matrix_test_2 false;;
+let result = Ocrs.solve_mat_recurrence matrix_test_2 true;;
 print_endline "";;
 List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
-
 
 let one = Mpq.init_set_si 1 1;;
 let one_copy = Mpq.init_set_si 1 1;;
@@ -176,7 +180,7 @@ let matrix_test_1 = VEquals (Ovec ([|"x"; "y"|], SAdd("n", 1)), [|[|one; one_cop
 
 print_endline "";;
 print_endline (Mat_helpers.matrix_rec_to_string matrix_test_1);;
-let result = Ocrs.solve_mat_recurrence matrix_test_1 false;;
+let result = Ocrs.solve_mat_recurrence matrix_test_1 true;;
 print_endline "";;
 
 
@@ -196,6 +200,41 @@ print_endline "";;
 
 
 List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
+
+
+
+(*
+
+let ior integ = OpRational (Mpq.init_set_si integ 1);;
+
+
+
+(*6 + (-5 * q) + q ^ 2 + (24 * x_0) + (-50 * q * x_0) + (35 * q ^ 2 * x_0) + (-10 * q ^ 3 * x_0) + (q ^ 4 * x_0) + (-6 * y_0) + (11 * q * y_0) + (-6 * q ^ 2 * y_0) + (q ^ 3 * y_0))*)
+let dividend = Op_simplifications.op_automatic_simplify (OpSum[ior 6; OpProduct[ior (-5); Q]; OpPow(Q, ior 2); OpProduct[ior 24; OpBase_case ("x", 0)];OpProduct[ior (-50); Q; OpBase_case ("x", 0)] ;OpProduct[ior 35; OpPow(Q, ior 2); OpBase_case ("x", 0)]; OpProduct[ior (-10);OpPow(Q, ior 3); OpBase_case ("x", 0)]; OpProduct[OpPow(Q, ior 4); OpBase_case ("x", 0)]; OpProduct[ior (-6); OpBase_case ("y", 0)]; OpProduct[ior 11; Q; OpBase_case ("y", 0)]; OpProduct[ior (-6); OpPow(Q, ior 2); OpBase_case ("y", 0)]; OpProduct[OpPow(Q, ior 3); OpBase_case ("y", 0)]]);;
+
+let divisor = Op_simplifications.op_automatic_simplify (OpPow(OpSum[ior 6; OpProduct [ior (-5); Q]; OpPow(Q, ior 2)], ior 2));;
+
+let expand_divisor = Op_transforms.algebraic_expand divisor;;
+
+
+let ext_res = Op_transforms.extended_euclidean dividend divisor;;
+
+
+
+
+
+print_endline ("dividend: " ^ (Expr_helpers.op_expr_to_string dividend));;
+print_endline ("divisor: " ^ (Expr_helpers.op_expr_to_string divisor));;
+
+
+print_endline ("gcd: " ^ (Expr_helpers.op_expr_to_string (List.nth ext_res 0)));;
+print_endline ("app: " ^ (Expr_helpers.op_expr_to_string (List.nth ext_res 1)));;
+print_endline ("bpp: " ^ (Expr_helpers.op_expr_to_string (List.nth ext_res 2)));;
+*)
+
+
+
+
 
 
 (*

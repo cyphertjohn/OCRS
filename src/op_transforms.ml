@@ -367,6 +367,15 @@ let rec get_num_denom_of_term unsimp_term =
   )
   ;;
 
+let lcm a b =
+  let exp_a = algebraic_expand a in
+  let exp_b = algebraic_expand b in
+  let gcd = List.nth (extended_euclidean exp_a exp_b) 0 in
+  let first_op = fst (polynomial_division exp_a gcd) in
+  Op_simplifications.op_automatic_simplify (algebraic_expand (OpProduct[first_op;exp_b]))
+  ;;
+
+
 let rec make_rat_expr unsimp_expr =
   let expr = Op_simplifications.op_automatic_simplify unsimp_expr in
   let rec get_new rat_exp =
@@ -374,7 +383,9 @@ let rec make_rat_expr unsimp_expr =
     | OpSum sumList ->
       let rat_sum_list = List.map get_new sumList in
       let (nums, denoms) = List.split (List.map get_num_denom_of_term rat_sum_list) in
-      let new_denom = Op_simplifications.op_automatic_simplify (OpProduct denoms) in
+      
+      let new_denom = List.fold_left lcm (OpRational (Mpq.init_set_si 1 1)) denoms in
+      (*let new_denom = Op_simplifications.op_automatic_simplify (OpProduct denoms) in*)
       let new_num_list = List.map2 (fun num denom -> fst (polynomial_division (Op_simplifications.op_automatic_simplify (algebraic_expand (OpProduct [new_denom; num]))) (Op_simplifications.op_automatic_simplify (algebraic_expand denom)))) nums denoms in
       let rat_num = OpSum new_num_list in
       Op_simplifications.op_automatic_simplify (OpDivide(rat_num, new_denom))
@@ -386,7 +397,9 @@ let rec make_rat_expr unsimp_expr =
     | _ -> rat_exp
     )
   in
-  get_new expr
+  let res = get_new expr in
+  res
+  ;;
 
 
 let simp_rat_expr expr = 
