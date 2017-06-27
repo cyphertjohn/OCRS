@@ -63,6 +63,7 @@ let new_part_frac expr =
 
 let simplify_inv_matrix matrix = 
   Array.map (fun x -> Array.map (fun y -> Op_transforms.simp_rat_expr (Op_transforms.make_rat_expr y)) x) matrix
+  (*Array.map (fun x -> Array.map Op_transforms.make_rat_expr x) matrix*)
   ;;
 
 let solve_mat_rec primed matrix unprimed add constr print = 
