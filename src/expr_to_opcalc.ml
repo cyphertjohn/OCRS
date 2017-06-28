@@ -2,10 +2,34 @@ open Type_def
 
 exception Expr_to_op_exc of string
 
+
+
+
+let transform_coefs = [|[|1; 0;    0;     0;      0;       0;        0;        0;        0;        0;       0|]; 
+                        [|0; 1;    0;     0;      0;       0;        0;        0;        0;        0;       0|];
+                        [|0; 1;    2;     0;      0;       0;        0;        0;        0;        0;       0|];
+                        [|0; 1;    6;     6;      0;       0;        0;        0;        0;        0;       0|];
+                        [|0; 1;   14;    36;     24;       0;        0;        0;        0;        0;       0|];
+                        [|0; 1;   30;   150;    240;     120;        0;        0;        0;        0;       0|];
+                        [|0; 1;   62;   540;   1560;    1800;      720;        0;        0;        0;       0|];
+                        [|0; 1;  126;  1806;   8400;   16800;    15120;     5040;        0;        0;       0|];
+                        [|0; 1;  254;  5796;  40824;  126000;   191520;   141120;    40320;        0;       0|];
+                        [|0; 1;  510; 18150; 186480;  834120;  1905120;  2328480;  1451520;   362880;       0|];
+                        [|0; 1; 1022; 55980; 818520; 5103000; 16435440; 29635200; 30240000; 16329600; 3628800|]|]
+  ;;
+
+
+
+
 let rec binomial_transform expr =
   match expr with
   | Pow(Input_variable ident, Rational rat) when Expr_simplifications.is_int rat && (Mpq.cmp_si rat 0 1) > 0 ->
-      let find_first_deg_elem deg = 
+      if (Mpq.cmp_si rat 10 1) <= 0 then
+        let rat_int = int_of_string (Mpq.to_string rat) in
+        let unsimp_arr = Array.mapi (fun k coef -> Times(Rational (Mpq.init_set_si coef 1), Binomial (Input_variable ident, Rational (Mpq.init_set_si k 1)))) transform_coefs.(rat_int) in
+        Expr_simplifications.automatic_simplify (Sum (Array.to_list unsimp_arr))
+      else
+        let find_first_deg_elem deg = 
           let rec aux a b = 
               (if (Mpq.cmp a b) > 0 then [] 
               else
@@ -14,8 +38,8 @@ let rec binomial_transform expr =
                   let _ = Mpq.add a_plus_1 a (Mpq.init_set_si 1 1) in
                   pow_res :: (aux a_plus_1 b)) in
           aux (Mpq.init_set_si 0 1) deg in
-      let val_list = find_first_deg_elem rat in
-      let rec accumulate j k = 
+        let val_list = find_first_deg_elem rat in
+        let rec accumulate j k = 
           if (Mpq.cmp j k) > 0 then (Mpq.init_set_si 0 1)
           else( 
               let minus_one = (Mpq.init_set_si (-1) 1) in
@@ -32,7 +56,7 @@ let rec binomial_transform expr =
               let acc = accumulate j_plus_1 k in
               let _ = Mpq.add result result acc in
               result) in
-      let rec build_sum_lis k deg = 
+        let rec build_sum_lis k deg = 
           if (Mpq.cmp k deg) > 0 then []
           else(
               let k_plus_1 = Mpq.init () in
@@ -40,8 +64,8 @@ let rec binomial_transform expr =
               let zero = Mpq.init_set_si 0 1 in
               Product [Binomial(Input_variable ident, Rational k); Rational (accumulate zero k)] :: (build_sum_lis k_plus_1 deg)
           ) in
-      let zero = Mpq.init_set_si 0 1 in
-      Expr_simplifications.automatic_simplify (Sum (build_sum_lis zero rat))
+        let zero = Mpq.init_set_si 0 1 in
+        Expr_simplifications.automatic_simplify (Sum (build_sum_lis zero rat))
       (* for k = 0 to deg do Product [Binomial(Input_variable ident, Rational k); Rational ((accumulate 0 k) * 1/k!)] *)
 
   | _ -> raise (Expr_to_op_exc "Error in Binomial Transform")

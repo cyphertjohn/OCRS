@@ -54,10 +54,10 @@ let rec algebraic_expand unsimp_expr =
     (match exp with
     | OpRational rat when Expr_simplifications.is_int rat && (Mpq.cmp_si rat 2 1) >= 0 ->
       op_automatic_simplify (expand_power (algebraic_expand base) rat)
-    | OpRational rat when Expr_simplifications.is_int rat && (Mpq.cmp_si rat (-2) 1) <= 0 ->
+    (*| OpRational rat when Expr_simplifications.is_int rat && (Mpq.cmp_si rat (-2) 1) <= 0 ->
       let neg_rat = Mpq.init() in
       let _ = Mpq.neg neg_rat rat in
-      op_automatic_simplify (OpDivide(OpRational (Mpq.init_set_si 1 1), expand_power (algebraic_expand base) neg_rat))
+      op_automatic_simplify (OpDivide(OpRational (Mpq.init_set_si 1 1), expand_power (algebraic_expand base) neg_rat))*)
     | _ -> op_automatic_simplify (OpPow (algebraic_expand base, exp)))
   | _ -> expr
   ;;
