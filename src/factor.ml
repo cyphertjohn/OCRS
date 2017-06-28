@@ -263,7 +263,7 @@ let find_factors u big_s p =
   ;;
 
 
-let get_coef_array_of_poly expr length = 
+let get_coef_array_of_poly expr length =
   let res = Array.make length (Mpz.init_set_si 0) in
   let _ = (match expr with
     | OpRational rat -> 
@@ -708,8 +708,9 @@ let irreducible_factor u =
     else (
       let k = find_k v p in
       let big_w = hensel_lift v (List.map (fun x -> poly_to_z_sym_p x p) big_s) p k in
-      let big_w = List.map (fun x -> Op_transforms.substitute x Q (OpTimes(l, Q))) big_w in
-      Op_simplifications.op_automatic_simplify (OpProduct (List.map (fun x -> Op_transforms.algebraic_expand (OpDivide (x, OpRational (Mpq.init_set_z (content x))))) big_w))
+      let big_w = List.map (fun x -> Op_transforms.substitute x Q (Op_simplifications.op_automatic_simplify (OpTimes(l, Q)))) big_w in
+      let res = Op_simplifications.op_automatic_simplify (OpProduct (List.map (fun x -> Op_transforms.algebraic_expand (OpDivide (x, OpRational (Mpq.init_set_z (content x))))) big_w)) in
+      res
     )
   )
   ;;

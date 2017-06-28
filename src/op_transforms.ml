@@ -33,11 +33,12 @@ let rec expand_power u n =
           let _ = Mpq.sub n_minus_k n k in
           aux (acc @ [(expand_product (OpProduct [OpRational c; OpPow(f, (OpRational n_minus_k))]) (expand_power r k))]) k_plus1 in
       op_automatic_simplify (aux [(OpRational zero)] zero))
-  | _ -> OpPow (u, OpRational n)
+  | _ -> op_automatic_simplify (OpPow (u, OpRational n))
   ;;
     
 
-let rec algebraic_expand expr = 
+let rec algebraic_expand unsimp_expr = 
+  let expr = op_automatic_simplify unsimp_expr in
   match expr with
   | OpSum sumList ->
     (match sumList with
@@ -57,7 +58,7 @@ let rec algebraic_expand expr =
       let neg_rat = Mpq.init() in
       let _ = Mpq.neg neg_rat rat in
       op_automatic_simplify (OpDivide(OpRational (Mpq.init_set_si 1 1), expand_power (algebraic_expand base) neg_rat))
-    | _ -> OpPow (algebraic_expand base, exp))
+    | _ -> op_automatic_simplify (OpPow (algebraic_expand base, exp)))
   | _ -> expr
   ;;
 

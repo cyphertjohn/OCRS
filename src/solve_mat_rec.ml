@@ -50,7 +50,7 @@ let new_part_frac expr =
     let num_expr = Op_simplifications.op_automatic_simplify (OpProduct num) in
     let denom_expr = Op_simplifications.op_automatic_simplify (OpProduct denom) in
     let expanded_num = Op_simplifications.op_automatic_simplify (Op_transforms.algebraic_expand (Op_simplifications.op_automatic_simplify num_expr)) in
-    let expanded_denom = Op_transforms.algebraic_expand (Op_simplifications.op_automatic_simplify (OpPow(denom_expr, OpRational (Mpq.init_set_si (-1) 1)))) in
+    let expanded_denom = Op_simplifications.op_automatic_simplify (Op_transforms.algebraic_expand (Op_simplifications.op_automatic_simplify (OpPow(denom_expr, OpRational (Mpq.init_set_si (-1) 1))))) in
     let (q, r) = Op_transforms.polynomial_division expanded_num expanded_denom in
     if (Type_def.op_expr_order r (OpRational (Mpq.init_set_si 0 1))) = 0 then Op_simplifications.op_automatic_simplify q
     else (

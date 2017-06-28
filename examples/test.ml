@@ -203,6 +203,34 @@ List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;
 
 
 
+
+
+let qqify = Array.map (Array.map (fun x -> Mpq.init_set_si x 1))
+let matrix_test_fib =
+  VEquals (Ovec ([|"a"; "b"; "c"; "d"; "e"; "f"; "g"|], SAdd("n", 1)),
+           qqify [|
+             [| 1; 0; 1; 0; 0; 0; 0 |];
+             [| 0; 1; 0; 1; 0; 0; 0 |];
+             [| 1; 0; 0; 0; 0; 0; 0 |];
+             [| 0; 1; 0; 0; 0; 0; 0 |];
+             [| 0; 0; 0; 0; 1; 0; 0 |];
+             [| 0; 0; 0; 0; 0; 1; 0 |];
+             [| 0; 0; 0; 0; 0; 1; 0 |];
+           |],
+           Ovec ([|"a"; "b"; "c"; "d"; "e"; "f"; "g"|], SSVar "n"),
+           (Array.map (fun x -> Rational (Mpq.init_set_si x 1))
+              [| 0; 0; 0; 0; 1; -1; -1 |]));;
+ 
+print_endline "\nFIB";;
+print_endline (Mat_helpers.matrix_rec_to_string matrix_test_fib);;
+let result = Ocrs.solve_mat_recurrence matrix_test_fib true;;
+print_endline "";;
+
+
+
+
+
+
 (*
 
 let ior integ = OpRational (Mpq.init_set_si integ 1);;
