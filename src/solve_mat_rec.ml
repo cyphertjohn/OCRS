@@ -99,7 +99,7 @@ let solve_mat_rec primed matrix unprimed add constr print =
       done in
     ans
     ) in
-  let add_vec_op_calc = Array.map Expr_to_opcalc.expr_to_opCalc add in
+  let add_vec_op_calc = Array.map (fun x -> Expr_to_opcalc.expr_to_opCalc x ivar_ident) add in
   let new_vec = Mat_functions.multiply_scalar_through_vector base_case_vec (OpMinus(Q, OpRational (Mpq.init_set_si 1 1))) in
   let new_vec = Mat_functions.add_vectors new_vec add_vec_op_calc in
   let new_matrix = Mat_functions.invert_matrix_fast (Mat_functions.sub_matrix q_matrix op_rational_matrix) in

@@ -14,18 +14,25 @@ let apply_subscript_to_ovec_op ovec =
     Array.map (fun x -> OpOutput_variable(x, subscript)) idents
   ;;
 
+
+
 let transpose_square_matrix matrix = 
-  let size = Array.length matrix in
-  if size > 0 then 
-    (let answer = Array.make_matrix size size matrix.(0).(0) in
-    let _ =
-      for i = 0 to (size - 1) do
-        for j = 0 to (size -1) do
-          answer.(i).(j) <- (matrix.(j).(i))
-        done
-      done in
-    answer)
-  else failwith "tranposing an empty matrix"
+  let m = Array.length matrix in
+  if m = 0 then matrix
+  else (
+    let n = Array.length (matrix.(0)) in
+    if n = 0 then matrix
+    else (
+      let answer = Array.make_matrix n m matrix.(0).(0) in
+      let _ =
+        for i = 0 to (m - 1) do
+          for j = 0 to (n -1) do
+            answer.(j).(i) <- (matrix.(i).(j))
+          done
+        done in
+      answer
+    )
+  )
   ;;
 
 

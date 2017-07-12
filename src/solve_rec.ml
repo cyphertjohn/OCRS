@@ -132,7 +132,7 @@ let find_ovar_ivar ineq =
 let solve_add_linear_rec ineq ovar_ident ivar_ident print_steps = 
   let simp_ineq = Expr_simplifications.automatic_simplify_inequation (Expr_transforms.algebraic_expand_inequation ineq) in
   let _ = if print_steps then Printf.printf "Expression to Solve:\t %s\n" (Expr_helpers.inequation_to_string simp_ineq) in
-  let op_ineq = Op_simplifications.op_automatic_simplify_inequation (Expr_to_opcalc.inequation_to_opCalc simp_ineq) in
+  let op_ineq = Op_simplifications.op_automatic_simplify_inequation (Expr_to_opcalc.inequation_to_opCalc simp_ineq ivar_ident) in
   let _ = if print_steps then Printf.printf "Operational Calculus:\t %s\n" (Expr_helpers.op_inequation_to_string op_ineq) in
   let isolated_op_ineq = Isolate_Ovar.solve_for_Ovar op_ineq ovar_ident ivar_ident in
   let _ = if print_steps then Printf.printf "Isolated Expression:\t %s\n" (Expr_helpers.op_inequation_to_string isolated_op_ineq) in
@@ -250,7 +250,7 @@ let find_lowest_add ineq =
 
 let rec shift_sub expr ovar_ident ivar_ident z =
   match expr with
-  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined ->
+  | Rational _ | Symbolic_Constant _ | Base_case _ | Iif _ | Arctan _ | Pi | Undefined ->
     expr
   | Output_variable (oident, subscript) when oident = ovar_ident ->
     (match subscript with
@@ -295,6 +295,14 @@ let rec shift_sub expr ovar_ident ivar_ident z =
     Product (List.map (fun x -> shift_sub x ovar_ident ivar_ident z) prodList)
   | Sum sumList ->
     Sum (List.map (fun x -> shift_sub x ovar_ident ivar_ident z) sumList)
+  | Sin (expression) -> 
+    Sin (shift_sub expression ovar_ident ivar_ident z)
+  | Cos (expression) -> 
+    Cos (shift_sub expression ovar_ident ivar_ident z)
+  | IDivide (expression, rat) ->
+    IDivide (shift_sub expression ovar_ident ivar_ident z, rat)
+  | Mod (left, right) ->
+    Mod (shift_sub left ovar_ident ivar_ident z, shift_sub right ovar_ident ivar_ident z)
   | _ ->
     raise (Solve_exc "OCRS is unable to solve multivariate recurrences")
   ;;
@@ -317,7 +325,7 @@ let shift ineq ovar_ident ivar_ident z =
 
 let rec get_beta_expr expr ovar_ident ivar_ident = 
   match expr with
-  | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ ->
+  | Rational _ | Symbolic_Constant _ | Base_case _ | Iif _ | Arctan _ | Pi | Undefined | Input_variable _ ->
     0
   | Output_variable (oident, subscript) when oident = ovar_ident ->
     (match subscript with
@@ -346,6 +354,14 @@ let rec get_beta_expr expr ovar_ident ivar_ident =
   | Sum sumList ->
     let res_lis = List.map (fun x -> get_beta_expr x ovar_ident ivar_ident) sumList in
     List.fold_left max 0 res_lis
+  | Sin (expression) ->
+    (get_beta_expr expression ovar_ident ivar_ident)
+  | Cos (expression) ->
+    (get_beta_expr expression ovar_ident ivar_ident)
+  | IDivide (expression, rat) ->
+    (get_beta_expr expression ovar_ident ivar_ident)
+  | Mod (left, right) ->
+    max (get_beta_expr left ovar_ident ivar_ident) (get_beta_expr right ovar_ident ivar_ident) 
   | _ ->
     raise (Solve_exc "OCRS is unable to solve multivariate recurrences")
   ;;

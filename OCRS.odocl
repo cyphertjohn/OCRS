@@ -1,9 +1,11 @@
 # OASIS_START
-# DO NOT EDIT (digest: 4318964adaad8d08c3079177672b845b)
+# DO NOT EDIT (digest: f069f931bad133b884b7b9e44dee4e32)
 src/Ocrs
 src/Type_def
 src/Expr_helpers
 src/Lexer
 src/Parser
 src/Mat_helpers
+src/OpLexer
+src/OpParser
 # OASIS_STOP

@@ -74,19 +74,19 @@ let rec binomial_transform expr =
 (* need to check to make sure the transform is possible namely pointwise multiplication and pointwise divide *)
 
 (* Also assumes all output variables are n or higher *)
-let rec expr_to_opCalc expr =
+let rec expr_to_opCalc expr ivar_ident =
   match expr with
   | Plus (left, right) ->							(* should not be called *)
-      OpPlus(expr_to_opCalc left, expr_to_opCalc right)
+      OpPlus(expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)
   | Minus (left, right) ->							(* Minuses should be removed *)
-      OpMinus(expr_to_opCalc left, expr_to_opCalc right)			(* this method should not be called *)
+      OpMinus(expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)			(* this method should not be called *)
   | Times (left, right) ->							(* also should not be called *)
-      OpTimes(expr_to_opCalc left, expr_to_opCalc right)
+      OpTimes(expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)
   | Divide (left, right) ->
-      OpDivide (expr_to_opCalc left, expr_to_opCalc right)
+      OpDivide (expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)
   | Product expr_list ->
       let (const_list, var_list) = List.partition Expr_helpers.is_const expr_list in
-      if (List.length const_list) <> 0 then OpProduct ((List.map expr_to_opCalc const_list) @ [expr_to_opCalc (Expr_simplifications.automatic_simplify (Product var_list))])
+      if (List.length const_list) <> 0 then OpProduct ((List.map (fun x -> expr_to_opCalc x ivar_ident) const_list) @ [expr_to_opCalc (Expr_simplifications.automatic_simplify (Product var_list)) ivar_ident])
       else
         (match expr_list with
         | Pow (Rational k, Input_variable str) :: Binomial (Input_variable str1, Rational c) :: [] when str = str1 && Expr_simplifications.is_int c->
@@ -100,17 +100,17 @@ let rec expr_to_opCalc expr =
           OpProduct [OpPow(OpSymbolic_Constant sym, OpRational c); OpDivide(OpMinus (Q, OpRational (Mpq.init_set_si 1 1)), OpPow (OpMinus(Q, OpSymbolic_Constant sym), OpRational c_plus_1))]
         | Pow (Rational k, Input_variable str1) :: Pow(Input_variable str, Rational rat) :: [] when str = str1 ->
           let new_expr = (Expr_transforms.algebraic_expand (Expr_simplifications.automatic_simplify (Product [binomial_transform (Pow (Input_variable str, Rational rat)); Pow(Rational k, Input_variable str)]))) in
-          expr_to_opCalc new_expr
+          expr_to_opCalc new_expr ivar_ident
         | Pow (Rational k, Input_variable str) :: (Input_variable str1) :: [] when str = str1 ->
           OpProduct [OpRational k; OpDivide(OpMinus (Q, OpRational (Mpq.init_set_si 1 1)), OpPow(OpMinus(Q, OpRational k), OpRational (Mpq.init_set_si 2 1)))]
         | Pow (Symbolic_Constant sym, Input_variable str) :: (Input_variable str1) :: [] when str = str1 ->
           OpProduct [OpSymbolic_Constant sym; OpDivide(OpMinus (Q, OpRational (Mpq.init_set_si 1 1)), OpPow(OpMinus(Q, OpSymbolic_Constant sym), OpRational (Mpq.init_set_si 2 1)))]
         | Pow (Symbolic_Constant sym, Input_variable str1) :: Pow(Input_variable str, Rational rat) :: [] when str = str1 ->
           let new_expr = (Expr_transforms.algebraic_expand (Expr_simplifications.automatic_simplify (Product [binomial_transform (Pow (Input_variable str, Rational rat)); Pow(Symbolic_Constant sym, Input_variable str)]))) in
-          expr_to_opCalc new_expr
+          expr_to_opCalc new_expr ivar_ident
         | _ -> raise (Expr_to_op_exc "Can't transform non-linear product"))
   | Sum expr_list ->
-      OpSum (List.map expr_to_opCalc expr_list)  					(* convert all list elem to strings concat with star *)
+      OpSum (List.map (fun x -> expr_to_opCalc x ivar_ident) expr_list)  					(* convert all list elem to strings concat with star *)
   | Symbolic_Constant ident ->
       OpSymbolic_Constant ident
   | Output_variable (ident, subscript) ->
@@ -135,30 +135,30 @@ let rec expr_to_opCalc expr =
            raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
        )
   | Input_variable str ->
-      expr_to_opCalc (Binomial(expr, (Rational (Mpq.init_set_si 1 1))))
+      expr_to_opCalc (Binomial(expr, (Rational (Mpq.init_set_si 1 1)))) ivar_ident
   | Rational rat ->
       OpRational rat
   | Log (base, expression) ->
-      if (Expr_helpers.is_const expression) then (OpLog (base, expr_to_opCalc expression))
+      if (Expr_helpers.is_const expression) then (OpLog (base, expr_to_opCalc expression ivar_ident))
       else (raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr))))
       (* don't know what to do here *)
   | Pow (left, right) ->
-      if Expr_helpers.is_const left && Expr_helpers.is_const right then OpPow (expr_to_opCalc left, expr_to_opCalc right)
+      if Expr_helpers.is_const left && Expr_helpers.is_const right then OpPow (expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)
       else
         (match (left, right) with
         | (_, Sum sumList) ->
           let aux exp = 
             Pow (left, exp) in
-          expr_to_opCalc (Expr_simplifications.automatic_simplify (Product (List.map aux sumList)))
+          expr_to_opCalc (Expr_simplifications.automatic_simplify (Product (List.map aux sumList))) ivar_ident
         | (Input_variable ident, Rational rat) when Expr_simplifications.is_int rat && (Mpq.cmp_si rat 0 1)>0 ->
-          expr_to_opCalc (binomial_transform expr)
+          expr_to_opCalc (binomial_transform expr) ivar_ident
         | (Rational rat, Input_variable ident) ->
           OpDivide(OpMinus(Q, OpRational (Mpq.init_set_si 1 1)), OpMinus(Q, OpRational rat))
         | (Symbolic_Constant ident, Input_variable ivar_ident) -> 
           OpDivide(OpMinus(Q, OpRational (Mpq.init_set_si 1 1)), OpMinus(Q, OpSymbolic_Constant ident))
         | _ -> 
           let expand_result = Expr_transforms.algebraic_expand expr in
-          if expand_result <> expr then expr_to_opCalc expand_result
+          if expand_result <> expr then expr_to_opCalc expand_result ivar_ident
           else raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr))))
   | Binomial (top, bottom) ->
       (match (top, bottom) with
@@ -175,7 +175,7 @@ let rec expr_to_opCalc expr =
   | Undefined ->
       OpUndefined
   | IDivide (num, denom) when Expr_helpers.is_const num ->
-      SymIDivide (expr_to_opCalc num, denom)
+      SymIDivide (expr_to_opCalc num ivar_ident, denom)
   | IDivide (Input_variable ident, denom) ->
       if Expr_simplifications.is_int denom then
         OpDivide(OpRational (Mpq.init_set_si 1 1), OpMinus(OpPow(Q, OpRational denom), OpRational (Mpq.init_set_si 1 1)))
@@ -191,23 +191,32 @@ let rec expr_to_opCalc expr =
   | Mod (left, right) ->
       raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
   | Iif (left, right) ->
-      raise (Expr_to_op_exc ("Don't expect an Iif as input at the moment"))
+      if (right = ivar_ident) then (
+        try
+          let lexbuf = Lexing.from_string left in
+          let result = OpParser.main OpLexer.token lexbuf in
+          result
+        with e ->
+          let _ = Printf.printf "%s%s\n" (Printexc.to_string e) (Printexc.get_backtrace ()) in
+          failwith "error parsing iif"
+      )  
+      else OpSymbolic_Constant left
   | Pi ->
       OpPi
   ;;
 
 
-let rec inequation_to_opCalc inequation =
+let rec inequation_to_opCalc inequation ivar_ident =
   match inequation with
   | Equals (left, right) ->
-      OpEquals (expr_to_opCalc left, expr_to_opCalc right)
+      OpEquals (expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)
   | LessEq (left, right) ->
-      OpLessEq (expr_to_opCalc left, expr_to_opCalc right)
+      OpLessEq (expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)
   | Less (left, right) ->
-      OpLess (expr_to_opCalc left, expr_to_opCalc right)
+      OpLess (expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)
   | GreaterEq (left, right) ->
-      OpGreaterEq (expr_to_opCalc left, expr_to_opCalc right)
+      OpGreaterEq (expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)
   | Greater (left, right) ->
-      OpGreater (expr_to_opCalc left, expr_to_opCalc right)
+      OpGreater (expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)
   ;;
 
