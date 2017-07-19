@@ -191,27 +191,30 @@ let rec expr_to_opCalc expr ivar_ident =
   | Mod (left, right) ->
       raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
   | Iif (left, right) ->
-      let do_ivars_match_subscript sub ivar = 
+      let do_ivars_match_subscript_get_shift sub ivar = 
         (match sub with
-        | SAdd _ | SSDiv _ -> failwith "haven't implemented translating iifs with shifts"
-        | SSVar ident when ident = ivar -> true
-        | _ -> false
+        | SSDiv _ -> failwith "haven't implemented translating iifs with shifts"
+        | SAdd (ident, shift) when ident = ivar -> (true, shift)
+        | SSVar ident when ident = ivar -> (true, 0)
+        | _ -> (false, 0)
         )
       in
-      if not (do_ivars_match_subscript right ivar_ident) then OpSymbolic_Constant left
+      let (ivar_match, shift_amount) = do_ivars_match_subscript_get_shift right ivar_ident in
+      if not (ivar_match) then OpSymbolic_Constant left
       else (
         try
           let lexbuf = Lexing.from_string left in
           let result = OpParser.main OpLexer.token lexbuf in
-          result
+          OpTimes(OpPow(Q, OpRational (Mpq.init_set_si shift_amount 1)), result)
         with e ->
           let _ = Printf.printf "%s%s\n" (Printexc.to_string e) (Printexc.get_backtrace ()) in
           failwith "error parsing iif"
       )
   | Pi ->
       OpPi
-  | Shift _ ->
-      raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
+  | Shift (shift_v, expression) ->
+      let res = expr_to_opCalc expression ivar_ident in
+      OpTimes(OpPow(Q, OpRational (Mpq.init_set_si ((-1)*shift_v) 1)), res)
   ;;
 
 
