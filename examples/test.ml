@@ -95,8 +95,9 @@ print_endline "";;
 
 let res_list = Ocrs.solve_rec_list new_test_list;;
 let print_list lis = List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) lis;;
+let print_res_list lis = List.iter (fun x -> print_endline (Expr_helpers.piece_to_string x)) lis;;
 let _ = print_list new_test_list;;
-let _ = print_list res_list;;
+let _ = print_res_list res_list;;
 print_endline "";;
 print_endline "";;
 
@@ -111,14 +112,14 @@ print_endline "";;
 let binary_search_term = Sum[Output_variable ("hi", SSVar "n"); Product[Rational (Mpq.init_set_si (-1) 1); Output_variable ("lo", SSVar "n")]];;
 let second_test_list = [(binary_search_term, parse "r_{n+1} = (1/2)*r_n, n"); (Output_variable("x", SSVar "n"), parse z1); (Output_variable("y", SSVar "n"), parse z2); (Output_variable("z", SSVar "n"), parse z3)];;
 let res_second_test_list = Ocrs.solve_rec_list_pair second_test_list;;
-print_list res_second_test_list;;
+print_res_list res_second_test_list;;
 print_endline "";;
 
 
 let test_list = [(Output_variable("x", SSVar "n"), Equals(Output_variable("x", SAdd ("n", 1)), Plus(Output_variable("x", SSVar "n"), Rational (Mpq.init_set_si 1 1)))); (Output_variable("y", SSVar "n"),  Equals(Output_variable("y", SAdd ("n", 1)), Plus(Output_variable("x", SSVar "n"), Output_variable("y", SSVar "n"))))];;
 
 let res = Ocrs.solve_rec_list_pair test_list;;
-print_list res;;
+print_res_list res;;
 print_endline "";;
 
 
@@ -146,46 +147,54 @@ let matrix_test_1 = VEquals (Ovec ([|"x"; "y"|], SAdd("n", 1)), [|[|one; one_cop
 
 print_endline "";;
 print_endline (Mat_helpers.matrix_rec_to_string matrix_test_1);;
-let result = Ocrs.solve_mat_recurrence matrix_test_1 false;;
+let result = Ocrs.solve_mat_rec matrix_test_1 false;;
 print_endline "";;
 
 
 
-List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
+List.iter (fun x -> print_endline (Expr_helpers.piece_to_string x)) result;;
 
 let matrix_test = VEquals (Ovec ([|"x"|], SAdd("n", 1)), [|[|four|]|], Ovec ([|"x"|], SSVar "n"), [|Input_variable "n"|]);;
 
 print_endline "";;
 print_endline (Mat_helpers.matrix_rec_to_string matrix_test);;
-let result = Ocrs.solve_mat_recurrence matrix_test false;;
+let result = Ocrs.solve_mat_rec matrix_test false;;
 print_endline "";;
-List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
+List.iter (fun x -> print_endline (Expr_helpers.piece_to_string x)) result;;
 
 
 let matrix_test_2 = VEquals (Ovec ([|"x"; "y"; "z"|], SAdd("n", 1)), [|[|(Mpq.init_set_si 5 1); Mpq.init_set_si 2 1; Mpq.init_set_si (-2) 1;|];[|Mpq.init_set_si 2 1; Mpq.init_set_si 5 1;Mpq.init_set_si (-2) 1|];[|Mpq.init_set_si (-2) 1; Mpq.init_set_si (-2) 1; Mpq.init_set_si 5 1|]|], Ovec ([|"x"; "y"; "z"|], SSVar "n"), [|Rational (Mpq.init_set_si 1 1); Times((Pow(Rational (Mpq.init_set_si 3 1), Input_variable "n")),Pow(Input_variable "n", Rational (Mpq.init_set_si 2 1))); Pow(Rational (Mpq.init_set_si 2 1), Input_variable "n")|]);;
 
 print_endline "";;
 print_endline (Mat_helpers.matrix_rec_to_string matrix_test_2);;
-let result = Ocrs.solve_mat_recurrence matrix_test_2 true;;
+let result = Ocrs.solve_mat_rec matrix_test_2 true;;
 print_endline "";;
-List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
+List.iter (fun x -> print_endline (Expr_helpers.piece_to_string x)) result;;
+
+
 
 let one = Mpq.init_set_si 1 1;;
 let one_copy = Mpq.init_set_si 1 1;;
 let minus_2 = Mpq.init_set_si (-2) 1;;
 let four = Mpq.init_set_si 4 1;;
 
+
+
 let matrix_test_1 = VEquals (Ovec ([|"x"; "y"|], SAdd("n", 1)), [|[|one; one_copy|];[|minus_2; four|]|], Ovec ([|"x"; "y"|], SSVar "n"), [|Rational (Mpq.init_set_si 0 1); Rational (Mpq.init_set_si 1 1)|]);;
 
 
 print_endline "";;
 print_endline (Mat_helpers.matrix_rec_to_string matrix_test_1);;
-let result = Ocrs.solve_mat_recurrence matrix_test_1 true;;
+let result = Ocrs.solve_mat_rec matrix_test_1 true;;
 print_endline "";;
 
 
 
-List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
+List.iter (fun x -> print_endline (Expr_helpers.piece_to_string x)) result;;
+
+
+
+
 
 
 
@@ -194,13 +203,12 @@ let matrix_test_1 = VEquals (Ovec ([|"x"; "y"|], SAdd("n", 1)), [|[|one; one_cop
 
 print_endline "";;
 print_endline (Mat_helpers.matrix_rec_to_string matrix_test_1);;
-let result = Ocrs.solve_mat_recurrence matrix_test_1 true;;
+let result = Ocrs.solve_mat_rec matrix_test_1 true;;
 print_endline "";;
 
 
 
-List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
-
+List.iter (fun x -> print_endline (Expr_helpers.piece_to_string x)) result;;
 
 
 
@@ -223,26 +231,35 @@ let matrix_test_fib =
  
 print_endline "\nFIB";;
 print_endline (Mat_helpers.matrix_rec_to_string matrix_test_fib);;
-let result = Ocrs.solve_mat_recurrence matrix_test_fib false;;
+let result = Ocrs.solve_mat_rec matrix_test_fib false;;
 print_endline "";;
 
-List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
+List.iter (fun x -> print_endline (Expr_helpers.piece_to_string x)) result;;
 
 
 print_endline "";;
-let ex_with_iif = Sum [Base_case ("g", 0); Product [Base_case ("f", 0); Iif ("q ^ -1", "n")]; Product [Rational (Mpq.init_set_si (-1) 1); Base_case ("g", 0); Iif ("q ^ -1", "n")]; Product [Rational (Mpq.init_set_si (-1) 1); Input_variable ("n")]];;
+let ex_with_iif = Sum [Base_case ("g", 0); Product [Base_case ("f", 0); Iif ("q ^ -1", SSVar "n")]; Product [Rational (Mpq.init_set_si (-1) 1); Base_case ("g", 0); Iif ("q ^ -1", SSVar "n")]; Product [Rational (Mpq.init_set_si (-1) 1); Input_variable ("n")]];;
 
 let new_mat_test = VEquals (Ovec ([|"y"|], SAdd("n", 1)), [|[|Mpq.init_set_si 1 1|]|], Ovec ([|"y"|], SSVar "n"), [|ex_with_iif|]);;
 print_endline (Mat_helpers.matrix_rec_to_string new_mat_test);;
-let result = Ocrs.solve_mat_recurrence new_mat_test true;;
-List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) result;;
+let result = Ocrs.solve_mat_rec new_mat_test true;;
+List.iter (fun x -> print_endline (Expr_helpers.piece_to_string x)) result;;
 print_endline "";;
 
 
 let new_rec_test = Equals(Output_variable ("y", SAdd("n", 1)), Plus(Output_variable ("y", SSVar "n"), ex_with_iif));;
 
 let result = Ocrs.solve_rec new_rec_test true;;
-print_endline (Expr_helpers.inequation_to_string result);;
+print_endline (Expr_helpers.piece_to_string result);;
+
+
+
+
+
+
+
+
+
 
 (*
 
@@ -289,7 +306,7 @@ let stratified_test = [stratified_test_lower;stratified_test_higher];;
 
 print_endline "";;
 List.iter (fun x -> print_endline (Mat_helpers.matrix_rec_to_string x)) stratified_test;;
-let results = Ocrs.solve_mat_recurrence_list stratified_test;;
+let results = Ocrs.solve_mat_rec_list stratified_test;;
 print_endline "";;
 List.iter (fun x -> print_endline (Expr_helpers.inequation_to_string x)) results;;
 *)

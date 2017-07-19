@@ -191,7 +191,15 @@ let rec expr_to_opCalc expr ivar_ident =
   | Mod (left, right) ->
       raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
   | Iif (left, right) ->
-      if (right = ivar_ident) then (
+      let do_ivars_match_subscript sub ivar = 
+        (match sub with
+        | SAdd _ | SSDiv _ -> failwith "haven't implemented translating iifs with shifts"
+        | SSVar ident when ident = ivar -> true
+        | _ -> false
+        )
+      in
+      if not (do_ivars_match_subscript right ivar_ident) then OpSymbolic_Constant left
+      else (
         try
           let lexbuf = Lexing.from_string left in
           let result = OpParser.main OpLexer.token lexbuf in
@@ -199,10 +207,11 @@ let rec expr_to_opCalc expr ivar_ident =
         with e ->
           let _ = Printf.printf "%s%s\n" (Printexc.to_string e) (Printexc.get_backtrace ()) in
           failwith "error parsing iif"
-      )  
-      else OpSymbolic_Constant left
+      )
   | Pi ->
       OpPi
+  | Shift _ ->
+      raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
   ;;
 
 

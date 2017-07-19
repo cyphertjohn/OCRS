@@ -34,7 +34,9 @@ let rec substitute_expr expr old_term new_term =
     | Cos expression ->
       Cos (substitute_expr expression old_term new_term)
     | Mod (left, right) ->
-      Mod (substitute_expr left old_term new_term, substitute_expr right old_term new_term))
+      Mod (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+    | Shift (shift_v, expression) ->
+      Shift (shift_v, substitute_expr expression old_term new_term))
   ;;
 
 let substitute ineq old_term new_term =

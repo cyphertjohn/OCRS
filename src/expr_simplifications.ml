@@ -430,6 +430,8 @@ let rec automatic_simplify expr =
       expr
   | Mod _ ->
       expr
+  | Shift (shift_v, expression) ->
+      Shift (shift_v, automatic_simplify expression)
 
 and simplify_log base expression = 
   match expression with

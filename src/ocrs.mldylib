@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: f39a7f86dfbf2f49d66dfb379adcd33f)
+# DO NOT EDIT (digest: be0b65db1088b0cbb257358e5622ace1)
 Ocrs
 Type_def
 Expr_helpers
@@ -19,4 +19,5 @@ Op_transforms
 Op_simplifications
 Expr_simplifications
 Expr_transforms
+Deshift
 # OASIS_STOP

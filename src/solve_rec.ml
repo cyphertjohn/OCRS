@@ -31,104 +31,6 @@ let get_right_left_ineq ineq =
   ;;
 
 
-let rec find_ovar_ivar_expr expr = 
-  match expr with
-  | Rational _ | Symbolic_Constant _ | Base_case _ | Arctan _ | Pi | Iif _ | Undefined ->
-    ([], [])
-  | Output_variable (ovar_ident, subscript) ->
-    (match subscript with 
-    | SAdd (ivar_ident, _) | SSDiv (ivar_ident, _) -> (ovar_ident :: [], ivar_ident :: [])
-    | SSVar ivar_ident -> (ovar_ident :: [], ivar_ident :: []))
-  | Input_variable ivar_ident -> ([], ivar_ident :: [])
-  | Pow (base, exp) ->
-    let base_res = find_ovar_ivar_expr base in
-    let exp_res = find_ovar_ivar_expr exp in
-    ((fst base_res) @ (fst exp_res), (snd base_res) @ (snd exp_res))
-  | Times (left, right) ->
-    let left_res = find_ovar_ivar_expr left in
-    let right_res = find_ovar_ivar_expr right in
-    ((fst left_res) @ (fst right_res), (snd left_res) @ (snd right_res))
-  | Plus (left, right) ->
-    let left_res = find_ovar_ivar_expr left in
-    let right_res = find_ovar_ivar_expr right in
-    ((fst left_res) @ (fst right_res), (snd left_res) @ (snd right_res))
-  | Product prodList ->
-    let list_res = List.map find_ovar_ivar_expr prodList in
-    let rec aux lst acc = 
-      (match lst with
-      | [] -> acc
-      | (ovar, ivar) :: [] -> ((fst acc) @ ovar, (snd acc) @ ivar)
-      | hd :: tl -> 
-        let new_acc = ((fst acc) @ (fst hd), (snd acc) @ (snd hd)) in
-        aux tl new_acc) in
-    aux list_res ([], []) 
-  | Sum sumList ->
-    let list_res = List.map find_ovar_ivar_expr sumList in
-    let rec aux lst acc = 
-      (match lst with
-      | [] -> acc
-      | (ovar, ivar) :: [] -> ((fst acc) @ ovar, (snd acc) @ ivar)
-      | hd :: tl -> 
-        let new_acc = ((fst acc) @ (fst hd), (snd acc) @ (snd hd)) in
-        aux tl new_acc) in
-    aux list_res ([], [])
-  | Divide (left, right) ->
-    let left_res = find_ovar_ivar_expr left in
-    let right_res = find_ovar_ivar_expr right in
-    ((fst left_res) @ (fst right_res), (snd left_res) @ (snd right_res))
-  | Minus (left, right) ->
-    let left_res = find_ovar_ivar_expr left in
-    let right_res = find_ovar_ivar_expr right in
-    ((fst left_res) @ (fst right_res), (snd left_res) @ (snd right_res))
-  | Log (_, expr) ->
-    find_ovar_ivar_expr expr
-  | Factorial expr ->
-    find_ovar_ivar_expr expr
-  | Binomial (left, right) ->
-    let left_res = find_ovar_ivar_expr left in
-    let right_res = find_ovar_ivar_expr right in
-    ((fst left_res) @ (fst right_res), (snd left_res) @ (snd right_res))
-  | IDivide (numerator, _) ->
-    find_ovar_ivar_expr numerator
-  | Sin inner_expr ->
-    find_ovar_ivar_expr inner_expr
-  | Cos inner_expr ->
-    find_ovar_ivar_expr inner_expr
-  | Mod (left, right) ->
-    let left_res = find_ovar_ivar_expr left in
-    let right_res = find_ovar_ivar_expr right in
-    ((fst left_res) @ (fst right_res), (snd left_res) @ (snd right_res))
-  ;;
-      
-let find_ovar_ivar ineq = 
-  let rec remove_dup lst = 
-    (match lst with
-    | [] -> []
-    | h::t -> h::(remove_dup (List.filter (fun x -> x<>h) t))) in
-  (match ineq with
-  | Equals (left, right) ->
-    let left_list = find_ovar_ivar_expr left in
-    let right_list = find_ovar_ivar_expr right in
-    (remove_dup ((fst left_list) @ (fst right_list)), remove_dup ((snd left_list) @ (snd right_list)))
-  | Less (left, right) ->
-    let left_list = find_ovar_ivar_expr left in
-    let right_list = find_ovar_ivar_expr right in
-    (remove_dup ((fst left_list) @ (fst right_list)), remove_dup ((snd left_list) @ (snd right_list)))
-  | LessEq (left, right) ->
-    let left_list = find_ovar_ivar_expr left in
-    let right_list = find_ovar_ivar_expr right in
-    (remove_dup ((fst left_list) @ (fst right_list)), remove_dup ((snd left_list) @ (snd right_list)))
-  | Greater (left, right) ->
-    let left_list = find_ovar_ivar_expr left in
-    let right_list = find_ovar_ivar_expr right in
-    (remove_dup ((fst left_list) @ (fst right_list)), remove_dup ((snd left_list) @ (snd right_list)))
-  | GreaterEq (left, right) ->
-    let left_list = find_ovar_ivar_expr left in
-    let right_list = find_ovar_ivar_expr right in
-    (remove_dup ((fst left_list) @ (fst right_list)), remove_dup ((snd left_list) @ (snd right_list))))
-  ;;
-  
-
 let solve_add_linear_rec ineq ovar_ident ivar_ident print_steps = 
   let simp_ineq = Expr_simplifications.automatic_simplify_inequation (Expr_transforms.algebraic_expand_inequation ineq) in
   let _ = if print_steps then Printf.printf "Expression to Solve:\t %s\n" (Expr_helpers.inequation_to_string simp_ineq) in
@@ -228,6 +130,8 @@ let rec find_lowest_add_expr expr =
     let left_res = find_lowest_add_expr left in
     let right_res = find_lowest_add_expr right in
     min left_res right_res
+  | Shift (_, inner_expr) ->
+    find_lowest_add_expr inner_expr
   ;;
 
 
@@ -381,70 +285,18 @@ let get_beta ineq ovar_ident ivar_ident =
   ;;
 
 
-
-let rec substitute_expr expr old_term new_term = 
-  if expr = old_term then new_term
-  else
-    (match expr with
-    | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Output_variable _ | Arctan _ | Pi | Iif _ ->
-      expr
-    | Pow (base, exp) ->
-      Pow (substitute_expr base old_term new_term, substitute_expr exp old_term new_term)
-    | Times (left, right) ->
-      Times (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
-    | Plus (left, right) ->
-      Plus (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
-    | Minus (left, right) ->
-      Minus (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
-    | Divide (left, right) ->
-      Divide (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
-    | Binomial (left, right) ->
-      Binomial (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
-    | Log (base, expression) ->
-      Log (base, substitute_expr expression old_term new_term)
-    | Factorial expression ->
-      Factorial (substitute_expr expression old_term new_term)
-    | Product prodList ->
-      Product (List.map (fun x -> substitute_expr x old_term new_term) prodList)
-    | Sum sumList ->
-      Sum (List.map (fun x -> substitute_expr x old_term new_term) sumList)
-    | IDivide (numerator, denom) ->
-      IDivide (substitute_expr numerator old_term new_term, denom)
-    | Sin inner_expr ->
-      Sin (substitute_expr inner_expr old_term new_term)
-    | Cos inner_expr ->
-      Cos (substitute_expr inner_expr old_term new_term)
-    | Mod (left, right) ->
-      Mod (substitute_expr left old_term new_term, substitute_expr right old_term new_term))
-  ;;
-
-let substitute ineq old_term new_term = 
-  match ineq with
-  | Equals (left, right) ->
-    Equals(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
-  | Less (left, right) ->
-    Less(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
-  | LessEq (left, right) ->
-    LessEq(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
-  | Greater (left, right) ->
-    Greater(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
-  | GreaterEq (left, right) ->
-    GreaterEq(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
-  ;;
-
-
 let rec solve_rec_recur ineq ovar_ident ivar_ident print_steps = 
   let beta = get_beta ineq ovar_ident ivar_ident in
   if beta <> 0 then
     let _ = if print_steps then Printf.printf "Subsituting a_k for %s_%s\n" ovar_ident ivar_ident in
-    let new_rec = substitute ineq (Output_variable (ovar_ident, SSVar ivar_ident)) (Output_variable ("a", SSVar "k")) in
-    let new_rec = substitute new_rec (Output_variable (ovar_ident, SSDiv (ivar_ident, beta))) (Output_variable ("a", SAdd("k", (-1)))) in
-    let new_rec = substitute new_rec (Input_variable ivar_ident) (Pow(Rational (Mpq.init_set_si beta 1), Input_variable "k")) in
+    let new_rec = Expr_helpers.substitute ineq (Output_variable (ovar_ident, SSVar ivar_ident)) (Output_variable ("a", SSVar "k")) in
+    let new_rec = Expr_helpers.substitute new_rec (Output_variable (ovar_ident, SSDiv (ivar_ident, beta))) (Output_variable ("a", SAdd("k", (-1)))) in
+    let new_rec = Expr_helpers.substitute new_rec (Input_variable ivar_ident) (Pow(Rational (Mpq.init_set_si beta 1), Input_variable "k")) in
     let _ = if print_steps then Printf.printf "Will Solve:\t\t %s\n" (Expr_helpers.inequation_to_string new_rec) in
     let res =  solve_rec_recur new_rec "a" "k" print_steps in
-    let final_answer = substitute res (Base_case ("a", 0)) (Base_case (ovar_ident, 1)) in
-    let final_answer = substitute final_answer (Output_variable ("a", SSVar "k")) (Output_variable (ovar_ident, SSVar ivar_ident)) in
-    let final_answer = substitute final_answer (Input_variable "k") (Log(Mpq.init_set_si beta 1, Input_variable ivar_ident)) in
+    let final_answer = Expr_helpers.substitute res (Base_case ("a", 0)) (Base_case (ovar_ident, 1)) in
+    let final_answer = Expr_helpers.substitute final_answer (Output_variable ("a", SSVar "k")) (Output_variable (ovar_ident, SSVar ivar_ident)) in
+    let final_answer = Expr_helpers.substitute final_answer (Input_variable "k") (Log(Mpq.init_set_si beta 1, Input_variable ivar_ident)) in
     let _ = if print_steps then Printf.printf "After Sub back:\t\t %s\n" (Expr_helpers.inequation_to_string final_answer) in
     let final_answer = Expr_simplifications.automatic_simplify_inequation final_answer in
     let _ = if print_steps then Printf.printf "Final answer:\t\t %s\n" (Expr_helpers.inequation_to_string final_answer) in
@@ -491,6 +343,8 @@ let rec contains_ovar_expr expr subscript =
     (contains_ovar_expr inner_expr subscript)
   | Mod (left, right) ->
     (contains_ovar_expr left subscript) || (contains_ovar_expr right subscript)
+  | Shift (_, inner_expr) ->
+    (contains_ovar_expr inner_expr subscript)
   ;;
 
 
@@ -528,6 +382,8 @@ let rec find_all_subscripts expr =
     find_all_subscripts expr
   | Mod (left, right) ->
     (find_all_subscripts left) @ (find_all_subscripts right)
+  | Shift (_, expr) ->
+    find_all_subscripts expr
   ;;
 
 

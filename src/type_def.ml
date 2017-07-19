@@ -67,7 +67,8 @@ type expr =
           | Mod of expr * expr		(** Modular expression *)
           | Pi				(** The trancendental number pi *)
           | Factorial of expr		(** Factorial *)
-          | Iif of string * string	(** Impliciltly intrepreted function *)
+          | Iif of string * subscript	(** Impliciltly intrepreted function *)
+          | Shift of int * expr		(** first argument represents amount to shift by. Neg ints represent left shifts *)
           | Undefined			(** An expression whose value is undefined. ie x/0, log(-1), etc *)
           ;;
 
@@ -77,6 +78,15 @@ type inequation = Equals of expr * expr 	(** = *)
 		| GreaterEq of expr * expr	(** >= *)
 		| Greater of expr * expr	(** > *)
                 ;;
+
+
+
+type interval = Bounded of int * int
+              | BoundBelow of int
+              ;;
+
+type piece = PieceWise of string * ((interval * inequation) list) ;;
+
 
 (** {7 Expression comparison} *)
 
@@ -88,8 +98,8 @@ let rec expr_order a b =
         Mpq.cmp a_v b_v
     | (Symbolic_Constant a_str, Symbolic_Constant b_str) | (Input_variable a_str, Input_variable b_str) -> (* O-2 *)
         String.compare a_str b_str
-    | (Iif (op_expr_stra, identa), Iif (op_expr_strb, identb)) ->
-        if (String.compare identa identb) <> 0 then (String.compare identa identb)
+    | (Iif (op_expr_stra, subscript_a), Iif (op_expr_strb, subscript_b)) ->
+        if (subscript_order subscript_a subscript_b) <> 0 then (subscript_order subscript_a subscript_b)
         else String.compare op_expr_stra op_expr_strb
     | (Base_case (a_ident, a_index), Base_case (b_ident, b_index)) ->
         if a_ident <> b_ident then String.compare a_ident b_ident
@@ -127,6 +137,10 @@ let rec expr_order a b =
     | (_, Base_case _) -> 1
     | (Symbolic_Constant _, _) -> (-1)
     | (_, Symbolic_Constant _) -> (1)
+    | (Shift (shift_a, expr_a), Shift (shift_b, expr_b)) ->
+        let expr_cmp = expr_order expr_a expr_b in
+        if expr_cmp <> 0 then expr_cmp
+        else compare shift_a shift_b
     | (Product _, _) ->
         expr_order a (Product [b])			(* O-8 *)
     | ( _, Product _)  ->	
@@ -161,6 +175,8 @@ let rec expr_order a b =
     | (_, Input_variable _) -> (-1)
     | (Iif _, _) -> 1
     | (_, Iif _) -> (-1)
+    | (Shift _, _) -> 1
+    | (_, Shift _) -> (-1)
     | _ -> failwith "all cases should have been taken care of"
     ;;
 

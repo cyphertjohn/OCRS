@@ -143,14 +143,47 @@ let rec tau_inverse op_expr input_ident =
   | OpProduct expr_list ->
       let (term, const_list) = List.partition Op_transforms.contains_q expr_list in
       if (List.length const_list) <> 0 then Product (List.append (List.map (fun x -> tau_inverse x input_ident) const_list) ((tau_inverse (Op_simplifications.op_automatic_simplify (OpProduct term)) input_ident) :: []))
-      else Iif(Expr_helpers.op_expr_to_string op_expr, input_ident)
+      else (
+        let is_shift_op op_expression =
+          (match op_expression with
+          | OpPow (Q, OpRational exp) ->
+            let den = Mpz.init () in
+            let _ = Mpq.get_den den exp in
+            if (Mpz.cmp_si den 1) = 0 then true
+            else false
+          | Q -> true
+          | _ -> false
+          ) in
+        let (shift, rest) = List.partition is_shift_op expr_list in
+        (match shift with
+        | OpPow (Q, OpRational exp) :: [] ->
+          let num = Mpz.init () in
+          let _ = Mpq.get_num num exp in
+          let num_int = (int_of_string (Mpz.to_string num)) * (-1) in
+          Shift (num_int, tau_inverse (Op_simplifications.op_automatic_simplify (OpProduct rest)) input_ident)
+        | Q :: [] -> Shift (-1, tau_inverse (Op_simplifications.op_automatic_simplify (OpProduct rest)) input_ident)
+        | [] -> Iif (Expr_helpers.op_expr_to_string op_expr, SSVar input_ident)
+        | _ -> raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string op_expr)))
+        )
+      )
       (*raise (Tau_inverse_exc ("OCRS is unable to transform " ^ (Expr_helpers.op_expr_to_string op_expr))) (* need to do some transformations *)*)
   | OpPow (base, exp) when (not (Op_transforms.contains_q base)) && (not (Op_transforms.contains_q exp)) ->
       Pow (tau_inverse base input_ident, tau_inverse exp input_ident)
   | OpLog (b, expression) when (not (Op_transforms.contains_q expression))->
       Log (b, tau_inverse expression input_ident)
-  | _ -> Iif(Expr_helpers.op_expr_to_string op_expr, input_ident)
-
+  | _ ->
+      (match op_expr with
+      | OpPow (Q, OpRational exp) ->
+        let num = Mpz.init () in
+        let _ = Mpq.get_num num exp in
+        let num_int = (int_of_string (Mpz.to_string num)) * (-1) in
+        Shift(num_int, Rational (Mpq.init_set_si 1 1))
+      | Q ->
+        Shift(-1, Rational (Mpq.init_set_si 1 1))
+      | _ -> 
+        Iif(Expr_helpers.op_expr_to_string op_expr, SSVar input_ident)
+      ) 
+  ;;
 
 let tau_inverse_inequation expr input_ident =
     match expr with

@@ -55,8 +55,11 @@ let rec expr_to_string e =
       "(" ^ expr_to_string left ^ " mod " ^ expr_to_string right ^ ")"
   | Pi ->
       "pi"
-  | Iif (op_expr_str, ident) ->
-    "f{"^ op_expr_str ^ "}(" ^ ident ^")"
+  | Iif (op_expr_str, subscript) ->
+    "f{"^ op_expr_str ^ "}(" ^ subscript_to_string subscript ^")"
+  | Shift (shift_v, expression) ->
+    if shift_v < 0 then "LeftShift(" ^ (string_of_int (shift_v * -1)) ^ ", " ^ (expr_to_string expression) ^ ")"
+    else "RightShift(" ^ (string_of_int shift_v) ^ ", " ^ (expr_to_string expression) ^ ")"
   | Undefined ->
       "UNDEFINED"
   ;;
@@ -77,6 +80,84 @@ let inequation_to_string e =
   ;;
 
 
+let rec get_right_left_constr ineqs =
+  match ineqs with
+  | [] -> ([], [], [])
+  | ineq :: tl ->
+    (match ineq with
+    | Equals (left, right) ->
+      let (lefts, rights, constrs) = get_right_left_constr tl in
+      (left :: lefts, right :: rights, "==" :: constrs)
+    | Less (left, right) ->
+      let (lefts, rights, constrs) = get_right_left_constr tl in
+      (left :: lefts, right :: rights, "<" :: constrs)
+    | LessEq (left, right) ->
+      let (lefts, rights, constrs) = get_right_left_constr tl in
+      (left :: lefts, right :: rights, "<=" :: constrs)
+    | Greater (left, right) ->
+      let (lefts, rights, constrs) = get_right_left_constr tl in
+      (left :: lefts, right :: rights, ">" :: constrs)
+    | GreaterEq (left, right) ->
+      let (lefts, rights, constrs) = get_right_left_constr tl in
+      (left :: lefts, right :: rights, ">=" :: constrs)
+    )
+  ;;
+
+let intervals_to_strings intervals ivar =
+  let bounds_to_strings inter = 
+    (match inter with
+    | Bounded (lower, upper) -> (string_of_int lower, string_of_int upper)
+    | BoundBelow (lower) -> (string_of_int lower, "inf")
+    ) in
+  let (lowers, uppers) = List.split (List.map bounds_to_strings intervals) in
+  let lower_lens = List.map String.length lowers in
+  let upper_lens = List.map String.length uppers in
+  let length_of_biggest_lower = List.fold_left max 0 lower_lens in
+  let length_of_biggest_upper = List.fold_left max 0 upper_lens in
+  let lower_format_string = Scanf.format_from_string ("%-" ^ (string_of_int length_of_biggest_lower) ^ "s") "%s" in
+  let upper_format_string = Scanf.format_from_string ("%" ^ (string_of_int length_of_biggest_upper) ^ "s") "%s" in
+  let lower_strs_formatted = List.map (fun x -> Printf.sprintf lower_format_string x) lowers in
+  let upper_strs_formatted = List.map (fun x -> Printf.sprintf upper_format_string x) uppers in
+  List.map2 (fun a b -> (a ^ " <= " ^ ivar ^ " <= " ^ b)) lower_strs_formatted upper_strs_formatted
+  ;;
+
+let piece_to_string piece = 
+  match piece with
+  | PieceWise (ivar, intervals_ineqs) ->
+    let (intervals, ineqs) = List.split intervals_ineqs in
+    let (lefts, rights, constrs) = get_right_left_constr ineqs in
+    let left_strs = List.map expr_to_string lefts in
+    let right_strs = List.map expr_to_string rights in
+    let inter_strs = intervals_to_strings intervals ivar in
+    let lefts_and_constrs = List.map2 (fun a b -> a ^ " " ^ b) left_strs constrs in
+   (* let len_of_left_and_constr = List.fold_left max 0 (List.map String.length lefts_and_constrs) in
+    *)
+    let build_piece_part left_constr_str right_str inter_str =
+      "{ " ^ inter_str ^ "    =>    " ^ left_constr_str ^ " " ^ right_str ^ " }"
+    in
+    let rec get_strings lefts_constrs r_strs int_strs = 
+      (match (lefts_constrs, r_strs, int_strs) with
+      | ([],[],[]) -> []
+      | (left_constr_str :: ltl, right_str :: rtl, inter_str :: itl) -> (build_piece_part left_constr_str right_str inter_str) :: (get_strings ltl rtl itl)
+      | _ -> failwith "this case shouldn't happen"
+      )
+    in
+    let lines = get_strings lefts_and_constrs right_strs inter_strs in
+    String.concat "\n" lines
+  ;;
+
+
+(*
+  | PieceWise pieceList ->
+    let interval_expr_to_string interval_expr = 
+      let interval = fst interval_expr in
+      let expr_str = expr_to_string (snd interval_expr) in
+      let lower_str = string_of_int (fst interval) in
+      let upper_str = if (snd interval) = (-1) then "inf" else (string_of_int (snd interval)) in
+      expr_str ^ " if " ^  lower_str ^ " <= n <= " ^ upper_str
+    in
+    "{" ^ (String.concat " : " (List.map interval_expr_to_string pieceList)) ^ "}" 
+*)
 
 let rec op_expr_to_string e =
   match e with
@@ -256,8 +337,11 @@ let rec expr_to_string_IR e =
       "Arctan (" ^ Mpq.to_string rat ^ ")"
   | Mod (left, right) ->
       "Mod (" ^ expr_to_string left ^ ", " ^ expr_to_string right ^ ")"
-  | Iif (op_expr_str, ident) ->
-      "Iif (" ^ op_expr_str ^ ", " ^ ident ^ ")"
+  | Iif (op_expr_str, subscript) ->
+      "Iif (" ^ op_expr_str ^ ", " ^ (subscript_to_string_IR subscript) ^ ")"
+  | Shift (shift_v, expression) ->
+    if shift_v < 0 then "LeftShift(" ^ (string_of_int (shift_v * -1)) ^ ", " ^ (expr_to_string expression) ^ ")"
+    else "RightShift(" ^ (string_of_int shift_v) ^ ", " ^ (expr_to_string expression) ^ ")"
   | Pi ->
       "Pi"
   ;;
@@ -310,6 +394,162 @@ let rec is_const expr =
     is_const inner_expr
   | Mod (left, right) ->
     (is_const left) && (is_const right)
+  | Shift (_, expression) -> is_const expression
   ;;
 
 
+let rec substitute_expr expr old_term new_term = 
+  if expr = old_term then new_term
+  else
+    (match expr with
+    | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Output_variable _ | Arctan _ | Pi | Iif _ ->
+      expr
+    | Pow (base, exp) ->
+      Pow (substitute_expr base old_term new_term, substitute_expr exp old_term new_term)
+    | Times (left, right) ->
+      Times (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+    | Plus (left, right) ->
+      Plus (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+    | Minus (left, right) ->
+      Minus (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+    | Divide (left, right) ->
+      Divide (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+    | Binomial (left, right) ->
+      Binomial (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+    | Log (base, expression) ->
+      Log (base, substitute_expr expression old_term new_term)
+    | Factorial expression ->
+      Factorial (substitute_expr expression old_term new_term)
+    | Product prodList ->
+      Product (List.map (fun x -> substitute_expr x old_term new_term) prodList)
+    | Sum sumList ->
+      Sum (List.map (fun x -> substitute_expr x old_term new_term) sumList)
+    | IDivide (numerator, denom) ->
+      IDivide (substitute_expr numerator old_term new_term, denom)
+    | Sin inner_expr ->
+      Sin (substitute_expr inner_expr old_term new_term)
+    | Cos inner_expr ->
+      Cos (substitute_expr inner_expr old_term new_term)
+    | Mod (left, right) ->
+      Mod (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+    | Shift (shift_v, inner_expr) ->
+      Shift (shift_v, substitute_expr inner_expr old_term new_term))
+  ;;
+
+
+let substitute ineq old_term new_term = 
+  match ineq with
+  | Equals (left, right) ->
+    Equals(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+  | Less (left, right) ->
+    Less(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+  | LessEq (left, right) ->
+    LessEq(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+  | Greater (left, right) ->
+    Greater(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+  | GreaterEq (left, right) ->
+    GreaterEq(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+  ;;
+
+
+let rec remove_dup lst = 
+  match lst with
+  | [] -> []
+  | h::t -> h::(remove_dup (List.filter (fun x -> x<>h) t))
+  ;;
+
+let rec find_ovar_ivar_expr expr = 
+  match expr with
+  | Rational _ | Symbolic_Constant _ | Base_case _ | Arctan _ | Pi | Iif _ | Undefined ->
+    ([], [])
+  | Output_variable (ovar_ident, subscript) ->
+    (match subscript with 
+    | SAdd (ivar_ident, _) | SSDiv (ivar_ident, _) -> (ovar_ident :: [], ivar_ident :: [])
+    | SSVar ivar_ident -> (ovar_ident :: [], ivar_ident :: []))
+  | Input_variable ivar_ident -> ([], ivar_ident :: [])
+  | Pow (base, exp) ->
+    let base_res = find_ovar_ivar_expr base in
+    let exp_res = find_ovar_ivar_expr exp in
+    (remove_dup ((fst base_res) @ (fst exp_res)), remove_dup ((snd base_res) @ (snd exp_res)))
+  | Times (left, right) ->
+    let left_res = find_ovar_ivar_expr left in
+    let right_res = find_ovar_ivar_expr right in
+    (remove_dup ((fst left_res) @ (fst right_res)), remove_dup ((snd left_res) @ (snd right_res)))
+  | Plus (left, right) ->
+    let left_res = find_ovar_ivar_expr left in
+    let right_res = find_ovar_ivar_expr right in
+    (remove_dup ((fst left_res) @ (fst right_res)), remove_dup ((snd left_res) @ (snd right_res)))
+  | Product prodList ->
+    let list_res = List.map find_ovar_ivar_expr prodList in
+    let rec aux lst acc = 
+      (match lst with
+      | [] -> acc
+      | (ovar, ivar) :: [] -> (remove_dup ((fst acc) @ ovar), remove_dup ((snd acc) @ ivar))
+      | hd :: tl -> 
+        let new_acc = ((fst acc) @ (fst hd), (snd acc) @ (snd hd)) in
+        aux tl new_acc) in
+    aux list_res ([], []) 
+  | Sum sumList ->
+    let list_res = List.map find_ovar_ivar_expr sumList in
+    let rec aux lst acc = 
+      (match lst with
+      | [] -> acc
+      | (ovar, ivar) :: [] -> (remove_dup ((fst acc) @ ovar), remove_dup ((snd acc) @ ivar))
+      | hd :: tl -> 
+        let new_acc = ((fst acc) @ (fst hd), (snd acc) @ (snd hd)) in
+        aux tl new_acc) in
+    aux list_res ([], [])
+  | Divide (left, right) ->
+    let left_res = find_ovar_ivar_expr left in
+    let right_res = find_ovar_ivar_expr right in
+    (remove_dup ((fst left_res) @ (fst right_res)), remove_dup ((snd left_res) @ (snd right_res)))
+  | Minus (left, right) ->
+    let left_res = find_ovar_ivar_expr left in
+    let right_res = find_ovar_ivar_expr right in
+    (remove_dup ((fst left_res) @ (fst right_res)), remove_dup ((snd left_res) @ (snd right_res)))
+  | Log (_, expr) ->
+    find_ovar_ivar_expr expr
+  | Factorial expr ->
+    find_ovar_ivar_expr expr
+  | Binomial (left, right) ->
+    let left_res = find_ovar_ivar_expr left in
+    let right_res = find_ovar_ivar_expr right in
+    (remove_dup ((fst left_res) @ (fst right_res)), remove_dup ((snd left_res) @ (snd right_res)))
+  | IDivide (numerator, _) ->
+    find_ovar_ivar_expr numerator
+  | Sin inner_expr ->
+    find_ovar_ivar_expr inner_expr
+  | Cos inner_expr ->
+    find_ovar_ivar_expr inner_expr
+  | Mod (left, right) ->
+    let left_res = find_ovar_ivar_expr left in
+    let right_res = find_ovar_ivar_expr right in
+    (remove_dup ((fst left_res) @ (fst right_res)), remove_dup ((snd left_res) @ (snd right_res)))
+  | Shift (shift_v, expression) ->
+    find_ovar_ivar_expr expression
+  ;;
+      
+let find_ovar_ivar ineq = 
+  (match ineq with
+  | Equals (left, right) ->
+    let left_list = find_ovar_ivar_expr left in
+    let right_list = find_ovar_ivar_expr right in
+    (remove_dup ((fst left_list) @ (fst right_list)), remove_dup ((snd left_list) @ (snd right_list)))
+  | Less (left, right) ->
+    let left_list = find_ovar_ivar_expr left in
+    let right_list = find_ovar_ivar_expr right in
+    (remove_dup ((fst left_list) @ (fst right_list)), remove_dup ((snd left_list) @ (snd right_list)))
+  | LessEq (left, right) ->
+    let left_list = find_ovar_ivar_expr left in
+    let right_list = find_ovar_ivar_expr right in
+    (remove_dup ((fst left_list) @ (fst right_list)), remove_dup ((snd left_list) @ (snd right_list)))
+  | Greater (left, right) ->
+    let left_list = find_ovar_ivar_expr left in
+    let right_list = find_ovar_ivar_expr right in
+    (remove_dup ((fst left_list) @ (fst right_list)), remove_dup ((snd left_list) @ (snd right_list)))
+  | GreaterEq (left, right) ->
+    let left_list = find_ovar_ivar_expr left in
+    let right_list = find_ovar_ivar_expr right in
+    (remove_dup ((fst left_list) @ (fst right_list)), remove_dup ((snd left_list) @ (snd right_list))))
+  ;;
+  

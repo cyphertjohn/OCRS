@@ -34,7 +34,8 @@ type expr =
           | Mod of expr * expr          (** Modular expression *)
           | Pi                          (** The trancendental number pi *)
           | Factorial of expr           (** Factorial *)
-          | Iif of string * string	(** Implicitly interpreted function *)
+          | Iif of string * subscript	(** Implicitly interpreted function *)
+          | Shift of int * expr		(** first argument represents amount to shift by. Neg ints represent left shifts *)
           | Undefined                   (** An expression whose value is undefined. ie x/0, log(-1), etc *)
           ;;
 
@@ -43,6 +44,13 @@ type inequation = Equals of expr * expr 	(** = *)
 		| Less of expr * expr		(** < *)
 		| GreaterEq of expr * expr	(** >= *)
 		| Greater of expr * expr	(** > *)
+
+
+type interval = Bounded of int * int
+              | BoundBelow of int
+              ;;
+
+type piece = PieceWise of string * ((interval * inequation) list) ;;
 
 
 (** {7 Expression Order} *)

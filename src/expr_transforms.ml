@@ -119,6 +119,11 @@ let rec inverse_binomial expr =
       Mod (inverse_binomial left, inverse_binomial right)
   | Factorial expression ->
       automatic_simplify (Factorial (inverse_binomial expression))
+  | Shift (shift_v, expression) ->
+      Shift (shift_v, inverse_binomial expression)
+  (*| PieceWise pieceList ->
+      let (intervals, exprs) = List.split pieceList in
+      List.map2 (fun a b -> (a, inverse_binomial b)) intervals exprs*)
   ;;
 
 let inverse_binomial_ineq ineq = 

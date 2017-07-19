@@ -66,7 +66,9 @@ let rec substitute_expr expr old_term new_term =
     | Cos expression ->
       Cos (substitute_expr expression old_term new_term)
     | Mod (left, right) ->
-      Mod (substitute_expr left old_term new_term, substitute_expr right old_term new_term))
+      Mod (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
+    | Shift (shift_v, expression) ->
+      Shift (shift_v, substitute_expr expression old_term new_term))
   ;;
 
 let substitute ineq old_term new_term =
@@ -82,7 +84,7 @@ let substitute ineq old_term new_term =
   | GreaterEq (left, right) ->
     GreaterEq(substitute_expr left old_term new_term, substitute_expr right old_term new_term)
   ;;  
-# 86 "parser.ml"
+# 88 "parser.ml"
 let yytransl_const = [|
   260 (* COMMA *);
   261 (* UNDERSCORE *);
@@ -292,269 +294,269 @@ let yyact = [|
     let _1 = (Parsing.peek_val __caml_parser_env 3 : 'ineq) in
     let _3 = (Parsing.peek_val __caml_parser_env 1 : string) in
     Obj.repr(
-# 75 "parser.mly"
+# 77 "parser.mly"
                               ( (substitute _1 (Symbolic_Constant _3) (Input_variable _3)) )
-# 298 "parser.ml"
+# 300 "parser.ml"
                : Type_def.inequation))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : 'ineq) in
     let _3 = (Parsing.peek_val __caml_parser_env 1 : string) in
     Obj.repr(
-# 76 "parser.mly"
+# 78 "parser.mly"
                              ( (substitute _1 (Symbolic_Constant _3) (Input_variable _3)) )
-# 306 "parser.ml"
+# 308 "parser.ml"
                : Type_def.inequation))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
     Obj.repr(
-# 80 "parser.mly"
-                     ( Equals(_1, _3) )
-# 314 "parser.ml"
-               : 'ineq))
-; (fun __caml_parser_env ->
-    let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
-    let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
-    Obj.repr(
-# 81 "parser.mly"
-                   ( Less(_1, _3) )
-# 322 "parser.ml"
-               : 'ineq))
-; (fun __caml_parser_env ->
-    let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
-    let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
-    Obj.repr(
 # 82 "parser.mly"
-                     ( LessEq(_1, _3) )
-# 330 "parser.ml"
+                     ( Equals(_1, _3) )
+# 316 "parser.ml"
                : 'ineq))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
     Obj.repr(
 # 83 "parser.mly"
-                      ( Greater(_1, _3) )
-# 338 "parser.ml"
+                   ( Less(_1, _3) )
+# 324 "parser.ml"
                : 'ineq))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
     Obj.repr(
 # 84 "parser.mly"
+                     ( LessEq(_1, _3) )
+# 332 "parser.ml"
+               : 'ineq))
+; (fun __caml_parser_env ->
+    let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
+    let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
+    Obj.repr(
+# 85 "parser.mly"
+                      ( Greater(_1, _3) )
+# 340 "parser.ml"
+               : 'ineq))
+; (fun __caml_parser_env ->
+    let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
+    let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
+    Obj.repr(
+# 86 "parser.mly"
                         ( GreaterEq(_1, _3) )
-# 346 "parser.ml"
+# 348 "parser.ml"
                : 'ineq))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 87 "parser.mly"
+# 89 "parser.mly"
               ( Rational(Mpq.init_set_si _1 1) )
-# 353 "parser.ml"
+# 355 "parser.ml"
                : 'expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : float) in
     Obj.repr(
-# 88 "parser.mly"
+# 90 "parser.mly"
                             ( Rational(Mpq.init_set_d (_1)) )
-# 360 "parser.ml"
+# 362 "parser.ml"
                : 'expr))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 1 : 'expr) in
     Obj.repr(
-# 89 "parser.mly"
-                            ( _2 )
-# 367 "parser.ml"
-               : 'expr))
-; (fun __caml_parser_env ->
-    let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
-    let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
-    Obj.repr(
-# 90 "parser.mly"
-                            ( Plus(_1, _3) )
-# 375 "parser.ml"
-               : 'expr))
-; (fun __caml_parser_env ->
-    let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
-    let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
-    Obj.repr(
 # 91 "parser.mly"
-                            ( Minus(_1, _3) )
-# 383 "parser.ml"
+                            ( _2 )
+# 369 "parser.ml"
                : 'expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
     Obj.repr(
 # 92 "parser.mly"
-                            ( Times(_1, _3) )
-# 391 "parser.ml"
+                            ( Plus(_1, _3) )
+# 377 "parser.ml"
                : 'expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
     Obj.repr(
 # 93 "parser.mly"
-                            ( Divide(_1, _3) )
-# 399 "parser.ml"
+                            ( Minus(_1, _3) )
+# 385 "parser.ml"
                : 'expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
     Obj.repr(
 # 94 "parser.mly"
-                      ( Pow(_1, _3) )
-# 407 "parser.ml"
+                            ( Times(_1, _3) )
+# 393 "parser.ml"
                : 'expr))
 ; (fun __caml_parser_env ->
-    let _2 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
+    let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
+    let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
     Obj.repr(
 # 95 "parser.mly"
-                            ( Times(Rational (Mpq.init_set_si (-1) 1), _2) )
-# 414 "parser.ml"
+                            ( Divide(_1, _3) )
+# 401 "parser.ml"
                : 'expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
     Obj.repr(
 # 96 "parser.mly"
-                           ( Binomial(_1, _3) )
-# 422 "parser.ml"
+                      ( Pow(_1, _3) )
+# 409 "parser.ml"
                : 'expr))
 ; (fun __caml_parser_env ->
-    let _1 = (Parsing.peek_val __caml_parser_env 4 : string) in
-    let _4 = (Parsing.peek_val __caml_parser_env 1 : 'sub) in
+    let _2 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
     Obj.repr(
 # 97 "parser.mly"
-                                        ( Output_variable (_1, _4) )
-# 430 "parser.ml"
-               : 'expr))
-; (fun __caml_parser_env ->
-    let _1 = (Parsing.peek_val __caml_parser_env 4 : string) in
-    let _4 = (Parsing.peek_val __caml_parser_env 1 : 'sub) in
-    Obj.repr(
-# 98 "parser.mly"
-                                        ( Output_variable (_1, _4) )
-# 438 "parser.ml"
-               : 'expr))
-; (fun __caml_parser_env ->
-    let _1 = (Parsing.peek_val __caml_parser_env 2 : string) in
-    let _3 = (Parsing.peek_val __caml_parser_env 0 : string) in
-    Obj.repr(
-# 99 "parser.mly"
-                            ( Output_variable (_1, SSVar _3) )
-# 446 "parser.ml"
-               : 'expr))
-; (fun __caml_parser_env ->
-    let _1 = (Parsing.peek_val __caml_parser_env 2 : string) in
-    let _3 = (Parsing.peek_val __caml_parser_env 0 : int) in
-    Obj.repr(
-# 100 "parser.mly"
-                           ( Symbolic_Constant (_1 ^ "_" ^ (string_of_int _3)) )
-# 454 "parser.ml"
-               : 'expr))
-; (fun __caml_parser_env ->
-    let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
-    Obj.repr(
-# 101 "parser.mly"
-              ( Symbolic_Constant (_1) )
-# 461 "parser.ml"
-               : 'expr))
-; (fun __caml_parser_env ->
-    let _3 = (Parsing.peek_val __caml_parser_env 3 : 'expr) in
-    let _5 = (Parsing.peek_val __caml_parser_env 1 : float) in
-    Obj.repr(
-# 102 "parser.mly"
-                                       ( IDivide(_3, Mpq.init_set_d (_5)) )
-# 469 "parser.ml"
-               : 'expr))
-; (fun __caml_parser_env ->
-    let _3 = (Parsing.peek_val __caml_parser_env 3 : 'expr) in
-    let _5 = (Parsing.peek_val __caml_parser_env 1 : int) in
-    Obj.repr(
-# 103 "parser.mly"
-                                     ( IDivide(_3, Mpq.init_set_si _5 1) )
-# 477 "parser.ml"
-               : 'expr))
-; (fun __caml_parser_env ->
-    let _2 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
-    Obj.repr(
-# 104 "parser.mly"
-                  ( Sin(_2) )
-# 484 "parser.ml"
-               : 'expr))
-; (fun __caml_parser_env ->
-    let _2 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
-    Obj.repr(
-# 105 "parser.mly"
-                  ( Cos(_2) )
-# 491 "parser.ml"
-               : 'expr))
-; (fun __caml_parser_env ->
-    let _2 = (Parsing.peek_val __caml_parser_env 0 : float) in
-    Obj.repr(
-# 106 "parser.mly"
-                     ( Arctan(Mpq.init_set_d _2) )
-# 498 "parser.ml"
-               : 'expr))
-; (fun __caml_parser_env ->
-    let _2 = (Parsing.peek_val __caml_parser_env 0 : int) in
-    Obj.repr(
-# 107 "parser.mly"
-                      ( Arctan(Mpq.init_set_si _2 1) )
-# 505 "parser.ml"
+                            ( Times(Rational (Mpq.init_set_si (-1) 1), _2) )
+# 416 "parser.ml"
                : 'expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
     Obj.repr(
-# 108 "parser.mly"
-                      ( Mod (_1, _3) )
-# 513 "parser.ml"
+# 98 "parser.mly"
+                           ( Binomial(_1, _3) )
+# 424 "parser.ml"
                : 'expr))
 ; (fun __caml_parser_env ->
+    let _1 = (Parsing.peek_val __caml_parser_env 4 : string) in
+    let _4 = (Parsing.peek_val __caml_parser_env 1 : 'sub) in
+    Obj.repr(
+# 99 "parser.mly"
+                                        ( Output_variable (_1, _4) )
+# 432 "parser.ml"
+               : 'expr))
+; (fun __caml_parser_env ->
+    let _1 = (Parsing.peek_val __caml_parser_env 4 : string) in
+    let _4 = (Parsing.peek_val __caml_parser_env 1 : 'sub) in
+    Obj.repr(
+# 100 "parser.mly"
+                                        ( Output_variable (_1, _4) )
+# 440 "parser.ml"
+               : 'expr))
+; (fun __caml_parser_env ->
+    let _1 = (Parsing.peek_val __caml_parser_env 2 : string) in
+    let _3 = (Parsing.peek_val __caml_parser_env 0 : string) in
+    Obj.repr(
+# 101 "parser.mly"
+                            ( Output_variable (_1, SSVar _3) )
+# 448 "parser.ml"
+               : 'expr))
+; (fun __caml_parser_env ->
+    let _1 = (Parsing.peek_val __caml_parser_env 2 : string) in
+    let _3 = (Parsing.peek_val __caml_parser_env 0 : int) in
+    Obj.repr(
+# 102 "parser.mly"
+                           ( Symbolic_Constant (_1 ^ "_" ^ (string_of_int _3)) )
+# 456 "parser.ml"
+               : 'expr))
+; (fun __caml_parser_env ->
+    let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
+    Obj.repr(
+# 103 "parser.mly"
+              ( Symbolic_Constant (_1) )
+# 463 "parser.ml"
+               : 'expr))
+; (fun __caml_parser_env ->
+    let _3 = (Parsing.peek_val __caml_parser_env 3 : 'expr) in
+    let _5 = (Parsing.peek_val __caml_parser_env 1 : float) in
+    Obj.repr(
+# 104 "parser.mly"
+                                       ( IDivide(_3, Mpq.init_set_d (_5)) )
+# 471 "parser.ml"
+               : 'expr))
+; (fun __caml_parser_env ->
+    let _3 = (Parsing.peek_val __caml_parser_env 3 : 'expr) in
+    let _5 = (Parsing.peek_val __caml_parser_env 1 : int) in
+    Obj.repr(
+# 105 "parser.mly"
+                                     ( IDivide(_3, Mpq.init_set_si _5 1) )
+# 479 "parser.ml"
+               : 'expr))
+; (fun __caml_parser_env ->
+    let _2 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
+    Obj.repr(
+# 106 "parser.mly"
+                  ( Sin(_2) )
+# 486 "parser.ml"
+               : 'expr))
+; (fun __caml_parser_env ->
+    let _2 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
+    Obj.repr(
+# 107 "parser.mly"
+                  ( Cos(_2) )
+# 493 "parser.ml"
+               : 'expr))
+; (fun __caml_parser_env ->
+    let _2 = (Parsing.peek_val __caml_parser_env 0 : float) in
+    Obj.repr(
+# 108 "parser.mly"
+                     ( Arctan(Mpq.init_set_d _2) )
+# 500 "parser.ml"
+               : 'expr))
+; (fun __caml_parser_env ->
+    let _2 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
 # 109 "parser.mly"
+                      ( Arctan(Mpq.init_set_si _2 1) )
+# 507 "parser.ml"
+               : 'expr))
+; (fun __caml_parser_env ->
+    let _1 = (Parsing.peek_val __caml_parser_env 2 : 'expr) in
+    let _3 = (Parsing.peek_val __caml_parser_env 0 : 'expr) in
+    Obj.repr(
+# 110 "parser.mly"
+                      ( Mod (_1, _3) )
+# 515 "parser.ml"
+               : 'expr))
+; (fun __caml_parser_env ->
+    Obj.repr(
+# 111 "parser.mly"
              ( Pi )
-# 519 "parser.ml"
+# 521 "parser.ml"
                : 'expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : string) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 112 "parser.mly"
+# 114 "parser.mly"
                  ( SAdd (_1, _3) )
-# 527 "parser.ml"
+# 529 "parser.ml"
                : 'sub))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : string) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 113 "parser.mly"
-                 ( SSDiv (_1, _3) )
-# 535 "parser.ml"
-               : 'sub))
-; (fun __caml_parser_env ->
-    let _1 = (Parsing.peek_val __caml_parser_env 2 : string) in
-    let _3 = (Parsing.peek_val __caml_parser_env 0 : float) in
-    Obj.repr(
-# 114 "parser.mly"
-                   ( SAdd (_1, int_of_float _3) )
-# 543 "parser.ml"
-               : 'sub))
-; (fun __caml_parser_env ->
-    let _1 = (Parsing.peek_val __caml_parser_env 2 : string) in
-    let _3 = (Parsing.peek_val __caml_parser_env 0 : float) in
-    Obj.repr(
 # 115 "parser.mly"
+                 ( SSDiv (_1, _3) )
+# 537 "parser.ml"
+               : 'sub))
+; (fun __caml_parser_env ->
+    let _1 = (Parsing.peek_val __caml_parser_env 2 : string) in
+    let _3 = (Parsing.peek_val __caml_parser_env 0 : float) in
+    Obj.repr(
+# 116 "parser.mly"
+                   ( SAdd (_1, int_of_float _3) )
+# 545 "parser.ml"
+               : 'sub))
+; (fun __caml_parser_env ->
+    let _1 = (Parsing.peek_val __caml_parser_env 2 : string) in
+    let _3 = (Parsing.peek_val __caml_parser_env 0 : float) in
+    Obj.repr(
+# 117 "parser.mly"
                   ( SSDiv (_1, int_of_float _3) )
-# 551 "parser.ml"
+# 553 "parser.ml"
                : 'sub))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 116 "parser.mly"
+# 118 "parser.mly"
           ( SSVar _1 )
-# 558 "parser.ml"
+# 560 "parser.ml"
                : 'sub))
 (* Entry main *)
 ; (fun __caml_parser_env -> raise (Parsing.YYexit (Parsing.peek_val __caml_parser_env 0)))
