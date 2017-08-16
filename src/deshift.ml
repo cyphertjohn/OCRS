@@ -177,19 +177,19 @@ let deshift left_expr right_expr const input_ident =
       (match const with
         | "=" -> 
           let new_ineqs = List.map (fun x -> Equals(left_expr, x)) new_funcs in
-          PieceWise (ivar, (List.combine new_intervals new_ineqs))
+          PieceWiseIneq (ivar, (List.combine new_intervals new_ineqs))
         | "<=" ->
           let new_ineqs = List.map (fun x -> LessEq(left_expr, x)) new_funcs in
-          PieceWise (ivar, (List.combine new_intervals new_ineqs))
+          PieceWiseIneq (ivar, (List.combine new_intervals new_ineqs))
         | "<" -> 
           let new_ineqs = List.map (fun x -> Less(left_expr, x)) new_funcs in
-          PieceWise (ivar, (List.combine new_intervals new_ineqs))
+          PieceWiseIneq (ivar, (List.combine new_intervals new_ineqs))
         | ">=" ->
           let new_ineqs = List.map (fun x -> GreaterEq(left_expr, x)) new_funcs in
-          PieceWise (ivar, (List.combine new_intervals new_ineqs))
+          PieceWiseIneq (ivar, (List.combine new_intervals new_ineqs))
         | ">" -> 
           let new_ineqs = List.map (fun x -> Greater(left_expr, x)) new_funcs in
-          PieceWise (ivar, (List.combine new_intervals new_ineqs))
+          PieceWiseIneq (ivar, (List.combine new_intervals new_ineqs))
         | _ -> failwith "there are no other cases"
       )
     )

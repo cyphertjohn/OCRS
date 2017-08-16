@@ -123,7 +123,7 @@ let intervals_to_strings intervals ivar =
 
 let piece_to_string piece = 
   match piece with
-  | PieceWise (ivar, intervals_ineqs) ->
+  | PieceWiseIneq (ivar, intervals_ineqs) ->
     let (intervals, ineqs) = List.split intervals_ineqs in
     let (lefts, rights, constrs) = get_right_left_constr ineqs in
     let left_strs = List.map expr_to_string lefts in
@@ -402,7 +402,7 @@ let rec substitute_expr expr old_term new_term =
   if expr = old_term then new_term
   else
     (match expr with
-    | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Output_variable _ | Arctan _ | Pi | Iif _ ->
+    | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Output_variable _ | Arctan _ | Pi ->
       expr
     | Pow (base, exp) ->
       Pow (substitute_expr base old_term new_term, substitute_expr exp old_term new_term)
@@ -433,7 +433,47 @@ let rec substitute_expr expr old_term new_term =
     | Mod (left, right) ->
       Mod (substitute_expr left old_term new_term, substitute_expr right old_term new_term)
     | Shift (shift_v, inner_expr) ->
-      Shift (shift_v, substitute_expr inner_expr old_term new_term))
+      Shift (shift_v, substitute_expr inner_expr old_term new_term)
+    | Iif (opCalcString, subscript) ->
+      let new_term_as_subscript expression = 
+        let simp_expression = Expr_simplifications.automatic_simplify expression in
+        (match simp_expression with
+        | Sum ((Rational add_term) :: (Input_variable ident) :: []) | Sum ((Input_variable ident) :: (Rational add_term) :: []) | Sum ((Rational add_term) :: (Symbolic_Constant ident) :: []) | Sum ((Symbolic_Constant ident) :: (Rational add_term) :: []) ->
+          let (num, denom) = (Mpz.init (), Mpz.init ()) in
+          let _ = Mpq.get_num num add_term in
+          let num_int = Mpz.get_int num in
+          let _ = Mpq.get_den denom add_term in
+          if (Mpz.cmp_si denom 1) = 0 then SAdd (ident, num_int)
+          else failwith "trying to shift by a non-integral value"
+        | Input_variable ident | Symbolic_Constant ident -> SSVar ident
+        | _ -> failwith "this expression can't be turned into a subscript"
+        )        
+      in
+      (match subscript with
+      | SAdd (identifier, add_int) ->
+        let (sub_as_sym, sub_as_input) = (Expr_simplifications.automatic_simplify (Plus(Symbolic_Constant identifier, Rational (Mpq.init_set_si add_int 1))), Expr_simplifications.automatic_simplify (Plus(Input_variable identifier, Rational (Mpq.init_set_si add_int 1)))) in
+        if expr_order sub_as_sym old_term = 0 || expr_order sub_as_input old_term = 0 then (
+          let new_sub = new_term_as_subscript new_term in
+          Iif (opCalcString, new_sub)
+        ) else (
+          if expr_order (Input_variable identifier) old_term = 0 || expr_order (Symbolic_Constant identifier) old_term = 0 then (
+            let new_sub = new_term_as_subscript new_term in
+            (match new_sub with
+            | SAdd (new_ident, add_v) -> Iif (opCalcString, (SAdd (new_ident, add_v + add_int)))
+            | SSVar new_ident -> Iif (opCalcString, (SAdd (new_ident, add_int)))
+            | _ -> failwith "this will never happen"
+            )
+          ) else expr
+        )
+      | SSVar identifier ->
+        let (sub_as_sym, sub_as_input) = (Symbolic_Constant identifier, Input_variable identifier) in
+        if expr_order sub_as_sym old_term = 0 || expr_order sub_as_input old_term = 0 then (
+          let new_sub = new_term_as_subscript new_term in
+          Iif (opCalcString, new_sub)
+        ) else expr
+      | SSDiv _ -> failwith "this case is not applied to IIFs"
+      )
+    )
   ;;
 
 

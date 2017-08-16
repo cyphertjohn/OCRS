@@ -107,6 +107,30 @@ let solve_mat_rec mat_rec print =
   List.map Deshift.deshift_ineq results
   ;;
 
+
+let solve_mat_rec_piece mat_rec_piece print = 
+  let new_rec = 
+    (match mat_rec_piece with
+    | PVEquals (primed, mat, unprimed, add) ->
+      let shift_add = Array.map Shift.shift_piece_expr add in
+      VEquals (primed, mat, unprimed, shift_add)
+    | PVLess (primed, mat, unprimed, add) ->
+      let shift_add = Array.map Shift.shift_piece_expr add in
+      VLess (primed, mat, unprimed, shift_add)
+    | PVLessEq (primed, mat, unprimed, add) ->
+      let shift_add = Array.map Shift.shift_piece_expr add in
+      VLessEq (primed, mat, unprimed, shift_add)
+    | PVGreater (primed, mat, unprimed, add) ->
+      let shift_add = Array.map Shift.shift_piece_expr add in
+      VGreater (primed, mat, unprimed, shift_add)
+    | PVGreaterEq (primed, mat, unprimed, add) ->
+      let shift_add = Array.map Shift.shift_piece_expr add in
+      VGreaterEq (primed, mat, unprimed, shift_add)
+    )
+  in
+  solve_mat_rec new_rec print
+  ;;
+
 let solve_mat_recurrence_list mat_rec_list print_steps =
   let rec sub_and_solve lis previous_sol_pairs = 
     (match lis with

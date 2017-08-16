@@ -252,9 +252,25 @@ let new_rec_test = Equals(Output_variable ("y", SAdd("n", 1)), Plus(Output_varia
 let result = Ocrs.solve_rec new_rec_test true;;
 print_endline (Expr_helpers.piece_to_string result);;
 
+print_endline "";;
+print_endline "";;
 
 
+let first_part = Minus(Symbolic_Constant "g_0", Input_variable "n");;
+let second_part = Minus(Symbolic_Constant "f_0", Input_variable "n");;
 
+let piece_wise_expr_1 = PieceWiseExpr ("n", [(Bounded (0,0), first_part); (BoundBelow 1, second_part)]);;
+
+
+let new_expr = Pow(Input_variable "n", Rational (Mpq.init_set_si 2 1));;
+
+let piece_wise_expr_2 = PieceWiseExpr ("n", [(BoundBelow 0, new_expr)]);;
+
+let new_rec_test_piece = PVEquals (Ovec ([|"x";"y"|], SAdd("n", 1)), [|[|Mpq.init_set_si 2 1;Mpq.init_set_si 0 1|];[|Mpq.init_set_si 0 1;Mpq.init_set_si 1 1|]|], Ovec ([|"x";"y"|], SSVar "n"), [|piece_wise_expr_1; piece_wise_expr_2|]);;
+
+let result = Ocrs.solve_mat_rec_piece new_rec_test_piece true;;
+
+List.iter (fun x -> print_endline (Expr_helpers.piece_to_string x)) result;;
 
 
 

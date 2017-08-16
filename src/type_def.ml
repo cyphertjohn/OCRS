@@ -85,7 +85,9 @@ type interval = Bounded of int * int
               | BoundBelow of int
               ;;
 
-type piece = PieceWise of string * ((interval * inequation) list) ;;
+type piece_ineq = PieceWiseIneq of string * ((interval * inequation) list) ;;
+
+type piece_expr = PieceWiseExpr of string * ((interval * expr) list);;
 
 
 (** {7 Expression comparison} *)
@@ -296,3 +298,11 @@ type matrix_rec =
           | VGreaterEq of ovec * Mpq.t array array * ovec * expr array
           ;;
 
+
+type matrix_rec_piece_add =
+          | PVEquals of ovec * Mpq.t array array * ovec * piece_expr array
+          | PVLess of ovec * Mpq.t array array * ovec * piece_expr array
+          | PVLessEq of ovec * Mpq.t array array * ovec * piece_expr array
+          | PVGreater of ovec * Mpq.t array array * ovec * piece_expr array
+          | PVGreaterEq of ovec * Mpq.t array array * ovec * piece_expr array
+          ;;
