@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 8c14ac6f068fa5a1da773d10113cb4cc)
+# DO NOT EDIT (digest: 7daf3b873dafb76ec99eeba4077b88a4)
 Ocrs
 Type_def
 Expr_helpers
@@ -8,6 +8,8 @@ Parser
 Mat_helpers
 OpLexer
 OpParser
+Deshift
+Shift
 Factor
 Solve_mat_rec
 Mat_functions
@@ -19,6 +21,4 @@ Op_transforms
 Op_simplifications
 Expr_simplifications
 Expr_transforms
-Deshift
-Shift
 # OASIS_STOP
