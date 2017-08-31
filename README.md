@@ -73,7 +73,7 @@ y_n == (-3/2 + 2 ^ n + (2 * x_0 * 2 ^ n) + (-1 * y_0 * 2 ^ n) + (1/2 * 3 ^ n) + 
 There are two special situations that can occur with matrix recurrences:
 
 #### A has non-rational eigenvalues
-If A has non-rational eigenvalues (irrational or complex) then OCRS will be unable to return a solution to the reccurence in standard algebra. (To solve this problem OCRS would need to be able to factor arbitrary polynomials). However, OCRS will still have a unique internal representation for the recurrence solution. Thus, in this situation OCRS will return this "Implicitly intrepreted function" (IIF) as a unintrepreted function characterized by a cannonical string.
+If A has non-rational eigenvalues (irrational or complex) then OCRS will be unable to return a solution to the recurrence in standard algebra. (To solve this problem OCRS would need to be able to factor arbitrary polynomials). However, OCRS will still have a unique internal representation for the recurrence solution. Thus, in this situation OCRS will return this "Implicitly interpreted function" (IIF) as a un-interpreted function characterized by a canonical string.
 
 Consider the following example:
 ```
