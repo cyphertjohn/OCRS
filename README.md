@@ -64,7 +64,7 @@ An example of this type of recurrence is the following:
 |y_{n + 1} |   | -2 4 |   | y_n |   | 1 |
 ```
 
-which has the followign solution:
+which has the following solution:
 ```
 x_n == (-5/4 + 2 ^ n + (2 * x_0 * 2 ^ n) + (-1 * y_0 * 2 ^ n) + (1/4 * 3 ^ n) + (-1 * x_0 * 3 ^ n) + (y_0 * 3 ^ n) + (-3/2 * n))
 y_n == (-3/2 + 2 ^ n + (2 * x_0 * 2 ^ n) + (-1 * y_0 * 2 ^ n) + (1/2 * 3 ^ n) + (-2 * x_0 * 3 ^ n) + (2 * y_0 * 3 ^ n) + (-1 * n))
