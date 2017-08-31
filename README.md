@@ -2,11 +2,11 @@ OCRS
 ====
 The Operational Calculus Recurrence Solver (OCRS) is an ocaml library designed to symbolically solve linear recurrences.
 
-##Classes of recurrences
+## Classes of recurrences
 
 OCRS is designed to solve the following classes of recurrences:
 
-###Univariate Linear recurrences
+### Univariate Linear recurrences
 
 These are recurrences of the form
 
@@ -26,7 +26,7 @@ OCRS will give the following solutions to the above recurrences:
 3. y_n = y_0 * 2 ^ n
 4. y_n = (-10 * 2 ^ n) + (10 * 3 ^ n) + (y_0 * 3 ^ n) + (-4 * 2 ^ n * n) + (-1 * 2 ^ n * n ^ 2)
 
-###Divide and Conquer recurrences
+### Divide and Conquer recurrences
 
 These are recurrences of the form:
 
@@ -44,7 +44,7 @@ OCRS will give the following solutions to the above recurrences:
 2. y_n = y_1 * n + n * log2(n)
 3. y_n = -2 * n + 2 * n ^ (log2(3)) + y_1 * n ^ (log2(3))
 
-###Matrix recurrences
+### Matrix recurrences
 
 OCRS able to solve what we call "matrix recurrences". These are recurrences of the form:
 
@@ -72,7 +72,7 @@ y_n == (-3/2 + 2 ^ n + (2 * x_0 * 2 ^ n) + (-1 * y_0 * 2 ^ n) + (1/2 * 3 ^ n) + 
 
 There are two special situations that can occur with matrix recurrences:
 
-####A has non-rational eigenvalues
+#### A has non-rational eigenvalues
 If A has non-rational eigenvalues (irrational or complex) then OCRS will be unable to return a solution to the reccurence in standard algebra. (To solve this problem OCRS would need to be able to factor arbitrary polynomials). However, OCRS will still have a unique internal representation for the recurrence solution. Thus, in this situation OCRS will return this "Implicitly intrepreted function" (IIF) as a unintrepreted function characterized by a cannonical string.
 
 Consider the following example:
@@ -89,7 +89,7 @@ x_n == (x_0 + (-9 * x_0 * f{(10 + (-2 * q) + q ^ 2) ^ -1}(n))
 ```
 The IIFs in question are f{(10 + (-2 * q) + q ^ 2) ^ -1}(n), and f{(10 + (-2 * q) + q ^ 2) ^ -1}(n+1), where f{(10 + (-2 * q) + q ^ 2) ^ -1}(n+1) is the same function as the first just shifted by one.
 
-####A has eigenvalues of zero
+#### A has eigenvalues of zero
 In this situation the result requires a piecewise function or a shift operator to represent the solution. When solving a matrix recurrence OCRS has the ability to return a solution in either representation.
 
 Building
@@ -119,7 +119,7 @@ To generate documentation:
 ocaml setup.ml -doc
 ```
 
-###Installing with opam
+### Installing with opam
 While OCRS is not part of the default opam repository, there are appropriate files in the opam directory for the most current version of OCRS to be installed via a custom opam repository.
 
 If you would like to install OCRS via this method copy the files in the opam directory to your custom repository.
