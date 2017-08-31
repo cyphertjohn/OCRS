@@ -95,11 +95,11 @@ In this situation the result requires a piecewise function or a shift operator t
 Building
 ====
 
-OCRS uses gmp to as an internal representation for constants. Therefore, to use OCRS an install of gmp and bindings for ocaml are required.
+OCRS uses gmp to as an internal representation for constants. Therefore, to use OCRS an install of gmp (https://gmplib.org/) is required.
 
 For Ubuntu, one way of doing this would be to run:
 ```
-sudo apt-get install libgmp-dev libmpfr-dev
+sudo apt-get install libgmp-dev
 ```
 
 OCRS uses the ocaml build tool oasis to assist in building. Note that it is not required to have oasis installed to use OCRS though. 
