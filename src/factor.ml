@@ -328,7 +328,7 @@ let r_matrix u n p =
     )
   in
   let lis_of_arrs = get_remainder_polys [] 0 in
-  let result = Mat_helpers.transpose_square_matrix (Array.of_list lis_of_arrs) in
+  let result = Mat_helpers.transpose_matrix (Array.of_list lis_of_arrs) in
   let _ = 
     for i = 0 to (n-1) do result.(i).(i) <- irem (mpz_sub result.(i).(i) (Mpz.init_set_si 1)) p done in
   result

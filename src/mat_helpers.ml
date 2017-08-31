@@ -1,13 +1,14 @@
+(** This module contains some basic useful operations for dealing with matrix expressions, and matrices *)
 open Type_def
 
-
-
+(** This function takes an ovec and returns a array of expressions, by applying the subscript of the ovec to each string of the ovec *)
 let apply_subscript_to_ovec ovec = 
   match ovec with
   | Ovec (idents, subscript) ->
     Array.map (fun x -> Output_variable(x, subscript)) idents
   ;;
 
+(** Same as the previous function except for op_expressions *)
 let apply_subscript_to_ovec_op ovec = 
   match ovec with
   | Ovec (idents, subscript) ->
@@ -15,8 +16,8 @@ let apply_subscript_to_ovec_op ovec =
   ;;
 
 
-
-let transpose_square_matrix matrix = 
+(** Transpose a matrix *)
+let transpose_matrix matrix = 
   let m = Array.length matrix in
   if m = 0 then matrix
   else (
@@ -35,7 +36,7 @@ let transpose_square_matrix matrix =
   )
   ;;
 
-
+(** Produce a formatted string representing the matrix recurrence *)
 let mat_rec_to_string primed matrix unprimed add constr = 
   let primed_str = Array.map Expr_helpers.expr_to_string (apply_subscript_to_ovec primed) in
   let unprimed_str = Array.map Expr_helpers.expr_to_string (apply_subscript_to_ovec unprimed) in
@@ -44,7 +45,7 @@ let mat_rec_to_string primed matrix unprimed add constr =
   let length_of_biggest_primed = Array.fold_left (fun a b -> max a (String.length b)) 0 primed_str in
   let length_of_biggest_unprimed = Array.fold_left (fun a b -> max a (String.length b)) 0 unprimed_str in
   let length_of_biggest_add = Array.fold_left (fun a b -> max a (String.length b)) 0 add_str in
-  let cols = transpose_square_matrix matrix_str in
+  let cols = transpose_matrix matrix_str in
   let lens = Array.map (fun x -> Array.fold_left (fun a b -> max a (String.length b)) 0 x) cols in
   let string_rows = Array.make (Array.length matrix_str) "" in
   
@@ -87,6 +88,7 @@ let mat_rec_to_string primed matrix unprimed add constr =
   String.concat "\n" (Array.to_list string_rows)
   ;;
 
+(** Produce a formatted string representing the matrix recurrence *)
 let rec matrix_rec_to_string mat_rec = 
   match mat_rec with
  | VEquals(primed, matrix, unprimed, add) ->
@@ -101,23 +103,26 @@ let rec matrix_rec_to_string mat_rec =
    mat_rec_to_string primed matrix unprimed add ">="
  ;;
 
-
+(** Produce a string showing the intermediate representation of an ovec *)
 let ovec_to_string_IR ovec = 
   match ovec with
   | Ovec (idents, subscript) ->
     "Ovec ([|" ^ (String.concat "; " (Array.to_list idents)) ^ "|], " ^ Expr_helpers.subscript_to_string_IR subscript ^ ")"
   ;;
 
+(** Produce a string showing the intermediate representation of an matrix *)
 let mat_to_string_IR matrix = 
   let matrix_str = Array.map (fun x -> Array.map Mpq.to_string x) matrix in
   let row_str = Array.map (fun x -> "[|" ^ (String.concat "; " (Array.to_list x)) ^ "|]") matrix_str in
   "[|" ^ (String.concat "; " (Array.to_list row_str)) ^ "|]"
   ;;
 
+(** Produce a string showing the intermediate representation of an expression array *)
 let expr_array_to_string_IR expr_arr = 
   "[|" ^ (String.concat "; " (Array.to_list (Array.map Expr_helpers.expr_to_string_IR expr_arr))) ^ "|]"
   ;;
 
+(** Produce a string showing the intermediate representation of a matrix recurrence *)
 let rec matrix_rec_to_string_IR mat_rec =
   match mat_rec with
  | VEquals(primed, matrix, unprimed, add) ->

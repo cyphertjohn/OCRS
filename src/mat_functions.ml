@@ -95,7 +95,7 @@ let multiply_scalar_through_vector vector scalar =
 
 let invert_matrix matrix = 
   let scalar = OpPow(determinant matrix, OpRational (Mpq.init_set_si (-1) 1)) in
-  let cofactor_transpose_matrix = Mat_helpers.transpose_square_matrix (get_matrix_of_cofactors matrix) in
+  let cofactor_transpose_matrix = Mat_helpers.transpose_matrix (get_matrix_of_cofactors matrix) in
   multiply_scalar_through cofactor_transpose_matrix scalar
   ;;
 

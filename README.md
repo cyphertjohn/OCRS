@@ -143,4 +143,4 @@ OCRS is based on the operational calculus algebra created by Lothar Berg. For mo
 * Currently the only paper in that directory is a write-up for a class project that only covers how to solve the first class of recurrences listed here. There is no current write-up for solving the other two classes of recurrences.
 
 
-The test.ml file in the examples directory gives some example usages of OCRS.
+The test.ml file in the examples directory gives some example usages of OCRS. To learn the usage of OCRS I recommend looking there as well as looking at the documentation for the modules Ocrs and Type_def.

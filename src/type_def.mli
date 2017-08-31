@@ -27,13 +27,13 @@ type expr =
           | Log of Mpq.t *  expr        (** Base b log *)
           | Pow of expr * expr          (** Binary exponentiation *)
           | Binomial of expr * expr     (** Binomial coeffiecient *)
-          | IDivide of expr * Mpq.t     (** Integer Division *)
-          | Sin of expr                 (** Trigonometric sine *)
-          | Cos of expr                 (** Trigonometric cosine *)
-          | Arctan of Mpq.t             (** Inverse tangent function *)
-          | Mod of expr * expr          (** Modular expression *)
-          | Pi                          (** The trancendental number pi *)
-          | Factorial of expr           (** Factorial *)
+          | IDivide of expr * Mpq.t     (** Integer Division. Currently unsupported *)
+          | Sin of expr                 (** Trigonometric sine. Currently unsupported *)
+          | Cos of expr                 (** Trigonometric cosine. Currently unsupported *)
+          | Arctan of Mpq.t             (** Inverse tangent function. Currently unsupported *)
+          | Mod of expr * expr          (** Modular expression. Currently unsupported *)
+          | Pi                          (** The trancendental number pi. Currently unsupported *)
+          | Factorial of expr           (** Factorial. Currently unsupported *)
           | Iif of string * subscript	(** Implicitly interpreted function *)
           | Shift of int * expr		(** first argument represents amount to shift by. Neg ints represent left shifts *)
           | Undefined                   (** An expression whose value is undefined. ie x/0, log(-1), etc *)
@@ -44,22 +44,30 @@ type inequation = Equals of expr * expr 	(** = *)
 		| Less of expr * expr		(** < *)
 		| GreaterEq of expr * expr	(** >= *)
 		| Greater of expr * expr	(** > *)
-
-
-type interval = Bounded of int * int
-              | BoundBelow of int
-              ;;
-
-type piece_ineq = PieceWiseIneq of string * ((interval * inequation) list) ;;
-
-type piece_expr = PieceWiseExpr of string * ((interval * expr) list);;
-
+                ;;
 
 (** {7 Expression Order} *)
 
 (** Definition of the comparison between two expressions. 
     @return < 0 if a < b, 0 if a = b, and > 0 if a > b *)
-val expr_order : expr -> expr -> int
+val expr_order : expr -> expr -> int ;;
+
+
+(** {6 Piece-wise functions} *)
+
+type interval = Bounded of int * int		(** \[a, b\] *)
+              | BoundBelow of int		(** \[a, inf) *)
+              ;;
+
+(** The first argument is the variable used in the guard. The second argument is a list of pairs where the first
+    argument is an interval, such that when the variable used in the guard is within the interval then the inequation
+    is the second argument of the pair *)
+type piece_ineq = PieceWiseIneq of string * ((interval * inequation) list) ;;
+
+(** The first argument is the variable used in the guard. The second argument is a list of pairs where the first
+    argument is an interval, such that when the variable used in the guard is within the interval then the expression
+    is the second argument of the pair *)
+type piece_expr = PieceWiseExpr of string * ((interval * expr) list);;
 
 
 (** {6 Operational Calculus expressions} *)
@@ -105,21 +113,29 @@ val op_expr_order : op_expr -> op_expr -> int
 
 (** {6 Matrix Recurrences} *)
 
+(** A vector of output variables. An array of strings bound by a subscript *)
 type ovec = Ovec of string array * subscript;;
 
+(** A matrix recurrence is a 4-tuple (x', A, x, b) over say variable n, representing x' >=< x*A+b, where 
+- x' is an ovec with subscript n+1
+- A is a matrix with entries of type Mpq.t
+- x is an ovec with subscript n
+- b is an array of expressions 
+
+*)
 type matrix_rec =
-          | VEquals of ovec * Mpq.t array array * ovec * expr array
-          | VLess of ovec * Mpq.t array array * ovec * expr array
-          | VLessEq of ovec * Mpq.t array array * ovec * expr array
-          | VGreater of ovec * Mpq.t array array * ovec * expr array
-          | VGreaterEq of ovec * Mpq.t array array * ovec * expr array
+          | VEquals of ovec * Mpq.t array array * ovec * expr array	(** = *)
+          | VLess of ovec * Mpq.t array array * ovec * expr array	(** < *)
+          | VLessEq of ovec * Mpq.t array array * ovec * expr array	(** <= *)
+          | VGreater of ovec * Mpq.t array array * ovec * expr array	(** > *)
+          | VGreaterEq of ovec * Mpq.t array array * ovec * expr array	(** >= *)
           ;;
 
-
+(** The same as matrix_rec except the additive array is a piece-wise expression *)
 type matrix_rec_piece_add =
-          | PVEquals of ovec * Mpq.t array array * ovec * piece_expr array
-          | PVLess of ovec * Mpq.t array array * ovec * piece_expr array
-          | PVLessEq of ovec * Mpq.t array array * ovec * piece_expr array
-          | PVGreater of ovec * Mpq.t array array * ovec * piece_expr array
-          | PVGreaterEq of ovec * Mpq.t array array * ovec * piece_expr array
+          | PVEquals of ovec * Mpq.t array array * ovec * piece_expr array	(** = *)
+          | PVLess of ovec * Mpq.t array array * ovec * piece_expr array	(** < *)
+          | PVLessEq of ovec * Mpq.t array array * ovec * piece_expr array	(** <= *)
+          | PVGreater of ovec * Mpq.t array array * ovec * piece_expr array	(** > *)
+          | PVGreaterEq of ovec * Mpq.t array array * ovec * piece_expr array	(** >= *)
           ;;

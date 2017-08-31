@@ -1,5 +1,7 @@
+(** This module contains functions to take in a piece-wise function and add shifts to it to create a single expression *)
 open Type_def
 
+(** Shift an expression where the string is within the two integers to the expression *)
 let shift_expr unsimp_expr lower upper identifier =
   let expr = Expr_simplifications.automatic_simplify unsimp_expr in
   if lower = 0 then (
@@ -17,12 +19,14 @@ let shift_expr unsimp_expr lower upper identifier =
   )
   ;;
 
+(** Take an interval and produce a piar. Infinity is represented by -1. *)
 let interval_to_pair interv = 
   match interv with
   | Bounded (lo, hi) -> (lo, hi)
   | BoundBelow value -> (value, -1)
   ;;
 
+(** Shift a piece-wise expression *)
 let shift_piece_expr piecewise =
   match piecewise with
   | PieceWiseExpr (identifier, inter_expr_list) ->
@@ -32,6 +36,7 @@ let shift_piece_expr piecewise =
     Expr_simplifications.automatic_simplify (Sum new_exprs)
   ;;
 
+(** Shift a piece-wise inequation *)
 let shift_piece_ineq piecewise =
   match piecewise with
   | PieceWiseIneq (identifier, inter_ineq_list) ->

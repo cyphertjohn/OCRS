@@ -1,5 +1,7 @@
+(** This module contains functions to support taking in a expression with shifts and returns a piece-wise function *)
 open Type_def
 
+(** This function removes all left shifts, which should only be applied to IIFs *)
 let rec remove_left_shifts expr = 
   match expr with
   | Symbolic_Constant _ | Base_case _ | Output_variable _ | Input_variable _ | Rational _ | Arctan _ | Pi | Iif _ | Undefined -> 
@@ -48,6 +50,7 @@ let rec remove_left_shifts expr =
   | _ -> expr
   ;;
 
+(** Sorts and removes duplicates of a list *)
 let sort_and_remove_duplicates l = 
   let rec remove_dups lst = 
     (match lst with
@@ -56,7 +59,7 @@ let sort_and_remove_duplicates l =
   List.sort compare (remove_dups l)
   ;;
 
-
+(** Get all the values used in shifts *)
 let rec get_break_points expr = 
   match expr with                                                                        
   | Symbolic_Constant _ | Base_case _ | Output_variable _ | Input_variable _ | Rational _ | Arctan _ | Pi | Iif _ | Undefined ->  
@@ -95,6 +98,7 @@ let rec get_break_points expr =
     sort_and_remove_duplicates ([shift_v] @ (get_break_points inner_expr))
   ;;
 
+(** Remove all shifts from an inequation split up into left and right pieces *)
 let deshift left_expr right_expr const input_ident =
   let no_left_shifts = remove_left_shifts right_expr in
   let break_points = get_break_points no_left_shifts in
@@ -195,6 +199,7 @@ let deshift left_expr right_expr const input_ident =
     )
   ;;
 
+(** Remove shifts from an inequation *)
 let deshift_ineq ineq = 
   let (_, ivars) = Expr_helpers.find_ovar_ivar ineq in
   if (List.length ivars) <> 1 then failwith "deshifting multivariate"
