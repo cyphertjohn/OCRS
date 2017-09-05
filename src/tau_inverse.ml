@@ -28,6 +28,10 @@ let rec complete_tiling op_expr =
       true
   | OpPow(OpSum [Q; OpProduct[OpRational neg_one; OpSymbolic_Constant a]], OpRational neg_c) when Expr_simplifications.is_int neg_c && (Mpq.cmp_si neg_c 0 1) < 0 && (Mpq.cmp_si neg_one (-1) 1)=0 ->
       true
+  | OpPow(OpSum [OpRational b; OpProduct[OpRational a; Q]], OpRational c) when Expr_simplifications.is_int c ->
+      let b_over_a = Mpq.init() in
+      let _ = Mpq.div b_over_a b a in
+      complete_tiling (OpPow(OpSum[OpRational b_over_a; Q], OpRational c))
   | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational b; OpProduct[OpRational a; Q]], OpRational rat2)] when (Mpq.cmp_si rat1 (-1) 1)=0 && (Mpq.cmp_si rat2 (-1) 1)=0 ->
       true
   | OpProduct [OpSum [OpRational neg_one_a; Q]; OpPow(OpSum[Q; OpProduct[OpRational neg_one_b; OpSymbolic_Constant a]], OpRational neg_one_c)] when (Mpq.cmp_si neg_one_a (-1) 1)=0
@@ -103,6 +107,12 @@ let rec tau_inverse op_expr input_ident =
       let k = Mpq.init () in
       let _ = Mpq.neg k neg_k in	(* should automatically simplify these expressions before sending out *)
       Product [Sum [Rational (Mpq.init_set_si (-1) 1); Pow(Rational k , Input_variable input_ident)]; Pow(Sum [Rational (Mpq.init_set_si (-1) 1); Rational k], Rational (Mpq.init_set_si (-1) 1))]
+  | OpPow(OpSum [OpRational b; OpProduct[OpRational a; Q]], OpRational c) when Expr_simplifications.is_int c ->
+      let a_to_c = Expr_simplifications.exp_by_squaring_int a c in
+      let b_over_a = Mpq.init() in
+      let _ = Mpq.div b_over_a b a in
+      Product[Rational a_to_c; tau_inverse (OpPow(OpSum[OpRational b_over_a; Q], OpRational c)) input_ident]
+
   | OpPow(OpSum [OpRational neg_a; Q], OpRational neg_c) when Expr_simplifications.is_int neg_c && (Mpq.cmp_si neg_c 0 1)<0 ->
       let a = Mpq.init () in
       let c = Mpq.init () in
