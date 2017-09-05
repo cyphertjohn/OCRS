@@ -64,7 +64,7 @@ An example of this type of recurrence is the following:
 |y_{n + 1} |   | -2 4 |   | y_n |   | 1 |
 ```
 
-which has the followign solution:
+which has the following solution:
 ```
 x_n == (-5/4 + 2 ^ n + (2 * x_0 * 2 ^ n) + (-1 * y_0 * 2 ^ n) + (1/4 * 3 ^ n) + (-1 * x_0 * 3 ^ n) + (y_0 * 3 ^ n) + (-3/2 * n))
 y_n == (-3/2 + 2 ^ n + (2 * x_0 * 2 ^ n) + (-1 * y_0 * 2 ^ n) + (1/2 * 3 ^ n) + (-2 * x_0 * 3 ^ n) + (2 * y_0 * 3 ^ n) + (-1 * n))
@@ -73,7 +73,7 @@ y_n == (-3/2 + 2 ^ n + (2 * x_0 * 2 ^ n) + (-1 * y_0 * 2 ^ n) + (1/2 * 3 ^ n) + 
 There are two special situations that can occur with matrix recurrences:
 
 #### A has non-rational eigenvalues
-If A has non-rational eigenvalues (irrational or complex) then OCRS will be unable to return a solution to the reccurence in standard algebra. (To solve this problem OCRS would need to be able to factor arbitrary polynomials). However, OCRS will still have a unique internal representation for the recurrence solution. Thus, in this situation OCRS will return this "Implicitly intrepreted function" (IIF) as a unintrepreted function characterized by a cannonical string.
+If A has non-rational eigenvalues (irrational or complex) then OCRS will be unable to return a solution to the recurrence in standard algebra. (To solve this problem OCRS would need to be able to factor arbitrary polynomials). However, OCRS will still have a unique internal representation for the recurrence solution. Thus, in this situation OCRS will return this "Implicitly interpreted function" (IIF) as a un-interpreted function characterized by a canonical string.
 
 Consider the following example:
 ```
@@ -95,7 +95,12 @@ In this situation the result requires a piecewise function or a shift operator t
 Building
 ====
 
-OCRS uses gmp to as an internal representation for constants. Therefore, to use OCRS a install of gmp and bindings for ocaml are required.
+OCRS uses gmp to as an internal representation for constants. Therefore, to use OCRS an install of gmp (https://gmplib.org/) is required.
+
+For Ubuntu, one way of doing this would be to run:
+```
+sudo apt-get install libgmp-dev
+```
 
 OCRS uses the ocaml build tool oasis to assist in building. Note that it is not required to have oasis installed to use OCRS though. 
 
