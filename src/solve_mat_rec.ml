@@ -68,7 +68,8 @@ let simplify_inv_matrix matrix =
 
 let solve_mat_rec primed matrix unprimed add constr print = 
   (* check to make sure primed subscript is n+1 *)
-  let _ = print_endline (Mat_helpers.matrix_rec_to_string (VEquals(primed, matrix, unprimed, add))) in
+  if print then
+    print_endline (Mat_helpers.matrix_rec_to_string (VEquals(primed, matrix, unprimed, add)));
   let size = Array.length matrix in
   let q_matrix = Array.make_matrix size size (OpRational (Mpq.init_set_si 0 1)) in
   let _ = 
