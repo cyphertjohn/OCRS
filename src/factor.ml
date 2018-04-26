@@ -641,7 +641,7 @@ let true_factors u l p k =
   let factors = ref [] in
   let m = ref 1 in
   let _ = 
-    while !m <= (List.length l)/2 do
+    while !m <= (List.length !big_l)/2 do
       let big_c = ref (comb !big_l !m) in
       let _ =
         while (List.length !big_c) <> 0 do

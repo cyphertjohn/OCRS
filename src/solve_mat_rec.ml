@@ -68,7 +68,7 @@ let simplify_inv_matrix matrix =
 
 let solve_mat_rec primed matrix unprimed add constr print = 
   (* check to make sure primed subscript is n+1 *)
-  let _ = print_endline (Mat_helpers.matrix_rec_to_string (VEquals(primed, matrix, unprimed, add))) in
+  let _ = if print then print_endline (Mat_helpers.matrix_rec_to_string (VEquals(primed, matrix, unprimed, add))) in
   let size = Array.length matrix in
   let q_matrix = Array.make_matrix size size (OpRational (Mpq.init_set_si 0 1)) in
   let _ = 
@@ -100,7 +100,7 @@ let solve_mat_rec primed matrix unprimed add constr print =
       done in
     ans
     ) in
-  let add_vec_op_calc = Array.map (fun x -> Expr_to_opcalc.expr_to_opCalc x ivar_ident) add in
+  let add_vec_op_calc = Array.map (fun x -> Expr_to_opcalc.expr_to_opCalc (Expr_transforms.algebraic_expand x) ivar_ident) add in
   let new_vec = Mat_functions.multiply_scalar_through_vector base_case_vec (OpMinus(Q, OpRational (Mpq.init_set_si 1 1))) in
   let new_vec = Mat_functions.add_vectors new_vec add_vec_op_calc in
   let new_matrix = Mat_functions.invert_matrix_fast (Mat_functions.sub_matrix q_matrix op_rational_matrix) in

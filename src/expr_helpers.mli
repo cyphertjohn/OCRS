@@ -36,7 +36,7 @@ val inequation_to_string_IR : Type_def.inequation -> string
 val get_right_left_constr : Type_def.inequation list -> (Type_def.expr list) * (Type_def.expr list) * (string list) 
 
 (** Tells whether an expression is a constant expression or not *)
-val is_const : Type_def.expr -> bool
+val is_const : Type_def.expr -> string -> bool
 
 (** Substitutes all occurences of an expression with another for a given expression. substitute_expr x old_expr new_expr, will return a new expression where all occurrences of old_expr are replaced with new_expr in x *)
 val substitute_expr : Type_def.expr -> Type_def.expr -> Type_def.expr -> Type_def.expr

@@ -361,40 +361,46 @@ let inequation_to_string_IR e =
       "Greater (" ^ expr_to_string_IR left ^ ", " ^ expr_to_string_IR right ^ ")"
   ;;
 
-let rec is_const expr =
+let rec is_const expr ivar_ident =
   match expr with
-  | Rational _ | Base_case _ | Symbolic_Constant _ | Pi | Arctan _ | Iif _ ->
+  | Rational _ | Base_case _ | Symbolic_Constant _ | Pi | Arctan _ ->
     true
   | Output_variable _ | Input_variable _ | Undefined -> false
   | Pow (left, right) ->
-    (is_const left) && (is_const right)
+    (is_const left ivar_ident) && (is_const right ivar_ident)
   | Times (left, right) ->
-    (is_const left) && (is_const right)
+    (is_const left ivar_ident) && (is_const right ivar_ident)
   | Product prod_list ->
-    List.for_all is_const prod_list
+    List.for_all (fun x -> is_const x ivar_ident) prod_list
   | Plus (left, right) ->
-    (is_const left) && (is_const right)
+    (is_const left ivar_ident) && (is_const right ivar_ident)
   | Sum sum_list ->
-    List.for_all is_const sum_list
+    List.for_all (fun x -> is_const x ivar_ident) sum_list
   | Divide (left, right) ->
-    (is_const left) && (is_const right)
+    (is_const left ivar_ident) && (is_const right ivar_ident)
   | Minus (left, right) ->
-    (is_const left) && (is_const right)
+    (is_const left ivar_ident) && (is_const right ivar_ident)
   | Log (base, expression) ->
-    is_const expression
+    is_const expression ivar_ident
   | Binomial (left, right) ->
-    (is_const left) && (is_const right)
+    (is_const left ivar_ident) && (is_const right ivar_ident)
   | Factorial expression ->
-    is_const expression
+    is_const expression ivar_ident
   | IDivide (num, _) ->
-    is_const num
+    is_const num ivar_ident
   | Sin inner_expr ->
-    is_const inner_expr
+    is_const inner_expr ivar_ident
   | Cos inner_expr ->
-    is_const inner_expr
+    is_const inner_expr ivar_ident
   | Mod (left, right) ->
-    (is_const left) && (is_const right)
-  | Shift (_, expression) -> is_const expression
+    (is_const left ivar_ident) && (is_const right ivar_ident)
+  | Shift (_, expression) -> is_const expression ivar_ident
+  | Iif (_, sub) ->
+    (match sub with
+    | SAdd (ident, _) when ident = ivar_ident -> false
+    | SSVar ident when ident = ivar_ident -> false
+    | _ -> true
+    )
   ;;
 
 

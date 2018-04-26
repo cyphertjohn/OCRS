@@ -75,17 +75,17 @@ let rec binomial_transform expr =
 
 (* Also assumes all output variables are n or higher *)
 let rec expr_to_opCalc expr ivar_ident =
-  match expr with
+  (match expr with
   | Plus (left, right) ->							(* should not be called *)
-      OpPlus(expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)
+      Op_simplifications.op_automatic_simplify (OpPlus(expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident))
   | Minus (left, right) ->							(* Minuses should be removed *)
-      OpMinus(expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)			(* this method should not be called *)
+      Op_simplifications.op_automatic_simplify (OpMinus(expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident))			(* this method should not be called *)
   | Times (left, right) ->							(* also should not be called *)
-      OpTimes(expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)
+      expr_to_opCalc (Expr_simplifications.automatic_simplify expr) ivar_ident
   | Divide (left, right) ->
-      OpDivide (expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)
+      expr_to_opCalc (Expr_simplifications.automatic_simplify expr) ivar_ident
   | Product expr_list ->
-      let (const_list, var_list) = List.partition Expr_helpers.is_const expr_list in
+      let (const_list, var_list) = List.partition (fun x -> Expr_helpers.is_const x ivar_ident) expr_list in
       if (List.length const_list) <> 0 then OpProduct ((List.map (fun x -> expr_to_opCalc x ivar_ident) const_list) @ [expr_to_opCalc (Expr_simplifications.automatic_simplify (Product var_list)) ivar_ident])
       else
         (match expr_list with
@@ -108,7 +108,8 @@ let rec expr_to_opCalc expr ivar_ident =
         | Pow (Symbolic_Constant sym, Input_variable str1) :: Pow(Input_variable str, Rational rat) :: [] when str = str1 ->
           let new_expr = (Expr_transforms.algebraic_expand (Expr_simplifications.automatic_simplify (Product [binomial_transform (Pow (Input_variable str, Rational rat)); Pow(Symbolic_Constant sym, Input_variable str)]))) in
           expr_to_opCalc new_expr ivar_ident
-        | _ -> raise (Expr_to_op_exc "Can't transform non-linear product"))
+        | _ -> Unit_mult.unit_mult_list (List.map (fun x -> expr_to_opCalc x ivar_ident) expr_list))
+(*raise (Expr_to_op_exc "Can't transform non-linear product"))*)
   | Sum expr_list ->
       OpSum (List.map (fun x -> expr_to_opCalc x ivar_ident) expr_list)  					(* convert all list elem to strings concat with star *)
   | Symbolic_Constant ident ->
@@ -139,11 +140,11 @@ let rec expr_to_opCalc expr ivar_ident =
   | Rational rat ->
       OpRational rat
   | Log (base, expression) ->
-      if (Expr_helpers.is_const expression) then (OpLog (base, expr_to_opCalc expression ivar_ident))
+      if (Expr_helpers.is_const expression ivar_ident) then (OpLog (base, expr_to_opCalc expression ivar_ident))
       else (raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr))))
       (* don't know what to do here *)
   | Pow (left, right) ->
-      if Expr_helpers.is_const left && Expr_helpers.is_const right then OpPow (expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)
+      if Expr_helpers.is_const left ivar_ident && Expr_helpers.is_const right ivar_ident then OpPow (expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)
       else
         (match (left, right) with
         | (_, Sum sumList) ->
@@ -174,7 +175,7 @@ let rec expr_to_opCalc expr ivar_ident =
       raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
   | Undefined ->
       OpUndefined
-  | IDivide (num, denom) when Expr_helpers.is_const num ->
+  | IDivide (num, denom) when Expr_helpers.is_const num ivar_ident ->
       SymIDivide (expr_to_opCalc num ivar_ident, denom)
   | IDivide (Input_variable ident, denom) ->
       if Expr_simplifications.is_int denom then
@@ -215,6 +216,7 @@ let rec expr_to_opCalc expr ivar_ident =
   | Shift (shift_v, expression) ->
       let res = expr_to_opCalc expression ivar_ident in
       OpTimes(OpPow(Q, OpRational (Mpq.init_set_si ((-1)*shift_v) 1)), res)
+  )
   ;;
 
 

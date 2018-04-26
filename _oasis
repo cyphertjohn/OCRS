@@ -14,7 +14,7 @@ Library ocrs
   Path:       src
   BuildTools: ocamlbuild
   Modules:    Ocrs, Type_def, Expr_helpers, Lexer, Parser, Mat_helpers, OpLexer, OpParser, Deshift, Shift
-  InternalModules: Factor, Solve_mat_rec, Mat_functions, Expr_to_opcalc, Isolate_Ovar, Tau_inverse, Solve_rec, Op_transforms, Op_simplifications, Expr_simplifications, Expr_transforms
+  InternalModules: Factor, Solve_mat_rec, Mat_functions, Expr_to_opcalc, Isolate_Ovar, Tau_inverse, Solve_rec, Op_transforms, Op_simplifications, Expr_simplifications, Expr_transforms, Unit_mult
   XMETAEnable:	true
   BuildDepends: gmp
  
