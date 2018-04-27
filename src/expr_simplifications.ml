@@ -173,6 +173,7 @@ and simplify_sum expr_list =
      Undefined
   else
      (match expr_list with
+     | [] -> Rational (Mpq.init_set_si 0 1)
      | u_1 :: [] -> u_1		
      | _ ->
          let simp_list = simplify_sum_rec expr_list in 
