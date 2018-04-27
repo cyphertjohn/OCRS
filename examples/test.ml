@@ -369,6 +369,20 @@ let unit_test_result = Ocrs.solve_mat_rec unit_mult_test true;;
 List.iter (fun x -> print_endline (Expr_helpers.piece_to_string x)) unit_test_result;;
                        
 
+
+let pascals_recursive = VEquals(Ovec([|"2"|], SAdd("k", 1)),
+                       qqify [|[|1|]|],
+                       Ovec([|"2"|], SSVar "k"),
+                       [|Sum[
+                             Product[Rational (Mpq.init_set_si 2 1); Pow(Sum [Base_case ("0", 0); Input_variable "k"], Rational (Mpq.init_set_si 1 1))]; 
+                             Product[Rational (Mpq.init_set_si (-1) 1); Pow(Sum [Base_case ("0", 0); Input_variable "k"], Rational (Mpq.init_set_si 1 1)); Pow(Sum [Base_case ("1", 0); Input_variable "k"], Rational (Mpq.init_set_si 1 1))]; 
+                             Product[Rational (Mpq.init_set_si 1 1); Pow(Sum [Base_case ("0", 0); Input_variable "k"], Rational (Mpq.init_set_si 2 1))]; 
+                             Product[Rational (Mpq.init_set_si (-1) 1); Pow(Sum [Base_case ("1", 0); Input_variable "k"], Rational (Mpq.init_set_si 1 1))]]|]);;
+
+let pascals_recursive_test = Ocrs.solve_mat_rec pascals_recursive true;;
+List.iter (fun x -> print_endline (Expr_helpers.piece_to_string x)) pascals_recursive_test;;
+
+
 (*let unit_mult = VEquals(Ovec([|"x1y1";"x1y2";"x1";"x2y1";"x2y2";"x2";"y1";"y2"; "1"|], SAdd("k", 1)),
                qqify [|[| 0;0;0;-1;-1;-1;1;1;1|];
 		       [| 0;0;0;-1; 0; 0;1;0;0|];
