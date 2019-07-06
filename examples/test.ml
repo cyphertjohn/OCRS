@@ -1,6 +1,6 @@
 open Type_def;;
 
-
+(*
 let x1 = Equals(Output_variable("y", SAdd("n", 1)), Plus(Output_variable("y", SSVar "n"), Rational (Mpq.init_set_si 1 1)));;
 
 let y1 = Equals(Output_variable("y", SAdd("n", 1)), Times (Output_variable("y", SSVar "n"), Rational (Mpq.init_set_si 2 1)));;
@@ -174,11 +174,32 @@ print_endline "";;
 
 
 List.iter (fun x -> print_endline (Expr_helpers.piece_to_string x)) result;;
-
+*)
 
 
 
 let qqify = Array.map (Array.map (fun x -> Mpq.init_set_si x 1));;
+
+
+
+let unsound = VEquals (Ovec ([|"1"; "2"; "3"; "4"; "5"; "6"|], SAdd("k", 1)),
+                       qqify [|
+                         [| 6; 0; 0; 4; 0; 0|];
+                         [| 0; 4; 2; 0; 0; 0|];
+                         [| 2; 0; 0; 0; 0; 0|];
+                         [| 0; 2; 0; 0; 0; 0|];
+                         [| 5; 0; 0; 4; 1; 0|];
+                         [| 0; 3; 2; 0; 0; 1|]|],
+                       Ovec ([|"1"; "2"; "3"; "4"; "5"; "6"|], SSVar "k"),
+                       (Array.map (fun x -> Rational (Mpq.init_set_si x 1))
+                          [| 0; 7; 0; 7; 0; 4|]));;
+
+(*print_endline (Mat_helpers.matrix_rec_to_string unsound);;*)
+let result = Ocrs.solve_mat_rec unsound true;;
+print_endline "";;
+List.iter (fun x -> print_endline (Expr_helpers.piece_to_string x)) result;;
+
+(*
 let matrix_test_fib =
   VEquals (Ovec ([|"a"; "b"; "c"; "d"; "e"; "f"; "g"|], SAdd("n", 1)),
            qqify [|
@@ -403,4 +424,4 @@ print_endline "";;
 
 
 
-
+*)

@@ -37,8 +37,8 @@ let rec remove_left_shifts expr =
   | Shift (shift_v, Iif (str, subscript)) ->
     let new_subscript = 
       (match subscript with
-      | SAdd (ident, value) -> SAdd (ident, value + 1)
-      | SSVar (ident) -> SAdd (ident, 1)
+      | SAdd (ident, value) -> SAdd (ident, value + (-1) * shift_v)
+      | SSVar (ident) -> SAdd (ident, (-1) * shift_v)
       | _ -> failwith "Can't shift a SSDidv"
       )
     in
