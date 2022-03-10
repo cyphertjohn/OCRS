@@ -1,2 +1,2 @@
-http: "https://github.com/cyphertjohn/OCRS/archive/20190706.tar.gz"
-checksum: "d41d8cd98f00b204e9800998ecf8427e"
+http: "https://github.com/cyphertjohn/OCRS/archive/refs/tags/20221003.tar.gz"
+checksum: "80d844b45434048e9497dacbf814e631"
