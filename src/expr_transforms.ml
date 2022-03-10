@@ -58,7 +58,7 @@ let rec algebraic_expand expr =
   | _ -> expr
   ;;
 
-let rec algebraic_expand_inequation ineq = 
+let algebraic_expand_inequation ineq = 
   match ineq with
   | Equals(left, right) -> Equals(algebraic_expand left, algebraic_expand right)	(* temporary solution *)
   | Greater(left, right) -> Greater(algebraic_expand left, algebraic_expand right)

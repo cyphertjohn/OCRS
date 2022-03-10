@@ -22,7 +22,7 @@ let multiplicative_inverse_p t p =
   let ans = Mpz.init () in
   let p_minus_2 = Mpz.init () in
   let _ = Mpz.sub_ui p_minus_2 p 2 in
-  let _ = Mpz.powm ans t p_minus_2 p in
+  let _ = Mpz.powm ans t p_minus_2 ~modulo:p in
   ans
   ;;
 
@@ -347,7 +347,7 @@ let berlekamp_factor u p =
   )
   ;;
 
-
+(*
 let square_free_factor_rat u = 
   if (op_expr_order u (OpRational (Mpq.init_set_si 0 1))) = 0 then u
   else (
@@ -371,7 +371,7 @@ let square_free_factor_rat u =
     Op_simplifications.op_automatic_simplify (OpTimes(c, !p))
   )
   ;;
-
+*)
 
 let content poly = 
   let deg = int_of_string (Mpq.to_string (snd (Op_transforms.degree poly))) in
@@ -592,7 +592,7 @@ let gen_extend_sigma_p v p =
     let rec aux acc gcd remaining_lis = 
       (match remaining_lis with
       | [] -> acc
-      | hd :: tl -> 
+      | hd :: _ -> 
         let euc_res = euclidean_algorithm_p gcd hd p in
         let app = List.nth euc_res 1 in
         let bpp = List.nth euc_res 2 in

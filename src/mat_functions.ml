@@ -1,5 +1,6 @@
 open Type_def
 
+(*
 let remove_row_column row column matrix = 
   let size = Array.length matrix in
   let answer = ref [] in
@@ -17,6 +18,7 @@ let remove_row_column row column matrix =
   let lis_of_arrays = List.map Array.of_list res in
   Array.of_list lis_of_arrays
   ;;
+
 
 let rec determinant matrix = 
   if (Array.length matrix) = 2 then
@@ -52,7 +54,7 @@ let get_matrix_of_cofactors matrix =
   let lis_of_arrays = List.map Array.of_list res in
   Array.of_list lis_of_arrays
   ;;
-
+*)
 
 let dot_product a b = 
   if Array.length a <> Array.length b then failwith "dot_product of vectors of unequal length"
@@ -93,12 +95,11 @@ let multiply_scalar_through_vector vector scalar =
   ;;
 
 
-let invert_matrix matrix = 
+(*let invert_matrix matrix = 
   let scalar = OpPow(determinant matrix, OpRational (Mpq.init_set_si (-1) 1)) in
   let cofactor_transpose_matrix = Mat_helpers.transpose_matrix (get_matrix_of_cofactors matrix) in
   multiply_scalar_through cofactor_transpose_matrix scalar
   ;;
-
 
 let sub_vectors a b =
   if (Array.length a) <> (Array.length b) then failwith "Adding vectors of different length"
@@ -110,6 +111,7 @@ let sub_vectors a b =
     Array.of_list answer_list
     )
   ;;
+*)
 
 let sub_matrix a b =
   if (Array.length a) <> (Array.length b) || (Array.length (a.(0)) <> Array.length (b.(0))) then

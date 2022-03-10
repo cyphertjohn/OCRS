@@ -276,7 +276,7 @@ let partial_fraction_3 u v =
     | OpProduct prodList ->
       let is_denom in_expr = 
         (match in_expr with
-        | OpPow (base, OpRational exp) when (Mpq.cmp_si exp 0 1)<0 && Expr_simplifications.is_int exp ->
+        | OpPow (_, OpRational exp) when (Mpq.cmp_si exp 0 1)<0 && Expr_simplifications.is_int exp ->
           true
         | _ ->
           false
@@ -307,7 +307,7 @@ let rec partial_fraction expr =
   | OpProduct prodList ->
     let is_denom in_expr = 
       (match in_expr with
-      | OpPow (base, OpRational exp) when (Mpq.cmp_si exp 0 1)<0 && Expr_simplifications.is_int exp ->
+      | OpPow (_, OpRational exp) when (Mpq.cmp_si exp 0 1)<0 && Expr_simplifications.is_int exp ->
         true
       | _ ->
         false
@@ -377,7 +377,7 @@ let lcm a b =
   ;;
 
 
-let rec make_rat_expr unsimp_expr =
+let make_rat_expr unsimp_expr =
   let expr = Op_simplifications.op_automatic_simplify unsimp_expr in
   let rec get_new rat_exp =
     (match rat_exp with

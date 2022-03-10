@@ -14,16 +14,16 @@ let subscript_order a b =
   match (a, b) with
   | (SSVar a_str, SSVar b_str) ->
       String.compare a_str b_str
-  | (SSVar a_str, SAdd (b_str, b_index)) ->
+  | (SSVar a_str, SAdd (b_str, _)) ->
       if a_str <> b_str then String.compare a_str b_str
       else (-1)
-  | (SSVar a_str, SSDiv (b_str, b_index)) ->
+  | (SSVar a_str, SSDiv (b_str, _)) ->
       if a_str <> b_str then String.compare a_str b_str
       else (-1)
-  | (SAdd (a_str, a_index), SSVar b_str) ->
+  | (SAdd (a_str, _), SSVar b_str) ->
       if a_str <> b_str then String.compare a_str b_str
       else 1
-  | (SSDiv(a_str, a_index), SSVar b_str) ->
+  | (SSDiv(a_str, _), SSVar b_str) ->
       if a_str <> b_str then String.compare a_str b_str
       else 1
   | (SAdd (a_str, a_index), SAdd (b_str, b_index)) ->
@@ -32,10 +32,10 @@ let subscript_order a b =
   | (SSDiv(a_str, a_index), SSDiv (b_str, b_index)) ->
       if a_str <> b_str then String.compare a_str b_str
       else compare b_index a_index
-  | (SSDiv(a_str, a_index), SAdd (b_str, b_index)) ->
+  | (SSDiv(a_str, _), SAdd (b_str, _)) ->
       if a_str <> b_str then String.compare a_str b_str
       else (-1) 
-  | (SAdd(a_str, a_index), SSDiv (b_str, b_index)) ->
+  | (SAdd(a_str, _), SSDiv (b_str, _)) ->
       if a_str <> b_str then String.compare a_str b_str
       else 1
   ;;
@@ -115,8 +115,8 @@ let rec expr_order a b =
         let rec aux x y = 
             (match (x, y) with
             | ([], []) -> 0		(* the two lists are equal *)
-            | ([], y1) -> (-1)		(* n>m *)	(* O-3-3 *)
-            | (x1, []) -> 1		(* m>n *)	(* O-3-3 *)
+            | ([], _) -> (-1)		(* n>m *)	(* O-3-3 *)
+            | (_, []) -> 1		(* m>n *)	(* O-3-3 *)
             | (x_hd :: x_rest, y_hd :: y_rest) ->
                 if (expr_order x_hd y_hd) = 0 then aux x_rest y_rest	(* O-3-2 *)
                 else expr_order x_hd y_hd		(* O-3-1 *)
@@ -240,8 +240,8 @@ let rec op_expr_order a b =
         let rec aux x y = 
             (match (x, y) with
             | ([], []) -> 0		(* the two lists are equal *)
-            | ([], y1) -> (-1)		(* n>m *)	(* O-3-3 *)
-            | (x1, []) -> 1		(* m>n *)	(* O-3-3 *)
+            | ([], _) -> (-1)		(* n>m *)	(* O-3-3 *)
+            | (_, []) -> 1		(* m>n *)	(* O-3-3 *)
             | (x_hd :: x_rest, y_hd :: y_rest) ->
                 if (op_expr_order x_hd y_hd) = 0 then aux x_rest y_rest	(* O-3-2 *)
                 else op_expr_order x_hd y_hd		(* O-3-1 *)

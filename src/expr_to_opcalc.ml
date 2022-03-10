@@ -21,7 +21,7 @@ let transform_coefs = [|[|1; 0;    0;     0;      0;       0;        0;        0
 
 
 
-let rec binomial_transform expr =
+let binomial_transform expr =
   match expr with
   | Pow(Input_variable ident, Rational rat) when Expr_simplifications.is_int rat && (Mpq.cmp_si rat 0 1) > 0 ->
       if (Mpq.cmp_si rat 10 1) <= 0 then
@@ -80,9 +80,9 @@ let rec expr_to_opCalc expr ivar_ident =
       Op_simplifications.op_automatic_simplify (OpPlus(expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident))
   | Minus (left, right) ->							(* Minuses should be removed *)
       Op_simplifications.op_automatic_simplify (OpMinus(expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident))			(* this method should not be called *)
-  | Times (left, right) ->							(* also should not be called *)
+  | Times _ ->							(* also should not be called *)
       expr_to_opCalc (Expr_simplifications.automatic_simplify expr) ivar_ident
-  | Divide (left, right) ->
+  | Divide _ ->
       expr_to_opCalc (Expr_simplifications.automatic_simplify expr) ivar_ident
   | Product expr_list ->
       let (const_list, var_list) = List.partition (fun x -> Expr_helpers.is_const x ivar_ident) expr_list in
@@ -130,12 +130,12 @@ let rec expr_to_opCalc expr ivar_ident =
                    OpMinus (OpTimes (OpPow (Q, OpRational (Mpq.init_set_si shift 1)), OpOutput_variable (ident, SSVar loop_counter)), right_summation)
                )
        
-       | SSVar loop_counter ->
+       | SSVar _ ->
            OpOutput_variable (ident, subscript)
        | _ ->
            raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
        )
-  | Input_variable str ->
+  | Input_variable _ ->
       expr_to_opCalc (Binomial(expr, (Rational (Mpq.init_set_si 1 1)))) ivar_ident
   | Rational rat ->
       OpRational rat
@@ -151,11 +151,11 @@ let rec expr_to_opCalc expr ivar_ident =
           let aux exp = 
             Pow (left, exp) in
           expr_to_opCalc (Expr_simplifications.automatic_simplify (Product (List.map aux sumList))) ivar_ident
-        | (Input_variable ident, Rational rat) when Expr_simplifications.is_int rat && (Mpq.cmp_si rat 0 1)>0 ->
+        | (Input_variable _, Rational rat) when Expr_simplifications.is_int rat && (Mpq.cmp_si rat 0 1)>0 ->
           expr_to_opCalc (binomial_transform expr) ivar_ident
-        | (Rational rat, Input_variable ident) ->
+        | (Rational rat, Input_variable _) ->
           OpDivide(OpMinus(Q, OpRational (Mpq.init_set_si 1 1)), OpMinus(Q, OpRational rat))
-        | (Symbolic_Constant ident, Input_variable ivar_ident) -> 
+        | (Symbolic_Constant ident, Input_variable _) -> 
           OpDivide(OpMinus(Q, OpRational (Mpq.init_set_si 1 1)), OpMinus(Q, OpSymbolic_Constant ident))
         | _ -> 
           let expand_result = Expr_transforms.algebraic_expand expr in
@@ -163,7 +163,7 @@ let rec expr_to_opCalc expr ivar_ident =
           else raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr))))
   | Binomial (top, bottom) ->
       (match (top, bottom) with
-          | (Input_variable ident, Rational k) when (Expr_simplifications.is_int k) ->	(* if the binomial is of the form n choose k, where k is a constant int *)
+          | (Input_variable _, Rational k) when (Expr_simplifications.is_int k) ->	(* if the binomial is of the form n choose k, where k is a constant int *)
               let _ = Mpq.neg k k in
               OpPow (OpMinus (Q, OpRational (Mpq.init_set_si 1 1)), OpRational k)		(* appropriate transformation *)
           | _ ->
@@ -171,13 +171,13 @@ let rec expr_to_opCalc expr ivar_ident =
       )
   | Base_case (ident, index) ->
       OpBase_case (ident, index)
-  | Factorial child ->
+  | Factorial _ ->
       raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
   | Undefined ->
       OpUndefined
   | IDivide (num, denom) when Expr_helpers.is_const num ivar_ident ->
       SymIDivide (expr_to_opCalc num ivar_ident, denom)
-  | IDivide (Input_variable ident, denom) ->
+  | IDivide (Input_variable _, denom) ->
       if Expr_simplifications.is_int denom then
         OpDivide(OpRational (Mpq.init_set_si 1 1), OpMinus(OpPow(Q, OpRational denom), OpRational (Mpq.init_set_si 1 1)))
       else raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
@@ -189,7 +189,7 @@ let rec expr_to_opCalc expr ivar_ident =
       raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
   | Arctan (value) ->
       OpArctan (value)
-  | Mod (left, right) ->
+  | Mod _ ->
       raise (Expr_to_op_exc ("Error transforming " ^ (Expr_helpers.expr_to_string expr)))
   | Iif (left, right) ->
       let do_ivars_match_subscript_get_shift sub ivar = 
@@ -220,7 +220,7 @@ let rec expr_to_opCalc expr ivar_ident =
   ;;
 
 
-let rec inequation_to_opCalc inequation ivar_ident =
+let inequation_to_opCalc inequation ivar_ident =
   match inequation with
   | Equals (left, right) ->
       OpEquals (expr_to_opCalc left ivar_ident, expr_to_opCalc right ivar_ident)

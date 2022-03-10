@@ -1,0 +1,15 @@
+(library
+ (name OCRS)
+ (synopsis "A library for solving c-finite recurrences")
+ (public_name OCRS)
+ (modules :standard)
+; (private_modules polyLexer polyParse expLexer expParse prePoly)
+ (libraries gmp)
+ )
+
+
+(ocamllex
+(modules lexer opLexer))
+
+(menhir
+(modules parser opParser))

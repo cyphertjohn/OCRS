@@ -89,7 +89,7 @@ let mat_rec_to_string primed matrix unprimed add constr =
   ;;
 
 (** Produce a formatted string representing the matrix recurrence *)
-let rec matrix_rec_to_string mat_rec = 
+let matrix_rec_to_string mat_rec = 
   match mat_rec with
  | VEquals(primed, matrix, unprimed, add) ->
    mat_rec_to_string primed matrix unprimed add "=="
@@ -123,17 +123,17 @@ let expr_array_to_string_IR expr_arr =
   ;;
 
 (** Produce a string showing the intermediate representation of a matrix recurrence *)
-let rec matrix_rec_to_string_IR mat_rec =
+let matrix_rec_to_string_IR mat_rec =
   match mat_rec with
- | VEquals(primed, matrix, unprimed, add) ->
+ | VEquals(primed, matrix, _, add) ->
    "VEquals (" ^ (ovec_to_string_IR primed) ^ ", " ^ (mat_to_string_IR matrix) ^ ", " ^ (expr_array_to_string_IR add) ^ ")"
- | VLess(primed, matrix, unprimed, add) ->
+ | VLess(primed, matrix, _, add) ->
    "VLess (" ^ (ovec_to_string_IR primed) ^ ", " ^ (mat_to_string_IR matrix) ^ ", " ^ (expr_array_to_string_IR add) ^ ")"
- | VLessEq(primed, matrix, unprimed, add) ->
+ | VLessEq(primed, matrix, _, add) ->
    "VLessEq (" ^ (ovec_to_string_IR primed) ^ ", " ^ (mat_to_string_IR matrix) ^ ", " ^ (expr_array_to_string_IR add) ^ ")"
- | VGreater(primed, matrix, unprimed, add) ->
+ | VGreater(primed, matrix, _, add) ->
    "VGreater (" ^ (ovec_to_string_IR primed) ^ ", " ^ (mat_to_string_IR matrix) ^ ", " ^ (expr_array_to_string_IR add) ^ ")"
- | VGreaterEq(primed, matrix, unprimed, add) ->
+ | VGreaterEq(primed, matrix, _, add) ->
    "VGreaterEq (" ^ (ovec_to_string_IR primed) ^ ", " ^ (mat_to_string_IR matrix) ^ ", " ^ (expr_array_to_string_IR add) ^ ")"
  ;;
 

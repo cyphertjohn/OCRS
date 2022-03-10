@@ -7,7 +7,7 @@ let _ = print_endline "" in
 let rec repl str = 
   if str = "" then print_endline "Goodbye!"
   else
-    let _ = Ocrs.solve_rec_str str in
+    let _ = OCRS.Ocrs.solve_rec_str str in
     let _ = print_endline "" in
     let _ = print_string "Enter a recurrence: " in
     let str1 = read_line () in

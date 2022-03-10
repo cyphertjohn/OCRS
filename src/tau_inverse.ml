@@ -2,54 +2,47 @@ open Type_def
 
 exception Tau_inverse_exc of string
 
-let is_const op_expr = 
-  match op_expr with
-  | OpRational _ | OpBase_case _ | OpSymbolic_Constant _ ->
-      true
-  | _ -> false
-  ;;
-
 
 let rec complete_tiling op_expr = 
   match op_expr with
   | OpPow (OpSum [OpRational rat; Q], OpRational neg_k) when (Mpq.cmp_si rat (-1) 1)=0 && (Mpq.cmp_si neg_k 0 1)<0 && Expr_simplifications.is_int neg_k ->
       true
-  | OpProduct [OpPow (OpSum [OpRational neg_k; Q], OpRational rat2); OpSum [OpRational rat1; Q]] when (Mpq.cmp_si rat1 (-1) 1)=0 && (Mpq.cmp_si rat2 (-1) 1)=0 ->
+  | OpProduct [OpPow (OpSum [OpRational _; Q], OpRational rat2); OpSum [OpRational rat1; Q]] when (Mpq.cmp_si rat1 (-1) 1)=0 && (Mpq.cmp_si rat2 (-1) 1)=0 ->
       true
-  | OpProduct [OpPow (OpSum [OpRational neg_k; Q], OpRational rat2); OpSum [OpRational rat1; Q]] when (Mpq.cmp_si rat1 (-1) 1)=0 && (Mpq.cmp_si rat2 0 1)<0 && Expr_simplifications.is_int rat2 ->
+  | OpProduct [OpPow (OpSum [OpRational _; Q], OpRational rat2); OpSum [OpRational rat1; Q]] when (Mpq.cmp_si rat1 (-1) 1)=0 && (Mpq.cmp_si rat2 0 1)<0 && Expr_simplifications.is_int rat2 ->
       true
-  | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational neg_k; Q], OpRational rat2)] when (Mpq.cmp_si rat1 (-1) 1)=0 && (Mpq.cmp_si rat2 (-1) 1)=0 ->
+  | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational _; Q], OpRational rat2)] when (Mpq.cmp_si rat1 (-1) 1)=0 && (Mpq.cmp_si rat2 (-1) 1)=0 ->
       true
-  | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational neg_k; Q], OpRational rat2)] when (Mpq.cmp_si rat1 (-1) 1)=0 && (Mpq.cmp_si rat2 0 1)<0 && Expr_simplifications.is_int rat2 ->
+  | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational _; Q], OpRational rat2)] when (Mpq.cmp_si rat1 (-1) 1)=0 && (Mpq.cmp_si rat2 0 1)<0 && Expr_simplifications.is_int rat2 ->
       true
-  | OpPow (OpSum [OpRational neg_k; Q], OpRational rat1) when (Mpq.cmp_si rat1 (-1) 1)=0 ->
+  | OpPow (OpSum [OpRational _; Q], OpRational rat1) when (Mpq.cmp_si rat1 (-1) 1)=0 ->
       true
-  | OpPow(OpSum [OpRational neg_a; Q], OpRational neg_c) when Expr_simplifications.is_int neg_c && (Mpq.cmp_si neg_c 0 1) < 0 ->
+  | OpPow(OpSum [OpRational _; Q], OpRational neg_c) when Expr_simplifications.is_int neg_c && (Mpq.cmp_si neg_c 0 1) < 0 ->
       true
-  | OpPow(OpSum [Q; OpProduct[OpRational neg_one; OpSymbolic_Constant a]], OpRational neg_c) when Expr_simplifications.is_int neg_c && (Mpq.cmp_si neg_c 0 1) < 0 && (Mpq.cmp_si neg_one (-1) 1)=0 ->
+  | OpPow(OpSum [Q; OpProduct[OpRational neg_one; OpSymbolic_Constant _]], OpRational neg_c) when Expr_simplifications.is_int neg_c && (Mpq.cmp_si neg_c 0 1) < 0 && (Mpq.cmp_si neg_one (-1) 1)=0 ->
       true
   | OpPow(OpSum [OpRational b; OpProduct[OpRational a; Q]], OpRational c) when Expr_simplifications.is_int c ->
       let b_over_a = Mpq.init() in
       let _ = Mpq.div b_over_a b a in
       complete_tiling (OpPow(OpSum[OpRational b_over_a; Q], OpRational c))
-  | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational b; OpProduct[OpRational a; Q]], OpRational rat2)] when (Mpq.cmp_si rat1 (-1) 1)=0 && (Mpq.cmp_si rat2 (-1) 1)=0 ->
+  | OpProduct [OpSum [OpRational rat1; Q]; OpPow (OpSum [OpRational _; OpProduct[OpRational _; Q]], OpRational rat2)] when (Mpq.cmp_si rat1 (-1) 1)=0 && (Mpq.cmp_si rat2 (-1) 1)=0 ->
       true
-  | OpProduct [OpSum [OpRational neg_one_a; Q]; OpPow(OpSum[Q; OpProduct[OpRational neg_one_b; OpSymbolic_Constant a]], OpRational neg_one_c)] when (Mpq.cmp_si neg_one_a (-1) 1)=0
+  | OpProduct [OpSum [OpRational neg_one_a; Q]; OpPow(OpSum[Q; OpProduct[OpRational neg_one_b; OpSymbolic_Constant _]], OpRational neg_one_c)] when (Mpq.cmp_si neg_one_a (-1) 1)=0
 && (Mpq.cmp_si neg_one_b (-1) 1)=0 && (Mpq.cmp_si neg_one_c (-1) 1)=0 ->
       true
-  | OpPow(OpSum[Q; OpProduct[OpRational neg_one_a; OpSymbolic_Constant a]], OpRational neg_one_b) when (Mpq.cmp_si neg_one_a (-1) 1)=0 && (Mpq.cmp_si neg_one_b (-1) 1)=0 ->
+  | OpPow(OpSum[Q; OpProduct[OpRational neg_one_a; OpSymbolic_Constant _]], OpRational neg_one_b) when (Mpq.cmp_si neg_one_a (-1) 1)=0 && (Mpq.cmp_si neg_one_b (-1) 1)=0 ->
       true
   | OpSum expr_list ->
       List.for_all complete_tiling expr_list
-  | OpRational rat -> true
-  | OpSymbolic_Constant str (* probably some other things *) -> true
-  | OpBase_case (str, integer) -> true
+  | OpRational _ -> true
+  | OpSymbolic_Constant _ (* probably some other things *) -> true
+  | OpBase_case _ -> true
   | OpPow(left, right) when not (Op_transforms.contains_q left) && not (Op_transforms.contains_q right) -> true
   | OpProduct expr_list ->
       let (term, const_list) = List.partition Op_transforms.contains_q expr_list in 
       if (List.length const_list) <> 0 then complete_tiling (Op_simplifications.op_automatic_simplify (OpProduct term))
       else false
-  | OpLog (b, expression) ->
+  | OpLog (_, expression) ->
       if Op_transforms.contains_q expression then false
       else true
   | _ ->false (* might be too strong *)

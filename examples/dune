@@ -1,0 +1,11 @@
+(executable
+  (name test)
+  (libraries OCRS)
+  (modules test)
+)
+
+(executable
+  (name main)
+  (libraries OCRS)
+  (modules main)
+)

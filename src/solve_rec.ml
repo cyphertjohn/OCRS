@@ -262,7 +262,7 @@ let rec get_beta_expr expr ovar_ident ivar_ident =
     (get_beta_expr expression ovar_ident ivar_ident)
   | Cos (expression) ->
     (get_beta_expr expression ovar_ident ivar_ident)
-  | IDivide (expression, rat) ->
+  | IDivide (expression, _) ->
     (get_beta_expr expression ovar_ident ivar_ident)
   | Mod (left, right) ->
     max (get_beta_expr left ovar_ident ivar_ident) (get_beta_expr right ovar_ident ivar_ident) 
@@ -313,7 +313,7 @@ let rec contains_ovar_expr expr subscript =
   match expr with
   | Rational _ | Symbolic_Constant _ | Base_case _ | Undefined | Input_variable _ | Arctan _ | Pi | Iif _ ->
     false
-  | Output_variable (_, subscript) ->
+  | Output_variable _ ->
     true
   | Pow (base, exp) ->
     (contains_ovar_expr base subscript) || (contains_ovar_expr exp subscript)
@@ -327,7 +327,7 @@ let rec contains_ovar_expr expr subscript =
     (contains_ovar_expr left subscript) || (contains_ovar_expr right subscript)
   | Binomial (left, right) ->
     (contains_ovar_expr left subscript) || (contains_ovar_expr right subscript)
-  | Log (base, expression) ->
+  | Log (_, expression) ->
     (contains_ovar_expr expression subscript)
   | Factorial expression ->
     (contains_ovar_expr expression subscript)

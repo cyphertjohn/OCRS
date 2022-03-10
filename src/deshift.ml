@@ -43,7 +43,7 @@ let rec remove_left_shifts expr =
       )
     in
     Iif (str, new_subscript)
-  | Shift (shift_v, inner_expr) when shift_v < 0 ->
+  | Shift (shift_v, _) when shift_v < 0 ->
     (*
     Expr_simplifications.automatic_simplify (Expr_helpers.substitute inner_expr )*)
     failwith "Potentially shifting a bad sequence"  
@@ -78,13 +78,13 @@ let rec get_break_points expr =
   | Sum sumList ->
     let break_points = List.map get_break_points sumList in
     sort_and_remove_duplicates (List.concat break_points)
-  | Log (b, expression) ->
+  | Log (_, expression) ->
     get_break_points expression
   | Pow (base, exp) ->
     sort_and_remove_duplicates ((get_break_points base) @ (get_break_points exp))
   | Binomial (left, right) ->
     sort_and_remove_duplicates ((get_break_points left) @ (get_break_points right))
-  | IDivide (expression, integer) ->    
+  | IDivide (expression, _) ->    
     get_break_points expression
   | Sin (expression) ->
     get_break_points expression

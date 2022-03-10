@@ -17,10 +17,10 @@ let rec contains_Ovar expr identifier =
       List.exists (fun x -> contains_Ovar x identifier) expr_list
   | OpSum expr_list ->
       List.exists (fun x -> contains_Ovar x identifier) expr_list
-  | OpOutput_variable (ident , subscript) ->
+  | OpOutput_variable (ident , _) ->
       if ident = identifier then true
       else false
-  | OpLog (b, expression) ->
+  | OpLog (_, expression) ->
       contains_Ovar expression identifier
   | OpPow (left, right) ->
       (contains_Ovar left identifier) || (contains_Ovar right identifier)
@@ -28,7 +28,7 @@ let rec contains_Ovar expr identifier =
       false
   ;;
 
-let rec move_Ovar_left left right identifier = 
+let move_Ovar_left left right identifier = 
   match (left, right) with
   | (OpSum left_list, OpSum right_list) ->
       let (_, non_ovar_left_temp) = List.partition (fun x -> contains_Ovar x identifier) left_list in
@@ -110,7 +110,7 @@ let rec solve_for_Ovar_pair left right ident input_ident =
     | OpOutput_variable (identifier, SSVar _) when identifier = ident ->
       (left, right)
     | OpProduct prod_list when (List.length (List.filter (fun x -> contains_Ovar x ident) prod_list)) = 1 ->
-      let (ovar, non_ovar) = List.partition (fun x -> contains_Ovar x ident) prod_list in
+      let (_, non_ovar) = List.partition (fun x -> contains_Ovar x ident) prod_list in
       let non_ovar_inv = OpPow(OpProduct non_ovar, OpRational (Mpq.init_set_si (-1) 1)) in
       solve_for_Ovar_pair (op_automatic_simplify (OpProduct (List.append prod_list [non_ovar_inv]))) (op_automatic_simplify (OpProduct (right :: non_ovar_inv :: []))) ident input_ident
     | OpProduct _ -> raise (Isolating_exc ("OCRS is unable to solve " ^ (Expr_helpers.op_inequation_to_string (OpEquals (left, right)))))

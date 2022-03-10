@@ -112,7 +112,7 @@ let get_init_vector first_row shift =
   let res = Array.make (Array.length first_row) (Mpq.init_set_si 0 1) in
   let _ = res.((Array.length temp) - 1) <- (Mpq.init_set_si 1 1) in
   let _ =
-    for i = 1 to shift do
+    for _ = 1 to shift do
       let _ =
         for j = 0 to (Array.length first_row - 3) do
           res.((Array.length first_row)- 2 - j) <- res.((Array.length first_row) - 3 - j)
@@ -192,6 +192,6 @@ let unit_mult_list op_calc_list =
   match op_calc_list with
   | [] -> OpRational (Mpq.init_set_si 1 1) (* Should never happen *)
   | a :: [] -> a (* Also should never happen *)
-  | a :: tl ->
+  | _ :: tl ->
     List.fold_left unit_mult_pair (List.nth op_calc_list 0) tl
   ;;

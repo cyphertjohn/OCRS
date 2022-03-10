@@ -4,7 +4,7 @@ exception Op_simplifications_exc of string
 
 let base expr = 
   match expr with
-  | OpPow (base, exp) ->
+  | OpPow (base, _) ->
       base
   | OpRational _ ->
       OpUndefined
@@ -14,7 +14,7 @@ let base expr =
 
 let exponent expr = 
   match expr with
-  | OpPow (base, exp) ->
+  | OpPow (_, exp) ->
       exp
   | OpRational _ ->
       OpUndefined
@@ -24,9 +24,9 @@ let exponent expr =
 
 let term expr = 
   match expr with
-  | OpProduct ((OpRational rat) :: tail :: []) ->
+  | OpProduct ((OpRational _) :: tail :: []) ->
       tail
-  | OpProduct ((OpRational rat) :: rest) ->
+  | OpProduct ((OpRational _) :: rest) ->
       OpProduct rest
   | OpProduct lis ->
       OpProduct lis
@@ -38,7 +38,7 @@ let term expr =
 
 let const expr = 
   match expr with
-  | OpProduct ((OpRational rat) :: rest) ->
+  | OpProduct ((OpRational rat) :: _) ->
       OpRational rat
   | OpRational _ ->
       OpUndefined
@@ -252,7 +252,7 @@ and simplify_power base exp =
 
 
 
-let rec simplify_divide num denom = 
+let simplify_divide num denom = 
   match denom with
   | OpRational rat when (Mpq.cmp_si rat 0 1) = 0 ->
       OpUndefined

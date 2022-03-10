@@ -1,4 +1,4 @@
-open Type_def;;
+open OCRS.Type_def
 
 (*
 let x1 = Equals(Output_variable("y", SAdd("n", 1)), Plus(Output_variable("y", SSVar "n"), Rational (Mpq.init_set_si 1 1)));;
@@ -195,9 +195,9 @@ let unsound = VEquals (Ovec ([|"1"; "2"; "3"; "4"; "5"; "6"|], SAdd("k", 1)),
                           [| 0; 7; 0; 7; 0; 4|]));;
 
 (*print_endline (Mat_helpers.matrix_rec_to_string unsound);;*)
-let result = Ocrs.solve_mat_rec unsound true;;
+let result = OCRS.Ocrs.solve_mat_rec unsound true;;
 print_endline "";;
-List.iter (fun x -> print_endline (Expr_helpers.piece_to_string x)) result;;
+List.iter (fun x -> print_endline (OCRS.Expr_helpers.piece_to_string x)) result;;
 
 (*
 let matrix_test_fib =

@@ -4,7 +4,7 @@ exception Simplification_exception of string
 
 let base expr = 
   match expr with
-  | Pow (base, exp) ->
+  | Pow (base, _) ->
       base
   | Rational _ ->
       Undefined
@@ -14,7 +14,7 @@ let base expr =
 
 let exponent expr = 
   match expr with
-  | Pow (base, exp) ->
+  | Pow (_, exp) ->
       exp
   | Rational _ ->
       Undefined
@@ -24,9 +24,9 @@ let exponent expr =
 
 let term expr = 
   match expr with
-  | Product ((Rational rat) :: tail :: []) ->
+  | Product ((Rational _) :: tail :: []) ->
       tail
-  | Product ((Rational rat) :: rest) ->
+  | Product ((Rational _) :: rest) ->
       Product rest
   | Product lis ->
       Product lis
@@ -38,7 +38,7 @@ let term expr =
 
 let const expr = 
   match expr with
-  | Product ((Rational rat) :: rest) ->
+  | Product ((Rational rat) :: _) ->
       Rational rat
   | Rational _ ->
       Undefined
@@ -320,7 +320,7 @@ and simplify_power base exp =
       let aux exponent = 
         simplify_power base exponent in
       simplify_product (List.map aux sumList)
-  | (Rational rat_base, Product prodList) ->
+  | (Rational rat_base, Product _) ->
       (*find Rationals and logarithms *)
       let exp_const = const exp in
       let exp_var = term exp in
@@ -348,7 +348,7 @@ and simplify_power base exp =
 
 
 
-let rec simplify_divide num denom = 
+let simplify_divide num denom = 
   match denom with
   | Rational rat when (Mpq.cmp_si rat 0 1) = 0 ->
       Undefined

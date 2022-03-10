@@ -41,7 +41,7 @@ let new_part_frac expr =
   | OpProduct prodList ->
     let is_denom in_expr =
       (match in_expr with
-      | OpPow (base, OpRational exp) when (Mpq.cmp_si exp 0 1)<0 && Expr_simplifications.is_int exp ->
+      | OpPow (_, OpRational exp) when (Mpq.cmp_si exp 0 1)<0 && Expr_simplifications.is_int exp ->
         true
       | _ ->
         false

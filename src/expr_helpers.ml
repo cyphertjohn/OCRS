@@ -1,6 +1,6 @@
 open Type_def
 
-let rec subscript_to_string e = 
+let subscript_to_string e = 
   match e with
   | SAdd (left, right) ->
     "{" ^ left ^ " + " ^ (string_of_int right) ^ "}"
@@ -287,7 +287,7 @@ let op_inequation_to_string_IR e =
   ;;
 
 
-let rec subscript_to_string_IR s = 
+let subscript_to_string_IR s = 
   match s with
   | SSVar ident -> "SSVar (" ^ ident ^ ")"
   | SSDiv (ident, beta) -> "SSDiv (" ^ ident ^ ", " ^ (string_of_int beta) ^ ")"
@@ -380,7 +380,7 @@ let rec is_const expr ivar_ident =
     (is_const left ivar_ident) && (is_const right ivar_ident)
   | Minus (left, right) ->
     (is_const left ivar_ident) && (is_const right ivar_ident)
-  | Log (base, expression) ->
+  | Log (_, expression) ->
     is_const expression ivar_ident
   | Binomial (left, right) ->
     (is_const left ivar_ident) && (is_const right ivar_ident)
@@ -571,7 +571,7 @@ let rec find_ovar_ivar_expr expr =
     let left_res = find_ovar_ivar_expr left in
     let right_res = find_ovar_ivar_expr right in
     (remove_dup ((fst left_res) @ (fst right_res)), remove_dup ((snd left_res) @ (snd right_res)))
-  | Shift (shift_v, expression) ->
+  | Shift (_, expression) ->
     find_ovar_ivar_expr expression
   ;;
       
