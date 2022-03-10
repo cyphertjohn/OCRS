@@ -10,7 +10,7 @@ homepage: "github.com/cyphertjohn/OCRS"
 bug-reports: "github.com/cyphertjohn/OCRS"
 depends: [
   "ocaml"
-  "dune" {>= "3.0"}
+  "dune" {>= "2.8"}
   "gmp"
   "odoc" {with-doc}
 ]
