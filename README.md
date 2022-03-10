@@ -95,33 +95,14 @@ In this situation the result requires a piecewise function or a shift operator t
 Building
 ====
 
-OCRS uses gmp to as an internal representation for constants. Therefore, to use OCRS an install of gmp (https://gmplib.org/) is required.
-
-For Ubuntu, one way of doing this would be to run:
+OCRS uses gmp to as an internal representation for constants. Therefore, to use OCRS an install of gmp (https://gmplib.org/) is required. OCRS uses dune to build and can be installed using opam.
 ```
-sudo apt-get install libgmp-dev
+opam install gmp dune
 ```
 
-OCRS uses the ocaml build tool oasis to assist in building. Note that it is not required to have oasis installed to use OCRS though. 
-
-To re-generate setup.ml have oasis installed and use:
+Then the library can be built with
 ```
-oasis setup
-```
-
-To build the project using setup.ml:
-```
-ocaml setup.ml -build
-```
-
-To install using setup.ml:
-```
-ocaml setup.ml -install
-```
-
-To generate documentation:
-```
-ocaml setup.ml -doc
+dune build
 ```
 
 ### Installing with opam
